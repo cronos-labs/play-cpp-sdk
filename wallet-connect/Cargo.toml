@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-aes = "0.7"
+aes = "0.8"
 async-trait = { version = "0.1", default-features = false }
-block-modes = "0.8"
+cbc = "0.1"
 dashmap = "5"
 ethers = "0.6"
 eyre = "0.6"
