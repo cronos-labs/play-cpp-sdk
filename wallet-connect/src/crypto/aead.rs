@@ -1,9 +1,10 @@
 //! Copyright (c) 2020 Nicholas Rodrigues Lordello (licensed under the Apache License, Version 2.0)
 //! Modifications Copyright (c) 2022, Foris Limited (licensed under the Apache License, Version 2.0)
 use crate::protocol::EncryptionPayload;
-use aes::Aes256;
-use block_modes::block_padding::Pkcs7;
-use block_modes::{BlockMode, BlockModeError, Cbc, InvalidKeyIvLength};
+use aes::{
+    cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, InvalidLength, KeyIvInit},
+    Aes256,
+};
 use hmac::{Hmac, Mac};
 use rand::{rngs::OsRng, Rng};
 use sha2::Sha256;
@@ -11,7 +12,8 @@ use subtle::ConstantTimeEq;
 use thiserror::Error;
 
 type HmacSha256 = Hmac<Sha256>;
-type Aes256Cbc = Cbc<Aes256, Pkcs7>;
+type Aes256CbcEnc = cbc::Encryptor<Aes256>;
+type Aes256CbcDec = cbc::Decryptor<Aes256>;
 
 fn hmac_sha256(key: &[u8], iv: &[u8], data: &[u8]) -> Vec<u8> {
     let mut mac = HmacSha256::new_from_slice(key).expect("HMAC can take key of any size");
@@ -34,8 +36,9 @@ fn generate_iv() -> Vec<u8> {
 /// The cryptographic choices are due to WalletConnect 1.0: https://docs.walletconnect.com/tech-spec#cryptography
 pub fn seal(key: &[u8], plaintext: &[u8]) -> EncryptionPayload {
     let iv = generate_iv();
-    let cipher = Aes256Cbc::new_from_slices(key, &iv).unwrap();
-    let data = cipher.encrypt_vec(plaintext);
+    // FIXME: return result or document assumption that a valid key length is passed?
+    let cipher = Aes256CbcEnc::new_from_slices(key, &iv).unwrap();
+    let data = cipher.encrypt_padded_vec_mut::<Pkcs7>(plaintext);
     let hmac = hmac_sha256(key, &iv, &data);
     EncryptionPayload { data, iv, hmac }
 }
@@ -47,8 +50,10 @@ pub fn open(key: &[u8], payload: &EncryptionPayload) -> Result<Vec<u8>, OpenErro
     if hmac.ct_eq(&payload.hmac).unwrap_u8() == 0 {
         return Err(OpenError::Verify);
     }
-    let cipher = Aes256Cbc::new_from_slices(key, &payload.iv)?;
-    let plaintext = cipher.decrypt_vec(&payload.data)?;
+    let cipher = Aes256CbcDec::new_from_slices(key, &payload.iv)?;
+    let plaintext = cipher
+        .decrypt_padded_vec_mut::<Pkcs7>(&payload.data)
+        .map_err(|_| OpenError::DecryptionError)?;
     Ok(plaintext)
 }
 
@@ -56,9 +61,9 @@ pub fn open(key: &[u8], payload: &EncryptionPayload) -> Result<Vec<u8>, OpenErro
 #[derive(Debug, Error)]
 pub enum OpenError {
     #[error("invalid key length: {0}")]
-    InvalidEncryption(#[from] InvalidKeyIvLength),
-    #[error("decryption error: {0}")]
-    DecryptionError(#[from] BlockModeError),
+    InvalidEncryption(#[from] InvalidLength),
+    #[error("decryption error")]
+    DecryptionError,
     #[error("unable to verify integrity of payload")]
     Verify,
 }
