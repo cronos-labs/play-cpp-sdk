@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "wallet-connect"
+    "wallet-connect",
+    "extra-cpp-bindings"
 ]
 

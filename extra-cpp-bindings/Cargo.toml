@@ -1,0 +1,18 @@
+[package]
+name = "extra-cpp-bindings"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["staticlib", "rlib", "cdylib"]
+
+[dependencies]
+anyhow = "1"
+ethers-core = { git = "https://github.com/gakonst/ethers-rs", rev = "de275db56a1be948cf4a543e1837f5add6f4750c" }
+ethers-etherscan = { git = "https://github.com/gakonst/ethers-rs", rev = "de275db56a1be948cf4a543e1837f5add6f4750c" }
+cxx = "1"
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[build-dependencies]
+cxx-build = "1"
