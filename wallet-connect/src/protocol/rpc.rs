@@ -75,9 +75,11 @@ pub struct SessionUpdate {
     /// if the wallet user approved the connection
     pub approved: bool,
     /// the wallet's addresses
-    pub accounts: Vec<Address>,
+    /// null/None when the wallet disconnects
+    pub accounts: Option<Vec<Address>>,
     /// the chain where these addresses are expected to be used
-    pub chain_id: u64,
+    /// null/None when the wallet disconnects
+    pub chain_id: Option<u64>,
 }
 
 fn is_zst<T>(_t: &T) -> bool {
@@ -105,6 +107,37 @@ impl<'a, T> Request<'a, T> {
             params,
         }
     }
+}
+
+/// the request coming in from the wallet
+/// (e.g. changing the chain id, address or disconnecting)
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RequestSessionUpdate {
+    /// JSON-RPC ID
+    /// according to https://www.jsonrpc.org/specification
+    /// it could be "String, Number, or NULL"
+    /// but it seems that the bridge server or wallets use just numbers.
+    /// TODO: change to be more general as per the official JSON-RPC specs?
+    pub(crate) id: u64,
+    /// "2.0" static string -- TODO: check?
+    jsonrpc: String,
+    /// the method name -- the expected one is "wc_sessionUpdate"
+    /// TODO: it's checked in the socket.rs -- check here in deserialization instead?
+    pub(crate) method: String,
+    /// the session update params
+    /// it's a vector of size one
+    /// TODO: it's checked in the socket.rs -- check here in deserialization instead?
+    pub(crate) params: Vec<SessionUpdate>,
+}
+
+/// the wrapper type for data received from the bridge server
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum BridgeServerMsg {
+    /// the session update request (e.g. changing the chain id, address or disconnecting)
+    SessionUpdateRequest(RequestSessionUpdate),
+    /// the responses to previous requests to the wallet (e.g. signing a transaction)
+    Response(Response<Value>),
 }
 
 /// A JSON-RPC response

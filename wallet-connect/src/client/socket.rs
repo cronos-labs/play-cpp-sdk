@@ -23,7 +23,7 @@ use super::core::SharedContext;
 use crate::{
     crypto::Key,
     protocol::{SocketMessage, SocketMessageKind, Topic},
-    Request, Response,
+    BridgeServerMsg, Request,
 };
 use eyre::{eyre, Context};
 
@@ -47,12 +47,26 @@ pub struct MessageHandler {
 
 impl MessageHandler {
     /// Processes the decrypted message and returns the message to be sent back (if any)
-    pub fn handle(&self, _: Topic, payload: Vec<u8>) -> Option<Vec<u8>> {
-        // FIXME: one can also receive session upgrades, not only responses to previous requests
-        let resp: Response<serde_json::Value> = serde_json::from_slice(&payload).ok()?;
-        let (_id, sender) = self.context.0.pending_requests.remove(&resp.id)?;
-        let _ = sender.send(resp.data.into_value().ok()?);
-        None
+    pub async fn handle(&self, _: Topic, payload: Vec<u8>) -> Option<Vec<u8>> {
+        let resp: BridgeServerMsg = serde_json::from_slice(&payload).ok()?;
+        match resp {
+            BridgeServerMsg::Response(resp) => {
+                let (_id, sender) = self.context.0.pending_requests.remove(&resp.id)?;
+                let _ = sender.send(resp.data.into_value().ok()?);
+                None
+            }
+            BridgeServerMsg::SessionUpdateRequest(req)
+                if req.params.len() == 1 && req.method == "wc_sessionUpdate" =>
+            {
+                // TODO: check session_pending?
+                let mut session = self.context.0.session.lock().await;
+                session.update(req.params[0].clone());
+                // TODO: a callback or some way to inform the client of the change (or let it check `ensure_session`?)?
+                // TODO: return the serialized SocketMessage with `Response` to be sent back to the wallet?
+                None
+            }
+            _ => None,
+        }
     }
 }
 
@@ -195,11 +209,11 @@ impl Socket {
         let reader = tokio::spawn(async move {
             let _ = rx
                 .try_filter_map(|mmsg| future::ok(check_socket_msg(mmsg, &key)))
-                .try_for_each(|(topic, decrypted)| {
-                    if let Some(resp) = handler.handle(topic, decrypted) {
+                .try_for_each(|(topic, decrypted)| async {
+                    if let Some(resp) = handler.handle(topic, decrypted).await {
                         let _ = sender.send((None, resp));
                     }
-                    future::ok(())
+                    Ok(())
                 })
                 .await;
         });
