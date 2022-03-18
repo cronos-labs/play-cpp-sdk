@@ -75,8 +75,12 @@ impl Session {
     /// updates the session details from the session update: https://docs.walletconnect.com/tech-spec#session-update
     pub fn update(&mut self, update: SessionUpdate) {
         self.connected = update.approved;
-        self.accounts = update.accounts;
-        self.chain_id = Some(update.chain_id);
+        if let Some(accounts) = update.accounts {
+            self.accounts = accounts;
+        } else {
+            self.accounts = vec![];
+        }
+        self.chain_id = update.chain_id;
     }
 }
 
