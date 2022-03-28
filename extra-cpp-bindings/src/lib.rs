@@ -45,6 +45,10 @@ mod ffi {
         /// the token type (ERC-20, ERC-721, ERC-1155)
         #[serde(rename = "type")]
         pub token_type: String,
+
+    pub enum QueryOption {
+        ByContract,
+        ByAddressAndContract,
     }
 
     extern "Rust" {
@@ -55,11 +59,13 @@ mod ffi {
         pub fn get_erc20_transfer_history_blocking(
             address: String,
             contract_address: String,
+            option: QueryOption,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
         pub fn get_erc721_transfer_blocking(
             address: String,
             contract_address: String,
+            option: QueryOption,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
         pub fn get_tokens_blocking(
@@ -68,6 +74,8 @@ mod ffi {
         ) -> Result<Vec<RawTokenResult>>;
     }
 }
+
+use ffi::{QueryOption, RawTxDetail};
 
 /// returns the transactions of a given address.
 /// The API key can be obtained from https://cronoscan.com
@@ -80,29 +88,35 @@ pub fn get_transaction_history_blocking(
 }
 
 /// returns the ERC20 transfers of a given address of a given contract.
+/// (address can be empty if option is ByContract)
+/// default option is by address
 /// The API key can be obtained from https://cronoscan.com
 pub fn get_erc20_transfer_history_blocking(
     address: String,
     contract_address: String,
+    option: QueryOption,
     api_key: String,
 ) -> Result<Vec<RawTxDetail>> {
     let rt = tokio::runtime::Runtime::new()?;
-    rt.block_on(
-        async move { get_erc20_transfer_history(&address, &contract_address, api_key).await },
-    )
+    rt.block_on(async move {
+        get_erc20_transfer_history(&address, &contract_address, option, api_key).await
+    })
 }
 
 /// returns the ERC721 transfers of a given address of a given contract.
+/// (address can be empty if option is ByContract)
+/// default option is by address
 /// The API key can be obtained from https://cronoscan.com
 pub fn get_erc721_transfer_blocking(
     address: String,
     contract_address: String,
+    option: QueryOption,
     api_key: String,
 ) -> Result<Vec<RawTxDetail>> {
     let rt = tokio::runtime::Runtime::new()?;
-    rt.block_on(
-        async move { get_erc721_transfer_history(&address, &contract_address, api_key).await },
-    )
+    rt.block_on(async move {
+        get_erc721_transfer_history(&address, &contract_address, option, api_key).await
+    })
 }
 
 /// given the BlockScout REST API base url and the account address (hexadecimal),
@@ -194,11 +208,17 @@ async fn get_transaction_history(address: &str, api_key: String) -> Result<Vec<R
 async fn get_erc20_transfer_history(
     address: &str,
     contract_address: &str,
+    option: QueryOption,
     api_key: String,
 ) -> Result<Vec<RawTxDetail>> {
     let client = Client::new(Chain::Cronos, api_key)?;
-    let token_query =
-        TokenQueryOption::ByAddressAndContract(address.parse()?, contract_address.parse()?);
+    let token_query = match option {
+        QueryOption::ByContract => TokenQueryOption::ByContract(contract_address.parse()?),
+        QueryOption::ByAddressAndContract => {
+            TokenQueryOption::ByAddressAndContract(address.parse()?, contract_address.parse()?)
+        }
+        _ => TokenQueryOption::ByAddress(address.parse()?),
+    };
     let transactions = client
         .get_erc20_token_transfer_events(token_query, None)
         .await?;
@@ -208,11 +228,17 @@ async fn get_erc20_transfer_history(
 async fn get_erc721_transfer_history(
     address: &str,
     contract_address: &str,
+    option: QueryOption,
     api_key: String,
 ) -> Result<Vec<RawTxDetail>> {
     let client = Client::new(Chain::Cronos, api_key)?;
-    let token_query =
-        TokenQueryOption::ByAddressAndContract(address.parse()?, contract_address.parse()?);
+    let token_query = match option {
+        QueryOption::ByContract => TokenQueryOption::ByContract(contract_address.parse()?),
+        QueryOption::ByAddressAndContract => {
+            TokenQueryOption::ByAddressAndContract(address.parse()?, contract_address.parse()?)
+        }
+        _ => TokenQueryOption::ByAddress(address.parse()?),
+    };
     let transactions = client
         .get_erc721_token_transfer_events(token_query, None)
         .await?;
