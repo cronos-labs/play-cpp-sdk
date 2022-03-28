@@ -45,6 +45,7 @@ mod ffi {
         /// the token type (ERC-20, ERC-721, ERC-1155)
         #[serde(rename = "type")]
         pub token_type: String,
+    }
 
     pub enum QueryOption {
         ByContract,
@@ -75,7 +76,7 @@ mod ffi {
     }
 }
 
-use ffi::{QueryOption, RawTxDetail};
+use ffi::{QueryOption, RawTokenResult, RawTxDetail};
 
 /// returns the transactions of a given address.
 /// The API key can be obtained from https://cronoscan.com
@@ -131,8 +132,6 @@ pub fn get_tokens_blocking(
     let resp = reqwest::blocking::get(&blockscout_url)?.json::<RawTokenResponse>()?;
     Ok(resp.result)
 }
-
-use ffi::{RawTokenResult, RawTxDetail};
 
 #[derive(Serialize, Deserialize)]
 struct RawTokenResponse {
