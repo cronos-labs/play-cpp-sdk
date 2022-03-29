@@ -1,9 +1,11 @@
 //! Copyright (c) 2020 Nicholas Rodrigues Lordello (licensed under the Apache License, Version 2.0)
 //! Modifications Copyright (c) 2022, Foris Limited (licensed under the Apache License, Version 2.0)
-use super::session::Session;
+use super::session::{Session, SessionInfo};
+use crate::client::ClientChannelMessage;
 use crate::crypto::Key;
 use crate::protocol::{Metadata, Topic};
 use crate::uri::Uri;
+use tokio::sync::mpsc::UnboundedSender;
 use url::Url;
 
 /// The provided WalletConnect connection information
@@ -32,6 +34,8 @@ pub struct Options {
     /// the chain id (otherwise the chain id is retrieved from the wallet)
     /// TODO: right now, it seems this is not checked against the wallet's chain id
     pub chain_id: Option<u64>,
+    /// callback sender
+    pub callback_channel: Option<UnboundedSender<ClientChannelMessage>>,
 }
 
 impl Options {
@@ -41,6 +45,7 @@ impl Options {
             meta,
             connection: Connection::default(),
             chain_id: None,
+            callback_channel: None,
         }
     }
 
@@ -50,6 +55,7 @@ impl Options {
             meta,
             connection: Connection::Uri(uri),
             chain_id: None,
+            callback_channel: None,
         }
     }
 
@@ -63,16 +69,19 @@ impl Options {
         let chain_id = self.chain_id;
 
         Session {
-            connected: false,
-            accounts: Vec::new(),
-            chain_id,
-            bridge,
-            key,
-            client_id: Topic::new(),
-            client_meta,
-            peer_id: None,
-            peer_meta: None,
-            handshake_topic,
+            info: SessionInfo {
+                connected: false,
+                accounts: Vec::new(),
+                chain_id,
+                bridge,
+                key,
+                client_id: Topic::new(),
+                client_meta,
+                peer_id: None,
+                peer_meta: None,
+                handshake_topic,
+            },
+            callback_channel: None,
         }
     }
 }

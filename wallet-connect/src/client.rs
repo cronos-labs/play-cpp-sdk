@@ -3,12 +3,13 @@ mod core;
 /// The external options to create a client
 mod options;
 /// The wallet-connect session management
-mod session;
+pub mod session;
 /// The websocket connection management
 mod socket;
 
 use std::str::FromStr;
 
+use crate::protocol::Metadata;
 use async_trait::async_trait;
 use ethers::prelude::{
     Address, FromErr, JsonRpcClient, Middleware, Provider, ProviderError, Signature,
@@ -16,13 +17,36 @@ use ethers::prelude::{
 use eyre::Context;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
-
-use crate::protocol::Metadata;
+use tokio::sync::mpsc::UnboundedSender;
 
 use self::{
     core::{Connector, ConnectorError},
     options::Options,
+    session::SessionInfo,
 };
+
+#[derive(Debug, Clone)]
+pub enum ClientChannelMessageType {
+    Connecting,
+    Connected,
+    Updated,
+    Disconnected,
+}
+
+#[derive(Debug, Clone)]
+pub struct ClientChannelMessage {
+    pub state: ClientChannelMessageType,
+    pub session: Option<SessionInfo>,
+}
+
+impl Default for ClientChannelMessage {
+    fn default() -> Self {
+        Self {
+            state: ClientChannelMessageType::Disconnected,
+            session: None,
+        }
+    }
+}
 
 /// The WalletConnect 1.0 client
 /// (holds the middleware trait implementations for ethers)
@@ -31,6 +55,8 @@ use self::{
 #[derive(Debug)]
 pub struct Client {
     connection: Connector,
+    // to make receive channel valid, sender channel should be open
+    callback_channel: Option<UnboundedSender<ClientChannelMessage>>,
 }
 
 impl Client {
@@ -40,10 +66,59 @@ impl Client {
         Client::with_options(Options::new(meta.into())).await
     }
 
+    /// Restore a new client from the provided options
+    pub async fn restore(session_info: SessionInfo) -> Result<Self, ConnectorError> {
+        Ok(Client {
+            callback_channel: None,
+            connection: Connector::restore(session_info).await?,
+        })
+    }
+
+    /// get current session info, can be saved , and later, restored
+    pub async fn get_session_info(&self) -> Result<SessionInfo, ConnectorError> {
+        Ok(self.connection.get_session_info().await?)
+    }
+
+    /// create qrcode from this string
+    pub async fn get_connection_string(&self) -> Result<String, ConnectorError> {
+        Ok(self
+            .connection
+            .get_uri()
+            .await?
+            .as_url()
+            .as_str()
+            .to_string())
+    }
+
+    /// manual polling for session
+    /// receive client state messages directly though channel
+    /// refer to run_callback to create channel
+    pub fn set_callback(&mut self, callback_channel: UnboundedSender<ClientChannelMessage>) {
+        self.callback_channel = Some(callback_channel);
+    }
+
+    /// automatic polling for session
+    ///  receive client state messages through callback
+    pub fn run_callback(&mut self, mycallback: Box<dyn Fn(ClientChannelMessage) + Send + Sync>) {
+        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel::<ClientChannelMessage>();
+
+        self.set_callback(sender);
+
+        tokio::spawn(async move {
+            loop {
+                let message = receiver.recv().await;
+
+                if let Some(message) = message {
+                    mycallback(message.clone());
+                }
+            }
+        });
+    }
     /// Creates a new client from the provided options
     /// (and will connect to the bridge server according to the URI in metadata)
     pub async fn with_options(options: Options) -> Result<Self, ConnectorError> {
         Ok(Client {
+            callback_channel: options.callback_channel.clone(),
             connection: Connector::new(options).await?,
         })
     }
@@ -52,6 +127,10 @@ impl Client {
     /// If successful, the returned value is the wallet's addresses and the chain ID.
     /// TODO: more specific error types than eyre
     pub async fn ensure_session(&mut self) -> Result<(Vec<Address>, u64), eyre::Error> {
+        if let Some(v) = &self.callback_channel {
+            self.connection.set_callback(v.clone()).await;
+        }
+
         self.connection.ensure_session().await
     }
 
@@ -71,6 +150,7 @@ impl Client {
                 ],
             )
             .await?;
+
         Signature::from_str(&sig_str)
             .context("failed to parse signature")
             .map_err(ClientError::Eyre)
