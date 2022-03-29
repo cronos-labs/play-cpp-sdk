@@ -17,13 +17,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("chain_id: {}", chain_id);
     let sig1 = client.personal_sign("hello", &address[0]).await?;
     println!("sig1: {:?}", sig1);
+
     let middleware = WCMiddleware::new(client);
     // Note that `sign` on ethers middleware translate to `eth_sign` JSON-RPC method
     // which in Metamask docs is marked as "(insecure and unadvised to use)"
     // and some wallets may reject it
     let sig2 = middleware
         .sign("world".as_bytes().to_vec(), &address[0])
-        .await?;
-    println!("sig2: {:?}", sig2);
+        .await;
+    match sig2 {
+        Ok(value) => println!("sig2: {:?}", value),
+        Err(_error) => println!("not erorr, eth_sign not supported in the wallet"),
+    }
     Ok(())
 }

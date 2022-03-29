@@ -132,6 +132,12 @@ impl Socket {
         drop(session);
         self.send_socket_msg(context, id, message)?;
         let response = rx.await?;
+        let code = response["code"].as_i64();
+        if let Some(value) = code {
+            if -32000 == value {
+                return Err(eyre!("{}", serde_json::to_string(&response)?));
+            }
+        }
         serde_json::from_value(response).wrap_err("failed to parse response")
     }
 
