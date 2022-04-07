@@ -1,21 +1,23 @@
 //! Copyright (c) 2020 Nicholas Rodrigues Lordello (licensed under the Apache License, Version 2.0)
 //! Modifications Copyright (c) 2022, Foris Limited (licensed under the Apache License, Version 2.0)
-use crate::ClientError;
-
 use super::{
     options::{Connection, Options},
     session::Session,
+    session::SessionInfo,
     socket::{MessageHandler, Socket},
 };
+use crate::client::ClientChannelMessage;
+use crate::protocol::Topic;
+use crate::uri::Uri;
+use crate::ClientError;
 use async_trait::async_trait;
 use dashmap::DashMap;
 use ethers::prelude::{Address, JsonRpcClient};
+use rand::Rng;
 use serde::{de::DeserializeOwned, Serialize};
-use std::sync::{
-    atomic::{AtomicBool, AtomicU64, Ordering},
-    Arc,
-};
+use std::sync::{atomic::AtomicBool, Arc};
 use thiserror::Error;
+use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::{oneshot, Mutex};
 
 /// This `Context` holds the wallet-connect client state
@@ -55,31 +57,92 @@ impl SharedContext {
 /// It holds the wallet-connect connection state
 #[derive(Debug)]
 pub struct Connector {
-    /// the next JSON-RPC request id
-    current_request: AtomicU64,
     /// the websocket connection
     socket: Socket,
     /// the client state
     context: SharedContext,
 }
 
+/// maximum is 9007199254740991 , 2^53 -1
+/// cannot be zero
+fn get_safe_random() -> u64 {
+    let random_request_id: u64 = rand::thread_rng().gen();
+    random_request_id % 9007199254740990 + 1
+}
 impl Connector {
+    ///  create qrcode with this uri
+    pub async fn get_uri(&self) -> Result<Uri, ConnectorError> {
+        let session = self.context.0.session.lock().await;
+        Ok(session.uri())
+    }
+
+    /// get session info, can be saved for restoration
+    pub async fn get_session_info(&self) -> Result<SessionInfo, ConnectorError> {
+        let session = self.context.0.session.lock().await;
+        Ok(session.info.clone())
+    }
+
+    pub async fn set_callback(&mut self, myfunc: UnboundedSender<ClientChannelMessage>) {
+        self.context.0.session.lock().await.set_callback(myfunc);
+    }
+
     /// This will return an existing session or create a new session.
     /// If successful, the returned value is the wallet's addresses and the chain ID.
     /// TODO: more specific error types than eyre
     pub async fn ensure_session(&mut self) -> Result<(Vec<Address>, u64), eyre::Error> {
         let session = self.context.0.session.lock().await;
-        if session.connected {
+        if session.info.connected {
             Ok((
-                session.accounts.clone(),
-                session.chain_id.unwrap_or_default(),
+                session.info.accounts.clone(),
+                session.info.chain_id.unwrap_or_default(),
             ))
         } else {
+            session.event_connecting();
             // no need to hold the session lock, hence this explicit drop
             drop(session);
-            let id = self.current_request.fetch_add(1, Ordering::SeqCst);
-            self.socket.create_session(id, &mut self.context).await
+            self.socket
+                .create_session(get_safe_random(), &mut self.context)
+                .await
         }
+    }
+
+    pub async fn new_client(
+        handshake_topic: Option<Topic>,
+        session: Session,
+    ) -> Result<Self, ConnectorError> {
+        let client_id = session.info.client_id.clone();
+        // NOTE: WalletConnect bridge URLs are expected to be automatically
+        // converted from a `http(s)` to `ws(s)` protocol for the WebSocket
+        // connection.
+        let mut url = session.info.bridge.clone();
+        match url.scheme() {
+            "http" => url.set_scheme("ws").unwrap(),
+            "https" => url.set_scheme("wss").unwrap(),
+            "ws" | "wss" => {}
+            scheme => return Err(ConnectorError::BadScheme(scheme.into())),
+        }
+        let key = session.info.key.clone();
+        let context = SharedContext::new(session);
+        let handler = MessageHandler {
+            context: context.clone(),
+        };
+        let mut socket = Socket::connect(url, key, handler).await?;
+        socket.subscribe(client_id.clone()).await?;
+        if let Some(topic) = handshake_topic {
+            socket.subscribe(topic).await?;
+        }
+        Ok(Self { socket, context })
+    }
+
+    pub async fn restore(session_info: SessionInfo) -> Result<Self, ConnectorError> {
+        // invalidate old topic, because  it's pending
+        let handshake_topic = Some(session_info.handshake_topic.clone());
+
+        let session = Session {
+            info: session_info,
+            callback_channel: None,
+        };
+        Connector::new_client(handshake_topic, session).await
     }
 
     /// Given the options (that contain the connection string),
@@ -91,37 +154,7 @@ impl Connector {
             _ => None,
         };
         let session = options.create_session();
-        // FIXME: pass a callback function in `new` that will let the caller
-        // display URI in whatever way it's preferred (instead of printing it out
-        // in command line)
-        session.uri().print_qr_uri();
-        let client_id = session.client_id.clone();
-        // NOTE: WalletConnect bridge URLs are expected to be automatically
-        // converted from a `http(s)` to `ws(s)` protocol for the WebSocket
-        // connection.
-        let mut url = session.bridge.clone();
-        match url.scheme() {
-            "http" => url.set_scheme("ws").unwrap(),
-            "https" => url.set_scheme("wss").unwrap(),
-            "ws" | "wss" => {}
-            scheme => return Err(ConnectorError::BadScheme(scheme.into())),
-        }
-        let key = session.key.clone();
-        let context = SharedContext::new(session);
-        let handler = MessageHandler {
-            context: context.clone(),
-        };
-        let mut socket = Socket::connect(url, key, handler).await?;
-        socket.subscribe(client_id).await?;
-        if let Some(topic) = handshake_topic {
-            socket.subscribe(topic).await?;
-        }
-        Ok(Self {
-            // Trust Wallet requires a non-zero request id
-            current_request: AtomicU64::new(1),
-            socket,
-            context,
-        })
+        Connector::new_client(handshake_topic, session).await
     }
 }
 
@@ -137,9 +170,8 @@ impl JsonRpcClient for Connector {
         method: &str,
         params: T,
     ) -> Result<R, ClientError> {
-        let id = self.current_request.fetch_add(1, Ordering::SeqCst);
         self.socket
-            .json_rpc_request::<T, R>(id, method, params, &self.context)
+            .json_rpc_request::<T, R>(get_safe_random(), method, params, &self.context)
             .await
             .map_err(ClientError::Eyre)
     }

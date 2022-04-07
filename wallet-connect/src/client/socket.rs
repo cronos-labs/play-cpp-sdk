@@ -60,6 +60,7 @@ impl MessageHandler {
             {
                 // TODO: check session_pending?
                 let mut session = self.context.0.session.lock().await;
+
                 session.update(req.params[0].clone());
                 // TODO: a callback or some way to inform the client of the change (or let it check `ensure_session`?)?
                 // TODO: return the serialized SocketMessage with `Response` to be sent back to the wallet?
@@ -119,10 +120,11 @@ impl Socket {
         context.0.pending_requests.insert(id, tx);
         let session = context.0.session.lock().await;
         let topic = session
+            .info
             .peer_id
             .clone()
-            .unwrap_or_else(|| session.handshake_topic.clone());
-        let key = &session.key;
+            .unwrap_or_else(|| session.info.handshake_topic.clone());
+        let key = &session.info.key;
         let message = SocketMessage {
             kind: SocketMessageKind::Pub,
             topic,
@@ -149,7 +151,7 @@ impl Socket {
         context: &mut SharedContext,
     ) -> eyre::Result<(Vec<Address>, u64)> {
         let session = context.0.session.lock().await;
-        if session.connected {
+        if session.info.connected {
             return Err(eyre!("Session already connected"));
         }
         if context
@@ -162,8 +164,8 @@ impl Socket {
         }
         let (tx, rx) = oneshot::channel();
         context.0.pending_requests.insert(id, tx);
-        let topic = session.handshake_topic.clone();
-        let key = &session.key;
+        let topic = session.info.handshake_topic.clone();
+        let key = &session.info.key;
         let session_req = session.request();
         let message = SocketMessage {
             kind: SocketMessageKind::Pub,
@@ -178,13 +180,19 @@ impl Socket {
         drop(session);
         self.send_socket_msg(context, id, message)?;
         let response = rx.await?;
+        let code = response["code"].as_i64();
+        if let Some(value) = code {
+            if -32000 == value {
+                return Err(eyre!("{}", serde_json::to_string(&response)?));
+            }
+        }
         let session_params = serde_json::from_value(response)?;
         let mut session = context.0.session.lock().await;
         session.apply(session_params);
         context.0.session_pending.store(false, Ordering::SeqCst);
         Ok((
-            session.accounts.clone(),
-            session.chain_id.unwrap_or_default(),
+            session.info.accounts.clone(),
+            session.info.chain_id.unwrap_or_default(),
         ))
     }
 

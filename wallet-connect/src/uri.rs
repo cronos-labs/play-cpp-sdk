@@ -18,6 +18,7 @@ pub struct Uri {
 
 const VERSION: u64 = 1;
 
+/// use as_url().as_str().to_string() for qrcode generation
 /// Prints the given QrCode object to the console.
 fn print_qr(qr: &QrCode) {
     let border: i32 = 4;
