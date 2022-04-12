@@ -1,3 +1,8 @@
+/// Crypto.com Pay basic support
+mod pay;
+
+use std::collections::HashMap;
+
 use anyhow::Result;
 use ethers_core::types::{BlockNumber, Chain};
 use ethers_etherscan::{
@@ -10,6 +15,43 @@ use serde::{Deserialize, Serialize};
 
 #[cxx::bridge(namespace = "com::crypto::game_sdk")]
 mod ffi {
+
+    /// optional arguments for creating a payment on Crypto.com Pay
+    /// leave empty values or 0 if not needed
+    pub struct OptionalArguments {
+        description: String,
+        metadata_keys: Vec<String>,
+        metadata_values: Vec<String>,
+        order_id: String,
+        return_url: String,
+        cancel_url: String,
+        sub_merchant_id: String,
+        onchain_allowed: bool,
+        expired_at: u64,
+    }
+
+    /// the subset of payment object from https://pay-docs.crypto.com
+    pub struct CryptoComPaymentResponse {
+        /// uuid of the payment object
+        pub id: String,
+        /// the base64 payload to be displayed as QR code that
+        /// can be scanned by the main app
+        pub main_app_qr_code: String,
+        /// if the on-chain payment is desired, this will
+        /// have the cryptocurrency address that can be displayed
+        /// as a QR code or put in a tx to be signed via WalletConnect
+        pub onchain_deposit_address: String,
+        /// the amount in base denomination
+        /// e.g. for USD, it's cents (1 USD == 100 cents)
+        pub base_amount: String,
+        /// the 3-letter currency code
+        pub currency: String,
+        /// expiration time in unix timestamp (10 minutes)
+        pub expiration: u64,
+        /// the status of the payment
+        pub status: String,
+    }
+
     /// Raw transaction details (extracted from Cronoscan/Etherscan or BlockScout API)
     #[derive(Debug, PartialEq, Eq)]
     pub struct RawTxDetail {
@@ -55,6 +97,7 @@ mod ffi {
     }
 
     extern "Rust" {
+        /// Etherscan API
         pub fn get_transaction_history_blocking(
             address: String,
             api_key: String,
@@ -71,6 +114,7 @@ mod ffi {
             option: QueryOption,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
+        /// BlockScout API
         pub fn get_tokens_blocking(
             blockscout_base_url: String,
             account_address: String,
@@ -81,11 +125,21 @@ mod ffi {
             contract_address: String,
             option: QueryOption,
         ) -> Result<Vec<RawTxDetail>>;
-
+        /// Crypto.com Pay API
+        pub fn create_payment(
+            secret_or_publishable_api_key: String,
+            base_unit_amount: String,
+            currency: String,
+            optional_args: OptionalArguments,
+        ) -> Result<CryptoComPaymentResponse>;
+        pub fn get_payment(
+            secret_or_publishable_api_key: String,
+            payment_id: String,
+        ) -> Result<CryptoComPaymentResponse>;
     }
 }
 
-use ffi::{QueryOption, RawTokenResult, RawTxDetail};
+use ffi::{CryptoComPaymentResponse, OptionalArguments, QueryOption, RawTokenResult, RawTxDetail};
 
 /// returns the transactions of a given address.
 /// The API key can be obtained from https://cronoscan.com
@@ -171,6 +225,84 @@ pub fn get_token_transfers_blocking(
         reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<RawBlockScoutTransfer>>()?;
 
     Ok(resp.result.iter().flat_map(TryInto::try_into).collect())
+}
+
+#[inline]
+fn str_or_none(arg: &str) -> Option<&str> {
+    if arg.is_empty() {
+        None
+    } else {
+        Some(arg)
+    }
+}
+
+/// it creates the payment object
+/// https://pay-docs.crypto.com/#api-reference-resources-payments-create-a-payment
+/// This API can be called using either your Secret Key or Publishable Key.
+/// The amount should be given in base units (e.g. for USD, the base unit is cents 1 USD == 100 cents).
+pub fn create_payment(
+    secret_or_publishable_api_key: String,
+    base_unit_amount: String,
+    currency: String,
+    optional_args: OptionalArguments,
+) -> Result<CryptoComPaymentResponse> {
+    let meta = if !optional_args.metadata_keys.is_empty()
+        && optional_args.metadata_keys.len() == optional_args.metadata_values.len()
+    {
+        Some(HashMap::from_iter(
+            optional_args
+                .metadata_keys
+                .iter()
+                .zip(optional_args.metadata_values.iter()),
+        ))
+    } else {
+        None
+    };
+    let args = pay::OptionalArgs {
+        metadata: meta,
+        description: str_or_none(&optional_args.description),
+        order_id: str_or_none(&optional_args.order_id),
+        return_url: str_or_none(&optional_args.return_url),
+        cancel_url: str_or_none(&optional_args.cancel_url),
+        sub_merchant_id: str_or_none(&optional_args.sub_merchant_id),
+        onchain_allowed: optional_args.onchain_allowed,
+        expired_at: if optional_args.expired_at == 0 {
+            None
+        } else {
+            Some(optional_args.expired_at)
+        },
+    };
+    pay::create_payment(
+        &secret_or_publishable_api_key,
+        &base_unit_amount,
+        &currency,
+        args,
+    )
+    .map(Into::into)
+}
+
+/// it returns the payment object by id
+/// https://pay-docs.crypto.com/#api-reference-resources-payments-get-payment-by-id
+/// This API can be called using either your Secret Key or Publishable Key.
+pub fn get_payment(
+    secret_or_publishable_api_key: String,
+    payment_id: String,
+) -> Result<CryptoComPaymentResponse> {
+    pay::get_payment(&secret_or_publishable_api_key, &payment_id).map(Into::into)
+}
+
+impl From<pay::CryptoPayObject> for CryptoComPaymentResponse {
+    fn from(obj: pay::CryptoPayObject) -> Self {
+        Self {
+            id: obj.id,
+            main_app_qr_code: obj.qr_code.unwrap_or_default(),
+            onchain_deposit_address: obj.deposit_address.unwrap_or_default(),
+            base_amount: serde_json::to_string(&obj.amount).unwrap_or_default(),
+            currency: obj.currency,
+            expiration: obj.expired_at.unwrap_or_default(),
+            status: obj.status,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]

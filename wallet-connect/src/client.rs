@@ -76,7 +76,7 @@ impl Client {
 
     /// get current session info, can be saved , and later, restored
     pub async fn get_session_info(&self) -> Result<SessionInfo, ConnectorError> {
-        Ok(self.connection.get_session_info().await?)
+        self.connection.get_session_info().await
     }
 
     /// create qrcode from this string

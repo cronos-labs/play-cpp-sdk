@@ -14,10 +14,9 @@ ethers-core = { git = "https://github.com/gakonst/ethers-rs", rev = "de275db56a1
 ethers-etherscan = { git = "https://github.com/gakonst/ethers-rs", rev = "de275db56a1be948cf4a543e1837f5add6f4750c" }
 reqwest =  { version = "0.11", features = ["json", "blocking"] }
 serde = "1"
+serde_json = { version = "1", features = ["arbitrary_precision"] }
 tokio = { version = "1", features = ["rt-multi-thread"] }
 
 [build-dependencies]
 cxx-build = "1"
 
-[dev-dependencies]
-serde_json = "1"
