@@ -361,9 +361,17 @@ impl From<&NormalTransaction> for RawTxDetail {
             _ => 0,
         };
         RawTxDetail {
-            hash: tx.hash.value().map(|x| x.to_string()).unwrap_or_default(),
-            to_address: tx.to.map(|x| x.to_string()).unwrap_or_default(),
-            from_address: tx.from.value().map(|x| x.to_string()).unwrap_or_default(),
+            hash: tx
+                .hash
+                .value()
+                .map(|x| format!("{:?}", x))
+                .unwrap_or_default(),
+            to_address: tx.to.map(|x| format!("{:?}", x)).unwrap_or_default(),
+            from_address: tx
+                .from
+                .value()
+                .map(|x| format!("{:?}", x))
+                .unwrap_or_default(),
             value: tx.value.to_string(),
             block_no,
             timestamp: tx.time_stamp.clone(),
@@ -383,13 +391,13 @@ impl From<&ERC20TokenTransferEvent> for RawTxDetail {
             _ => 0,
         };
         RawTxDetail {
-            hash: tx.hash.to_string(),
-            to_address: tx.to.map(|x| x.to_string()).unwrap_or_default(),
-            from_address: tx.from.to_string(),
+            hash: format!("{:?}", tx.hash),
+            to_address: tx.to.map(|x| format!("{:?}", x)).unwrap_or_default(),
+            from_address: format!("{:?}", tx.from),
             value: tx.value.to_string(),
             block_no,
             timestamp: tx.time_stamp.clone(),
-            contract_address: tx.contract_address.to_string(),
+            contract_address: format!("{:?}", tx.contract_address),
         }
     }
 }
@@ -401,13 +409,13 @@ impl From<&ERC721TokenTransferEvent> for RawTxDetail {
             _ => 0,
         };
         RawTxDetail {
-            hash: tx.hash.to_string(),
-            to_address: tx.to.map(|x| x.to_string()).unwrap_or_default(),
-            from_address: tx.from.to_string(),
+            hash: format!("{:?}", tx.hash),
+            to_address: tx.to.map(|x| format!("{:?}", x)).unwrap_or_default(),
+            from_address: format!("{:?}", tx.from),
             value: tx.token_id.to_string(),
             block_no,
             timestamp: tx.time_stamp.clone(),
-            contract_address: tx.contract_address.to_string(),
+            contract_address: format!("{:?}", tx.contract_address),
         }
     }
 }

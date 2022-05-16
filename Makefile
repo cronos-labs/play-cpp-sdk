@@ -3,7 +3,7 @@ build_cpp:
 	cd demo && make build
 
 cpp: build_cpp
-	cd demo && make run
+	cd demo && . ./.env && make run
 
 cppx86_64:
 	rustup target add x86_64-apple-darwin

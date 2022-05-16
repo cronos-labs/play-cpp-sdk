@@ -1,0 +1,34 @@
+name: Windows Build CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+  pull_request:
+    paths-ignore:
+      - README.md
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: git config --global core.symlinks true
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: prepare files in bash
+      shell: bash
+      run: |
+        # run command in git shell of windows
+        # or run in msys2 shell
+        cargo build --package extra-cpp-bindings --release
+        cd demo
+        python3 helper.py  --target_dir ../target/release
+
+    - name: compile
+      working-directory: .\demo
+      run: msbuild .\demo.vcxproj -t:rebuild  -property:Configuration=Release /p:Platform=x64
