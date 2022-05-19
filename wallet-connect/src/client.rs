@@ -7,23 +7,25 @@ pub mod session;
 /// The websocket connection management
 mod socket;
 
+use std::collections::HashMap;
 use std::str::FromStr;
-
-use crate::protocol::Metadata;
-use async_trait::async_trait;
-use ethers::prelude::{
-    Address, FromErr, JsonRpcClient, Middleware, Provider, ProviderError, Signature,
-};
-use eyre::Context;
-use serde::{de::DeserializeOwned, Serialize};
-use thiserror::Error;
-use tokio::sync::mpsc::UnboundedSender;
 
 use self::{
     core::{Connector, ConnectorError},
     options::Options,
     session::SessionInfo,
 };
+use crate::protocol::Metadata;
+use async_trait::async_trait;
+use ethers::prelude::{
+    Address, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider, ProviderError, Signature,
+};
+use ethers::types::transaction::eip2718::TypedTransaction;
+use eyre::eyre;
+use eyre::Context;
+use serde::{de::DeserializeOwned, Serialize};
+use thiserror::Error;
+use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Debug, Clone)]
 pub enum ClientChannelMessageType {
@@ -221,15 +223,49 @@ impl<M: Middleware> FromErr<M::Error> for WCError<M> {
 }
 
 #[async_trait]
-impl<M> Middleware for WCMiddleware<M>
-where
-    M: Middleware,
-{
-    type Error = WCError<M>;
-    type Provider = M::Provider;
-    type Inner = M;
+impl Middleware for WCMiddleware<Provider<Client>> {
+    type Error = WCError<Provider<Client>>;
+    type Provider = Client;
+    type Inner = Provider<Client>;
 
-    fn inner(&self) -> &M {
+    fn inner(&self) -> &Provider<Client> {
         &self.0
+    }
+
+    async fn sign_transaction(
+        &self,
+        tx: &TypedTransaction,
+        from: Address,
+    ) -> Result<Signature, Self::Error> {
+        let mut tx_obj = HashMap::new();
+        tx_obj.insert("from", format!("{:?}", from));
+        if let Some(to) = tx.to() {
+            let addr = match to {
+                NameOrAddress::Address(addr) => *addr,
+                NameOrAddress::Name(n) => self.resolve_name(n).await?,
+            };
+            tx_obj.insert("to", format!("{:?}", addr));
+        }
+        if let Some(data) = tx.data() {
+            tx_obj.insert("data", format!("{:?}", data));
+        } else {
+            tx_obj.insert("data", "".to_string());
+        }
+        if let Some(gas) = tx.gas() {
+            tx_obj.insert("gas", format!("{:?}", gas));
+        }
+        if let Some(gas_price) = tx.gas_price() {
+            tx_obj.insert("gasPrice", format!("{:?}", gas_price));
+        }
+        if let Some(value) = tx.value() {
+            tx_obj.insert("value", format!("{:?}", value));
+        }
+        if let Some(nonce) = tx.nonce() {
+            tx_obj.insert("nonce", format!("{:?}", nonce));
+        }
+        self.0
+            .request("eth_signTransaction", vec![tx_obj])
+            .await
+            .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
     }
 }
