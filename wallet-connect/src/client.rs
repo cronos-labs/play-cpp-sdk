@@ -248,6 +248,8 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         }
         if let Some(data) = tx.data() {
             tx_obj.insert("data", format!("{:?}", data));
+        } else {
+            tx_obj.insert("data", "".to_string());
         }
         if let Some(gas) = tx.gas() {
             tx_obj.insert("gas", format!("{:?}", gas));
@@ -262,7 +264,7 @@ impl Middleware for WCMiddleware<Provider<Client>> {
             tx_obj.insert("nonce", format!("{:?}", nonce));
         }
         self.0
-            .request("eth_signTransaction", vec![tx])
+            .request("eth_signTransaction", vec![tx_obj])
             .await
             .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
     }
