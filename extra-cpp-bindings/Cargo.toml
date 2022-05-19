@@ -17,6 +17,10 @@ serde = "1"
 serde_json = { version = "1", features = ["arbitrary_precision"] }
 thiserror = "1"
 tokio = { version = "1", features = ["rt-multi-thread"] }
+defi-wallet-connect= { path="../wallet-connect" }
+url = { version = "2", features = ["serde"] }
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "0a031417d8ec9e8696229eb5d172f7155ec3c79c" }
+hex="0.4.3"
 
 [build-dependencies]
 cxx-build = "1"

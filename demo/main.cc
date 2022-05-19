@@ -5,7 +5,10 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <thread>
 
 using namespace std;
@@ -15,6 +18,9 @@ using namespace nlohmann;
 
 void test_crypto_pay();
 void websocket_client_thread(std::atomic<bool> &stop_thread, String &id);
+
+String getEnv(String key);
+
 
 String getEnv(String key) {
   String ret;
@@ -31,8 +37,15 @@ const String PAY_API_KEY = getEnv("PAY_API_KEY");
 // Read websocket port in env
 const String PAY_WEBSOCKET_PORT = getEnv("PAY_WEBSOCKET_PORT");
 
+void test_wallet_connect();
+void test_blackscout_cronoscan();
 int main(int argc, char *argv[]) {
+  test_blackscout_cronoscan();
+  //test_wallet_connect();
+  return 0;
+}
 
+void test_blackscout_cronoscan() {
   // CronoScan examples
   if (CRONOSCAN_API_KEY != "") {
     Vec<RawTxDetail> txs = get_transaction_history_blocking(
@@ -112,7 +125,93 @@ int main(int argc, char *argv[]) {
   }
 
   test_crypto_pay();
-  return 0;
+  
+}
+
+// convert byte array to hex string
+String bytes_to_hex_string(Vec<uint8_t> bytes) {
+  stringstream ret;
+  ret << std::hex;
+  for (int i = 0; i < bytes.size(); i++) {
+    ret << std::setw(2) << std::setfill('0') << (int)bytes[i];
+  }
+  return ret.str();
+}
+
+String address_to_hex_string(::std::array<::std::uint8_t, 20> bytes) {
+  stringstream ret;
+  ret << std::hex;
+  for (int i = 0; i < 20; i++) {
+    ret << std::setw(2) << std::setfill('0') << (int)bytes[i];
+  }
+  return ret.str();
+}
+
+// if session already exists, restore session
+Box<WalletconnectClient> make_new_client(std::string filename) {
+
+  ifstream file(filename.c_str());
+  if (file.is_open()) {
+    std::string sessioninfostring((istreambuf_iterator<char>(file)),
+                                  istreambuf_iterator<char>());
+    Box<WalletconnectClient> client =
+        walletconnect_restore_client(sessioninfostring);
+    return client;
+  } else {
+    Box<WalletconnectClient> client = walletconnect_new_client(
+        "Defi WalletConnect example.", "http://localhost:8080/",
+        Vec<rust::String>(), "Defi WalletConnect Web3 Example");
+    cout << "qrcode= " << client->get_connection_string() << endl;
+
+    return client;
+  }
+}
+
+void test_wallet_connect() {
+  bool test_personal = false;
+  std::string filename = "sessioninfo.json";
+
+  try {
+    Box<WalletconnectClient> client = make_new_client(filename);
+    client->setup_callback();
+    String uri = client->print_uri();
+    WalletConnectEnsureSessionResult result = client->ensure_session_blocking();
+
+    String sessioninfo = client->save_client();
+    {
+      ofstream outfile(filename);
+      outfile.write(sessioninfo.c_str(), sessioninfo.size());
+    }
+
+    assert(result.addresses.size() > 0);
+
+    if (test_personal) {
+      /* message signing */
+      Vec<uint8_t> sig1 =
+          client->sign_personal_blocking("hello", result.addresses[0].address);
+      cout << "signature=" << bytes_to_hex_string(sig1).c_str() << std::endl;
+      cout << "signature length=" << sig1.size() << endl;
+    } else {
+      /* legacy eth sign */
+      WalletConnectTxLegacy info;
+      info.to =
+          String(std::string("0x") +
+                 address_to_hex_string(result.addresses[0].address).c_str());
+      info.gas = "21000";             // gas limit
+      info.gas_price = "10000";       // gas price
+      info.value = "100000000000000"; // 0.0001 eth
+      info.data = Vec<uint8_t>();
+      info.nonce = "1";
+      Vec<uint8_t> sig1 = client->sign_legacy_transaction_blocking(
+          info, result.addresses[0].address);
+
+      cout << "signature=" << bytes_to_hex_string(sig1).c_str() << endl;
+      cout << "signature length=" << sig1.size() << endl;
+    }
+
+  } catch (const cxxbridge1::Error e) {
+    cout << "wallet connect error=" << e.what() << std::endl;
+  }
 }
 
 // pay api examples

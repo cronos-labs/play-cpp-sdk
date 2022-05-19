@@ -24,5 +24,6 @@ webhook:
 
 cppx86_64:
 	rustup target add x86_64-apple-darwin
+	cargo build --package extra-cpp-bindings --release
 	cargo build --package extra-cpp-bindings --release --target x86_64-apple-darwin
-	cd demo && make x86_64_build
+	cd demo &&  git submodule update --init --recursive  && make x86_64_build

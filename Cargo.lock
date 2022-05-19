@@ -1111,13 +1111,17 @@ dependencies = [
  "anyhow",
  "cxx",
  "cxx-build",
+ "defi-wallet-connect",
+ "ethers",
  "ethers-core",
  "ethers-etherscan",
+ "hex",
  "reqwest",
  "serde",
  "serde_json",
  "thiserror",
  "tokio",
+ "url",
 ]
 
 [[package]]
