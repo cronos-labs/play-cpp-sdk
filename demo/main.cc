@@ -19,6 +19,8 @@ String getEnv(String key) {
 
 // Read CronoScan api key in env
 const String CRONOSCAN_API_KEY = getEnv("CRONOSCAN_API_KEY");
+// Read pay api key in env
+const String PAY_API_KEY = getEnv("PAY_API_KEY");
 
 int main(int argc, char *argv[]) {
 
@@ -54,7 +56,7 @@ int main(int argc, char *argv[]) {
       cout << ptr->contract_address << " " << endl;
     }
 
-    Vec<RawTxDetail> erc721_txs = get_erc721_transfer_blocking(
+    Vec<RawTxDetail> erc721_txs = get_erc721_transfer_history_blocking(
         "0x668f126b87936df4f9a98f18c44eb73868fffea0",
         "0xbd6b9a1A0477d64E99F660b7b7C205f4604E4Ff3", QueryOption::ByContract,
         CRONOSCAN_API_KEY);
@@ -80,6 +82,7 @@ int main(int argc, char *argv[]) {
     cout << ptr->balance << " ";
     cout << ptr->contract_address << " ";
     cout << ptr->decimals << " ";
+    cout << ptr->id << " ";
     cout << ptr->name << " ";
     cout << ptr->symbol << " ";
     cout << ptr->token_type << endl;
@@ -97,6 +100,18 @@ int main(int argc, char *argv[]) {
     cout << ptr->block_no << " ";
     cout << ptr->timestamp << " ";
     cout << ptr->contract_address << " " << endl;
+  }
+
+  // pay api examples
+  Vec<String> metadata_keys, metadata_values;
+  OptionalArguments opiton_args;
+  opiton_args.description = "Crypto.com Tee (Unisex)";
+
+  try {
+    create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
+  } catch (const rust::cxxbridge1::Error &e) {
+    // Use `Assertion failed`, the same as `assert` function
+    cout << "Assertion failed: " << e.what() << endl;
   }
 
   return 0;

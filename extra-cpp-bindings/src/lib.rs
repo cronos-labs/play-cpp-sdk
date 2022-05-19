@@ -1,3 +1,4 @@
+mod error;
 /// Crypto.com Pay basic support
 mod pay;
 
@@ -31,6 +32,7 @@ mod ffi {
     }
 
     /// the subset of payment object from https://pay-docs.crypto.com
+    #[derive(Debug)]
     pub struct CryptoComPaymentResponse {
         /// uuid of the payment object
         pub id: String,
@@ -81,6 +83,9 @@ mod ffi {
         pub contract_address: String,
         /// the number of decimal places
         pub decimals: String,
+        /// the token id
+        #[serde(default)]
+        pub id: String,
         /// the human-readable name of the token
         pub name: String,
         /// the ticker for the token
@@ -108,7 +113,7 @@ mod ffi {
             option: QueryOption,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
-        pub fn get_erc721_transfer_blocking(
+        pub fn get_erc721_transfer_history_blocking(
             address: String,
             contract_address: String,
             option: QueryOption,
@@ -171,7 +176,7 @@ pub fn get_erc20_transfer_history_blocking(
 /// (address can be empty if option is ByContract)
 /// default option is by address
 /// The API key can be obtained from https://cronoscan.com
-pub fn get_erc721_transfer_blocking(
+pub fn get_erc721_transfer_history_blocking(
     address: String,
     contract_address: String,
     option: QueryOption,
@@ -272,13 +277,13 @@ pub fn create_payment(
             Some(optional_args.expired_at)
         },
     };
-    pay::create_payment(
+    Ok(pay::create_payment(
         &secret_or_publishable_api_key,
         &base_unit_amount,
         &currency,
         args,
-    )
-    .map(Into::into)
+    )?
+    .into())
 }
 
 /// it returns the payment object by id
@@ -288,7 +293,7 @@ pub fn get_payment(
     secret_or_publishable_api_key: String,
     payment_id: String,
 ) -> Result<CryptoComPaymentResponse> {
-    pay::get_payment(&secret_or_publishable_api_key, &payment_id).map(Into::into)
+    Ok(pay::get_payment(&secret_or_publishable_api_key, &payment_id)?.into())
 }
 
 impl From<pay::CryptoPayObject> for CryptoComPaymentResponse {

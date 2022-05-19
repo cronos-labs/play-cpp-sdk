@@ -1,8 +1,29 @@
+use super::error::GameSdkError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum ResponseData {
+    Success(CryptoPayObject),
+    Error { error: CryptoPayErrorObject },
+}
+
+// workaround, enable dead_code to suppress the  warnnings
+#[allow(dead_code)]
+#[derive(Deserialize, Debug)]
+pub struct CryptoPayErrorObject {
+    #[serde(rename = "type")]
+    error_type: String,
+    code: String,
+    #[serde(default)]
+    error_message: String,
+    #[serde(default)]
+    param: String,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct CryptoPayObject {
+pub struct CryptoPayObject {
     /// uuid
     pub id: String,
     /// arbitrary_precision amounts
@@ -160,7 +181,7 @@ pub(crate) fn create_payment(
     base_unit_amount: &str,
     currency: &str,
     optional_args: OptionalArgs,
-) -> anyhow::Result<CryptoPayObject> {
+) -> Result<CryptoPayObject, GameSdkError> {
     const URL: &str = "https://pay.crypto.com/api/payments";
     let mut data = vec![("amount", base_unit_amount), ("currency", currency)];
     if let Some(description) = optional_args.description {
@@ -194,27 +215,35 @@ pub(crate) fn create_payment(
         data.push(("expired_at", &expired_str));
     }
     let client = reqwest::blocking::Client::new();
-    let resp = client
+    let resp: ResponseData = client
         .post(URL)
         .basic_auth(secret_or_publishable_api_key, Some(""))
         .form(&data)
         .send()?
-        .json::<CryptoPayObject>()?;
-    Ok(resp)
+        .json()?;
+
+    match resp {
+        ResponseData::Error { error: err } => Err(GameSdkError::CryptoPayError(err)),
+        ResponseData::Success(resp) => Ok(resp),
+    }
 }
 
 pub(crate) fn get_payment(
     secret_or_publishable_api_key: &str,
     payment_id: &str,
-) -> anyhow::Result<CryptoPayObject> {
+) -> Result<CryptoPayObject, GameSdkError> {
     let url: String = format!("https://pay.crypto.com/api/payments/{payment_id}");
     let client = reqwest::blocking::Client::new();
-    let resp = client
+    let resp: ResponseData = client
         .get(url)
         .basic_auth(secret_or_publishable_api_key, Some(""))
         .send()?
-        .json::<CryptoPayObject>()?;
-    Ok(resp)
+        .json()?;
+
+    match resp {
+        ResponseData::Error { error: err } => Err(GameSdkError::CryptoPayError(err)),
+        ResponseData::Success(resp) => Ok(resp),
+    }
 }
 
 #[cfg(test)]
