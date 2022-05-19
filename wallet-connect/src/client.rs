@@ -15,12 +15,17 @@ use self::{
     options::Options,
     session::SessionInfo,
 };
-use crate::protocol::Metadata;
+use crate::{hex, protocol::Metadata};
 use async_trait::async_trait;
-use ethers::prelude::{
-    Address, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider, ProviderError, Signature,
-};
 use ethers::types::transaction::eip2718::TypedTransaction;
+use ethers::{
+    prelude::{
+        Address, Bytes, Eip1559TransactionRequest, Eip2930TransactionRequest, FromErr,
+        JsonRpcClient, Middleware, NameOrAddress, Provider, ProviderError, Signature,
+        TransactionRequest,
+    },
+    utils::rlp,
+};
 use eyre::eyre;
 use eyre::Context;
 use serde::{de::DeserializeOwned, Serialize};
@@ -247,25 +252,51 @@ impl Middleware for WCMiddleware<Provider<Client>> {
             tx_obj.insert("to", format!("{:?}", addr));
         }
         if let Some(data) = tx.data() {
-            tx_obj.insert("data", format!("{:?}", data));
+            tx_obj.insert("data", format!("0x{}", hex::encode(data)));
         } else {
             tx_obj.insert("data", "".to_string());
         }
         if let Some(gas) = tx.gas() {
-            tx_obj.insert("gas", format!("{:?}", gas));
+            tx_obj.insert("gas", format!("0x{:x}", gas));
         }
         if let Some(gas_price) = tx.gas_price() {
-            tx_obj.insert("gasPrice", format!("{:?}", gas_price));
+            tx_obj.insert("gasPrice", format!("0x{:x}", gas_price));
         }
         if let Some(value) = tx.value() {
-            tx_obj.insert("value", format!("{:?}", value));
+            tx_obj.insert("value", format!("0x{:x}", value));
         }
         if let Some(nonce) = tx.nonce() {
-            tx_obj.insert("nonce", format!("{:?}", nonce));
+            tx_obj.insert("nonce", format!("0x{:x}", nonce));
         }
-        self.0
+        // TODO: put those error cases to WCError instead of wrapping in eyre
+        let tx_bytes: Bytes = self
+            .0
             .request("eth_signTransaction", vec![tx_obj])
             .await
-            .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
+            .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))?;
+        let tx_rlp = rlp::Rlp::new(tx_bytes.as_ref());
+        // TODO: check that the decoded request matches the typed transaction content here?
+        let signature = match tx {
+            TypedTransaction::Eip1559(_) => {
+                let decoded_request = Eip1559TransactionRequest::decode_signed_rlp(&tx_rlp);
+                decoded_request
+                    .map(|x| x.1)
+                    .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
+            }
+            TypedTransaction::Eip2930(_) => {
+                let decoded_request = Eip2930TransactionRequest::decode_signed_rlp(&tx_rlp);
+                decoded_request
+                    .map(|x| x.1)
+                    .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
+            }
+            TypedTransaction::Legacy(_) => {
+                let decoded_request = TransactionRequest::decode_signed_rlp(&tx_rlp);
+                decoded_request
+                    .map(|x| x.1)
+                    .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
+            }
+        }?;
+
+        Ok(signature)
     }
 }
