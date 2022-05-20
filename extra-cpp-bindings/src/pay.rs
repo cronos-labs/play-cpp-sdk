@@ -167,7 +167,7 @@ pub(crate) fn create_payment(
 
     let metadata = optional_args.get_metadata();
     if !metadata.is_empty() {
-        data.push(("metadata", &metadata));
+        data.push(("metadata", metadata));
     }
 
     let order_id = optional_args.get_order_id();
@@ -197,7 +197,7 @@ pub(crate) fn create_payment(
     }
 
     let expired_at = optional_args.get_expired_at().to_string();
-    if expired_at != "0".to_string() {
+    if expired_at != "0" {
         data.push(("expired_at", &expired_at));
     }
 
