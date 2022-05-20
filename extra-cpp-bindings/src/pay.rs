@@ -17,14 +17,12 @@ pub struct CryptoPayErrorObject {
     #[serde(rename = "type")]
     error_type: String,
     code: String,
-    #[serde(default)]
-    error_message: String,
-    #[serde(default)]
-    param: String,
+    error_message: Option<String>,
+    param: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[allow(clippy::large-enum-variant)]
+#[allow(clippy::large_enum_variant)]
 pub struct CryptoPayObject {
     /// uuid
     pub id: String,
