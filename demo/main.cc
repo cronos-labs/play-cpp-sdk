@@ -108,7 +108,15 @@ int main(int argc, char *argv[]) {
     opiton_args.description = "Crypto.com Tee (Unisex)";
     CryptoComPaymentResponse resp =
         create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
+    cout << resp.id << " ";
+    cout << resp.main_app_qr_code << " ";
+    cout << resp.onchain_deposit_address << " ";
+    cout << resp.base_amount << " ";
+    cout << resp.currency << " ";
+    cout << resp.expiration << " ";
+    cout << resp.status << endl;
 
+    resp = get_payment(PAY_API_KEY, resp.id);
     cout << resp.id << " ";
     cout << resp.main_app_qr_code << " ";
     cout << resp.onchain_deposit_address << " ";
