@@ -8,7 +8,7 @@ namespace com {
 namespace crypto {
 namespace game_sdk {
 
-OptionalArguments::OptionalArguments() : onchain_allowed{true}, expired_at{600} {}
+OptionalArguments::OptionalArguments() : onchain_allowed{true}, expired_at{0} {}
 
 Str OptionalArguments::get_description() const { return description; }
 Str OptionalArguments::get_metadata() const { return metadata; }

@@ -29,8 +29,8 @@ struct OptionalArguments {
   /// Whether to allow the customer to pay by Other Cryptocurrency Wallets for this payment. If
   /// not specified, the setting in merchant account will be used.
   bool onchain_allowed;
-  /// Time at which the payment expires. Measured in seconds since the Unix epoch. If not
-  /// specified, it will expire after the default period(10 minutes).
+  /// Time at which the payment expires. Measured in seconds since the Unix epoch. If 0, it
+  /// will expire after the default period(10 minutes).
   uint64_t expired_at;
 
   OptionalArguments();

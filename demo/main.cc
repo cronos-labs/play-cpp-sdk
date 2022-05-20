@@ -106,8 +106,8 @@ int main(int argc, char *argv[]) {
   try {
     OptionalArguments opiton_args;
     opiton_args.description = "Crypto.com Tee (Unisex)";
-    CryptoComPaymentResponse resp = create_payment(PAY_API_KEY, "2500", "USD",
-                                           opiton_args);
+    CryptoComPaymentResponse resp =
+        create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
 
     cout << resp.id << " ";
     cout << resp.main_app_qr_code << " ";

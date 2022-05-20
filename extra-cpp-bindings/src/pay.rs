@@ -197,7 +197,9 @@ pub(crate) fn create_payment(
     }
 
     let expired_at = optional_args.get_expired_at().to_string();
-    data.push(("expired_at", &expired_at));
+    if expired_at != "0".to_string() {
+        data.push(("expired_at", &expired_at));
+    }
 
     let client = reqwest::blocking::Client::new();
     let resp: ResponseData = client
