@@ -20,9 +20,8 @@ use async_trait::async_trait;
 use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers::{
     prelude::{
-        Address, Bytes, Eip1559TransactionRequest, Eip2930TransactionRequest, FromErr,
-        JsonRpcClient, Middleware, NameOrAddress, Provider, ProviderError, Signature,
-        TransactionRequest,
+        Address, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider, ProviderError,
+        Signature, TransactionRequest,
     },
     utils::rlp,
 };
@@ -242,6 +241,7 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         tx: &TypedTransaction,
         from: Address,
     ) -> Result<Signature, Self::Error> {
+        println!("sign_transaction");
         let mut tx_obj = HashMap::new();
         tx_obj.insert("from", format!("{:?}", from));
         if let Some(to) = tx.to() {
@@ -274,29 +274,31 @@ impl Middleware for WCMiddleware<Provider<Client>> {
             .request("eth_signTransaction", vec![tx_obj])
             .await
             .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))?;
-        let tx_rlp = rlp::Rlp::new(tx_bytes.as_ref());
-        // TODO: check that the decoded request matches the typed transaction content here?
-        let signature = match tx {
-            TypedTransaction::Eip1559(_) => {
-                let decoded_request = Eip1559TransactionRequest::decode_signed_rlp(&tx_rlp);
-                decoded_request
-                    .map(|x| x.1)
-                    .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
-            }
-            TypedTransaction::Eip2930(_) => {
-                let decoded_request = Eip2930TransactionRequest::decode_signed_rlp(&tx_rlp);
-                decoded_request
-                    .map(|x| x.1)
-                    .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
-            }
-            TypedTransaction::Legacy(_) => {
-                let decoded_request = TransactionRequest::decode_signed_rlp(&tx_rlp);
-                decoded_request
-                    .map(|x| x.1)
-                    .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
-            }
-        }?;
 
-        Ok(signature)
+        let tx_rlp = rlp::Rlp::new(tx_bytes.as_ref());
+
+        if tx_rlp.as_raw().is_empty() {
+            return Err(WCError::ClientError(ClientError::Eyre(eyre!(
+                "failed to decode transaction , empty rlp"
+            ))));
+        }
+
+        let first_byte = tx_rlp.as_raw()[0];
+        // TODO: check that the decoded request matches the typed transaction content here? or a new `sign_transaction` function that returns both request+signature?
+        if first_byte <= 0x7f {
+            let decoded_request = TypedTransaction::decode_signed(&tx_rlp);
+            decoded_request
+                .map(|x| x.1)
+                .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
+        } else if (0xc0..=0xfe).contains(&first_byte) {
+            let decoded_request = TransactionRequest::decode_signed_rlp(&tx_rlp);
+            decoded_request
+                .map(|x| x.1)
+                .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))
+        } else {
+            Err(WCError::ClientError(ClientError::Eyre(eyre!(
+                "failed to decode transaction"
+            ))))
+        }
     }
 }
