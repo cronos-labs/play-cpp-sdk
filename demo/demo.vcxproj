@@ -145,6 +145,7 @@
   <ItemGroup>
     <Library Include="lib\extra_cpp_bindings.dll.lib" />
     <Library Include="lib\libcxxbridge1.a" />
+    <ClCompile Include="include\pay.cc" />
     <ClCompile Include="include\extra-cpp-bindings\src\lib.rs.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
