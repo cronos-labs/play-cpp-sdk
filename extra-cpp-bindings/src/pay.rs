@@ -6,7 +6,7 @@ use std::collections::HashMap;
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub enum ResponseData {
-    Success(CryptoPayObject),
+    Success(Box<CryptoPayObject>),
     Error { error: CryptoPayErrorObject },
 }
 
@@ -22,7 +22,6 @@ pub struct CryptoPayErrorObject {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[allow(clippy::large_enum_variant)]
 pub struct CryptoPayObject {
     /// uuid
     pub id: String,
@@ -210,7 +209,7 @@ pub(crate) fn create_payment(
 
     match resp {
         ResponseData::Error { error: err } => Err(GameSdkError::CryptoPayError(err)),
-        ResponseData::Success(resp) => Ok(resp),
+        ResponseData::Success(resp) => Ok(*resp),
     }
 }
 
@@ -228,7 +227,7 @@ pub(crate) fn get_payment(
 
     match resp {
         ResponseData::Error { error: err } => Err(GameSdkError::CryptoPayError(err)),
-        ResponseData::Success(resp) => Ok(resp),
+        ResponseData::Success(resp) => Ok(*resp),
     }
 }
 
