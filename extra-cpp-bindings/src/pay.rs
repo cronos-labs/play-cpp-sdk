@@ -1,4 +1,5 @@
 use super::error::GameSdkError;
+use super::ffi::OptionalArguments;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -150,70 +151,54 @@ pub(crate) struct PayLaterInstallment {
     currency: String,
 }
 
-pub(crate) struct OptionalArgs<'a> {
-    pub description: Option<&'a str>,
-    pub metadata: Option<HashMap<&'a String, &'a String>>,
-    pub order_id: Option<&'a str>,
-    pub return_url: Option<&'a str>,
-    pub cancel_url: Option<&'a str>,
-    pub sub_merchant_id: Option<&'a str>,
-    pub onchain_allowed: bool,
-    pub expired_at: Option<u64>,
-}
-
-impl<'a> Default for OptionalArgs<'a> {
-    fn default() -> Self {
-        Self {
-            description: None,
-            metadata: None,
-            order_id: None,
-            return_url: None,
-            cancel_url: None,
-            sub_merchant_id: None,
-            onchain_allowed: true,
-            expired_at: None,
-        }
-    }
-}
-
 pub(crate) fn create_payment(
     secret_or_publishable_api_key: &str,
     base_unit_amount: &str,
     currency: &str,
-    optional_args: OptionalArgs,
+    optional_args: &OptionalArguments,
 ) -> Result<CryptoPayObject, GameSdkError> {
     const URL: &str = "https://pay.crypto.com/api/payments";
     let mut data = vec![("amount", base_unit_amount), ("currency", currency)];
-    if let Some(description) = optional_args.description {
+
+    let description = optional_args.get_description();
+    if !description.is_empty() {
         data.push(("description", description));
     }
-    let metadata_str;
-    if let Some(metadata) = optional_args.metadata {
-        metadata_str = serde_json::to_string(&metadata)?;
-        data.push(("metadata", &metadata_str));
+
+    let metadata = optional_args.get_metadata();
+    if !metadata.is_empty() {
+        data.push(("metadata", &metadata));
     }
-    if let Some(order_id) = optional_args.order_id {
+
+    let order_id = optional_args.get_order_id();
+    if !order_id.is_empty() {
         data.push(("order_id", order_id));
     }
-    if let Some(return_url) = optional_args.return_url {
+
+    let return_url = optional_args.get_return_url();
+    if !return_url.is_empty() {
         data.push(("return_url", return_url));
     }
-    if let Some(cancel_url) = optional_args.cancel_url {
+
+    let cancel_url = optional_args.get_cancel_url();
+    if !cancel_url.is_empty() {
         data.push(("cancel_url", cancel_url));
     }
-    if let Some(sub_merchant_id) = optional_args.sub_merchant_id {
+
+    let sub_merchant_id = optional_args.get_sub_merchant_id();
+    if !sub_merchant_id.is_empty() {
         data.push(("sub_merchant_id", sub_merchant_id));
     }
-    if optional_args.onchain_allowed {
+
+    if optional_args.get_onchain_allowed() {
         data.push(("onchain_allowed", "true"));
     } else {
         data.push(("onchain_allowed", "false"));
     }
-    let expired_str;
-    if let Some(expired_at) = optional_args.expired_at {
-        expired_str = expired_at.to_string();
-        data.push(("expired_at", &expired_str));
-    }
+
+    let expired_at = optional_args.get_expired_at().to_string();
+    data.push(("expired_at", &expired_at));
+
     let client = reqwest::blocking::Client::new();
     let resp: ResponseData = client
         .post(URL)

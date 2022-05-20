@@ -103,12 +103,20 @@ int main(int argc, char *argv[]) {
   }
 
   // pay api examples
-  Vec<String> metadata_keys, metadata_values;
-  OptionalArguments opiton_args;
-  opiton_args.description = "Crypto.com Tee (Unisex)";
-
   try {
-    create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
+    OptionalArguments opiton_args;
+    opiton_args.description = "Crypto.com Tee (Unisex)";
+    CryptoComPaymentResponse resp = create_payment(PAY_API_KEY, "2500", "USD",
+                                           opiton_args);
+
+    cout << resp.id << " ";
+    cout << resp.main_app_qr_code << " ";
+    cout << resp.onchain_deposit_address << " ";
+    cout << resp.base_amount << " ";
+    cout << resp.currency << " ";
+    cout << resp.expiration << " ";
+    cout << resp.status << endl;
+
   } catch (const rust::cxxbridge1::Error &e) {
     // Use `Assertion failed`, the same as `assert` function
     cout << "Assertion failed: " << e.what() << endl;

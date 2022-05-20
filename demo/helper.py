@@ -3,14 +3,24 @@ import fnmatch
 import os
 import shutil
 
-SOURCES = []
+SOURCES = [
+    "../extra-cpp-bindings/include/pay.h",
+    "../extra-cpp-bindings/src/pay.cc",
+]
 INCLUDE_PATH = "./include"
 LIB_PATH = "./lib"
 
 INITIAL_INCLUDES = [
     '#include "extra-cpp-bindings/src/lib.rs.h"',
+    '#include "extra-cpp-bindings/include/pay.h"',
 ]
-FINAL_INCLUDES = ['#include "lib.rs.h"']
+FINAL_INCLUDES = ['#include "lib.rs.h"', '#include "../../pay.h"']
+
+INITIAL_SOURCES_INCLUDES = [
+    '#include "extra-cpp-bindings/include/pay.h"',
+]
+FINAL_SOURCES_INCLUDES = ['#include "pay.h"']
+
 TARGET_DIR = "../target/release"
 
 OUT_DIR = "../target/cxxbridge"
@@ -62,9 +72,32 @@ def copy_lib_files(output_path):
 
 
 # copy `SOURCES` to `output_path`
-def copy_example_files(output_path):
+def copy_sources_files(output_path):
     for f in SOURCES:
         shutil.copy(f, output_path)
+    files = []
+    files.extend(collect_files("*.h", output_path, recursive=False))
+    files.extend(collect_files("*.cc", output_path, recursive=False))
+
+    def has_include_string(s):
+        for include in INITIAL_SOURCES_INCLUDES:
+            if include in s:
+                return True
+        return False
+
+    # replace string
+    for filename in files:
+        # Safely read the input filename using 'with'
+        with open(filename) as f:
+            s = f.read()
+            if not has_include_string(s):
+                continue
+
+        # Safely write the changed content, if found in the file
+        with open(filename, "w") as f:
+            for i, include in enumerate(INITIAL_SOURCES_INCLUDES):
+                s = s.replace(include, FINAL_SOURCES_INCLUDES[i])
+            f.write(s)
 
 
 # collect files with `pattern` in `search path`, and return the matched files
@@ -98,3 +131,4 @@ if __name__ == "__main__":
     print("TARGET_DIR= ", TARGET_DIR)
     copy_cxxbridge(INCLUDE_PATH)
     copy_lib_files(LIB_PATH)
+    copy_sources_files(INCLUDE_PATH)
