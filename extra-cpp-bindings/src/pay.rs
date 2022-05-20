@@ -24,6 +24,7 @@ pub struct CryptoPayErrorObject {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[allow(clippy::large-enum-variant)]
 pub struct CryptoPayObject {
     /// uuid
     pub id: String,
