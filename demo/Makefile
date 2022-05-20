@@ -22,10 +22,10 @@ static:
 	g++ -o cppexamplestatic main.cc lib/libextra_cpp_bindings.a -std=c++11 $(FLAGS)
 
 dynamic:
-	g++ -o cppexample main.cc include/*.cc include/extra-cpp-bindings/src/*.cc lib/libcxxbridge1.a -lextra_cpp_bindings -std=c++14 $(FLAGS)  -L lib
+	g++ -o cppexample main.cc include/*.cc include/extra-cpp-bindings/src/*.cc lib/libcxxbridge1.a -lextra_cpp_bindings -std=c++11 $(FLAGS)  -L lib
 
 x86_64_build: prepare_x86_64
-	arch -x86_64 g++ -o cppexample main.cc lib/libextra_cpp_bindings.a -std=c++14 $(FLAGS)
+	arch -x86_64 g++ -o cppexample main.cc lib/libextra_cpp_bindings.a -std=c++11 $(FLAGS)
 
 run_static:
 	./cppexamplestatic
