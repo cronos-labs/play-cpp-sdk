@@ -45,8 +45,7 @@ function http_request_listener(request, response) {
             response.writeHead(200, { 'Content-Type': 'text/html' });
             response.end('post received');
             console.log("Valid webhook request");
-            let data = JSON.parse(body);
-            eventEmitter.emit(data['object_type'], data['id'], data['type'], data['created']);
+            eventEmitter.emit('event', body);
           } else {
             eventEmitter.emit('error', `Expired webhook request: ${timestamp_difference} > ${timestamp_tolerance}`);
           }
@@ -67,16 +66,20 @@ function http_request_listener(request, response) {
 wss.on('connection', function wss_connection_listener(ws, req) {
   console.log(`Client ws://${req.socket.remoteAddress}:${req.socket.remotePort} connected`);
 
-  eventEmitter.on('event', function status(id, type, created) {
-    ws.send(`${id}, ${type}, ${created}`);
+  eventEmitter.on('event', function status(data) {
+    ws.send(`${data}`);
   });
 
   eventEmitter.on('error', function status(msg) {
     console.error(msg);
     ws.send(`error: ${msg}`);
   });
-}
-);
+
+  ws.on('message', function message(data) {
+    console.log('received: %s', data);
+  });
+
+});
 
 server.listen(webhook_port, host);
 console.log(`Listening at http://${host}:${webhook_port}`);

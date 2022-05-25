@@ -1,5 +1,8 @@
+#include "include/easywsclient/easywsclient.hpp"
 #include "include/extra-cpp-bindings/src/lib.rs.h"
+#include "include/json/single_include/nlohmann/json.hpp"
 #include "include/rust/cxx.h"
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -8,6 +11,11 @@
 using namespace std;
 using namespace com::crypto::game_sdk;
 using namespace rust;
+using namespace nlohmann;
+
+void test_crypto_pay();
+void websocket_client_thread(std::atomic<bool> &stop_thread, String &id);
+void handle_webhook_event(std::string msg);
 
 String getEnv(String key) {
   String ret;
@@ -102,33 +110,62 @@ int main(int argc, char *argv[]) {
     cout << ptr->contract_address << " " << endl;
   }
 
-  // pay api examples
-  try {
-    OptionalArguments opiton_args;
-    opiton_args.description = "Crypto.com Tee (Unisex)";
-    CryptoComPaymentResponse resp =
-        create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
-    cout << resp.id << " ";
-    cout << resp.main_app_qr_code << " ";
-    cout << resp.onchain_deposit_address << " ";
-    cout << resp.base_amount << " ";
-    cout << resp.currency << " ";
-    cout << resp.expiration << " ";
-    cout << resp.status << endl;
-
-    resp = get_payment(PAY_API_KEY, resp.id);
-    cout << resp.id << " ";
-    cout << resp.main_app_qr_code << " ";
-    cout << resp.onchain_deposit_address << " ";
-    cout << resp.base_amount << " ";
-    cout << resp.currency << " ";
-    cout << resp.expiration << " ";
-    cout << resp.status << endl;
-
-  } catch (const rust::cxxbridge1::Error &e) {
-    // Use `Assertion failed`, the same as `assert` function
-    cout << "Assertion failed: " << e.what() << endl;
-  }
-
+  test_crypto_pay();
   return 0;
+}
+
+void test_crypto_pay() {
+  // pay api examples
+
+  std::atomic<bool> stop_thread_1{false};
+  String id = "";
+  std::thread t1(websocket_client_thread, std::ref(stop_thread_1),
+                 std::ref(id));
+
+  OptionalArguments opiton_args;
+  opiton_args.description = "Crypto.com Tee (Unisex)";
+  CryptoComPaymentResponse resp =
+      create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
+  cout << "create payment:" << resp.id << " ";
+  cout << resp.main_app_qr_code << " ";
+  cout << resp.onchain_deposit_address << " ";
+  cout << resp.base_amount << " ";
+  cout << resp.currency << " ";
+  cout << resp.expiration << " ";
+  cout << resp.status << endl;
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+  stop_thread_1 = true; // stop websocket thread after timeout
+  id = resp.id;         // pass the id to the thread
+  t1.join();            // pauses until t1 finishes
+}
+
+// A simple websocket client thread
+void websocket_client_thread(std::atomic<bool> &stop_thread, String &id) {
+  using easywsclient::WebSocket;
+  WebSocket::pointer ws = WebSocket::from_url("ws://127.0.0.1:4567");
+  assert(ws);
+  while (true) {
+    ws->poll();
+    ws->dispatch(handle_webhook_event);
+    if (stop_thread) {
+      return;
+    }
+  }
+  delete ws;
+}
+
+void handle_webhook_event(std::string msg) {
+  // cout << "Receive webhook event: " << msg << endl;
+  auto message = json::parse(msg);
+  assert(message.at("type") == "payment.created");
+  String id = message.at("data").at("object").at("id");
+  CryptoComPaymentResponse resp = get_payment(PAY_API_KEY, id);
+  cout << "get payment: " << resp.id << " ";
+  cout << resp.main_app_qr_code << " ";
+  cout << resp.onchain_deposit_address << " ";
+  cout << resp.base_amount << " ";
+  cout << resp.currency << " ";
+  cout << resp.expiration << " ";
+  cout << resp.status << endl;
 }
