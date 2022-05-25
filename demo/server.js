@@ -1,7 +1,10 @@
 const crypto = require('crypto');
+const ws = require('ws');
 const http = require('http');
+const EventEmitter = require("events");
+
 // The local test port exposed by ngrok
-const port = process.env.PAY_NGROK_PORT;
+const webhook_port = process.env.PAY_WEBHOOK_PORT;
 const host = '127.0.0.1';
 // You can subscribe to the events by going to your Merchant Dashboard and add a new webhook
 // subscription. Retrieve your endpoint’s Signature Secret from your Merchant Dashboard's
@@ -10,7 +13,14 @@ const signature_secret = process.env.PAY_WEBHOOK_SIGNATURE_SECRET;
 // tolerance between the current timestamp and the received timestamp in seconds
 const timestamp_tolerance = 2;
 
-const server = http.createServer(function (request, response) {
+// create a http server
+const server = http.createServer(http_request_listener);
+// create a ws server by sharing a http server
+const wss = new ws.WebSocketServer({ server });
+// create an event emitter
+const eventEmitter = new EventEmitter();
+
+function http_request_listener(request, response) {
   let pay_signature = request.headers['pay-signature'];
   if (pay_signature != undefined) {
     console.log(request.headers);
@@ -35,20 +45,38 @@ const server = http.createServer(function (request, response) {
             response.writeHead(200, { 'Content-Type': 'text/html' });
             response.end('post received');
             console.log("Valid webhook request");
+            let data = JSON.parse(body);
+            eventEmitter.emit(data['object_type'], data['id'], data['type'], data['created']);
           } else {
-            console.error(`Expired webhook request: ${timestamp_difference} > ${timestamp_tolerance}`);
+            eventEmitter.emit('error', `Expired webhook request: ${timestamp_difference} > ${timestamp_tolerance}`);
           }
         } else {
-          console.error("Invalid signture");
+          eventEmitter.emit('error', 'Invalid Signture');
         }
-        process.exit();
+        // process.exit();
       });
     };
   } else {
-    console.error("Invalid webhook request: no pay-signature in header");
-    process.exit();
+    eventEmitter.emit('error', 'Invalid webhook request: no pay-signature in header');
+    // process.exit();
   }
-});
+}
 
-server.listen(port, host);
-console.log(`Listening at http://${host}:${port}`);
+
+// handle the websocket client connection (e.g. from c++ client)
+wss.on('connection', function wss_connection_listener(ws, req) {
+  console.log(`Client ws://${req.socket.remoteAddress}:${req.socket.remotePort} connected`);
+
+  eventEmitter.on('event', function status(id, type, created) {
+    ws.send(`${id}, ${type}, ${created}`);
+  });
+
+  eventEmitter.on('error', function status(msg) {
+    console.error(msg);
+    ws.send(`error: ${msg}`);
+  });
+}
+);
+
+server.listen(webhook_port, host);
+console.log(`Listening at http://${host}:${webhook_port}`);
