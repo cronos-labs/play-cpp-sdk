@@ -114,8 +114,10 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+// pay api examples
 void test_crypto_pay() {
-  // pay api examples
+  if (PAY_API_KEY == "" or PAY_WEBHOOK_SIGNATURE_SECRET == "")
+    return;
 
   std::atomic<bool> stop_thread_1{false};
   String id = "";
