@@ -1,9 +1,12 @@
 build_cpp:
 	cargo build --package extra-cpp-bindings --release
-	cd demo && make build
+	cd demo && git submodule update --init --recursive && make build
 
 cpp: build_cpp
 	cd demo && . ./.env && make run
+
+cpp_webhook_server:
+	cd demo && . ./.env && npm install && node server.js
 
 cppx86_64:
 	rustup target add x86_64-apple-darwin
