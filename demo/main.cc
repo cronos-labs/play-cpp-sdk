@@ -29,6 +29,8 @@ String getEnv(String key) {
 const String CRONOSCAN_API_KEY = getEnv("CRONOSCAN_API_KEY");
 // Read pay api key in env
 const String PAY_API_KEY = getEnv("PAY_API_KEY");
+// Read websocket port in env
+const String PAY_WEBSOCKET_PORT = getEnv("PAY_WEBSOCKET_PORT");
 
 int main(int argc, char *argv[]) {
 
@@ -116,7 +118,7 @@ int main(int argc, char *argv[]) {
 
 // pay api examples
 void test_crypto_pay() {
-  if (PAY_API_KEY == "" or PAY_WEBHOOK_SIGNATURE_SECRET == "")
+  if (PAY_API_KEY == "")
     return;
 
   std::atomic<bool> stop_thread_1{false};
@@ -145,7 +147,10 @@ void test_crypto_pay() {
 // A simple websocket client thread
 void websocket_client_thread(std::atomic<bool> &stop_thread, String &id) {
   using easywsclient::WebSocket;
-  WebSocket::pointer ws = WebSocket::from_url("ws://127.0.0.1:4567");
+  String r_port = PAY_WEBSOCKET_PORT;
+  std::string port = r_port.c_str();
+  WebSocket::pointer ws =
+      WebSocket::from_url("ws://127.0.0.1:" + port);
   assert(ws);
   while (true) {
     ws->poll();
