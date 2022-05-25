@@ -147,6 +147,8 @@
     <Library Include="lib\libcxxbridge1.a" />
     <ClCompile Include="include\pay.cc" />
     <ClCompile Include="include\extra-cpp-bindings\src\lib.rs.cc" />
+    <ClCompile Include="include\easywsclient\easywsclient.cpp" />
+    <ClCompile Include="include\json\single_include\nlohmann\json.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
