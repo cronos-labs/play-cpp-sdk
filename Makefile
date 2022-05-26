@@ -9,11 +9,13 @@ cpp: build_cpp
 # 2. Copy the `Publishable Key` or `Secret Key` as `PAY_API_KEY`'s value in `.env`
 	cd demo && . ./.env && make run
 
-cpp_webhook_server:
+webhook:
 # 1. Install ngrok for crypto pay api testing: https://ngrok.com/download
 #
 # 2. Run `ngrok http 4567` in a seperate terminal first, then add the `payload url` into
 # https://merchant.crypto.com/developers/webhooks
+#
+# 3. Repeat the last step, if you want to add more webhooks
 #
 # 3. Find the `SIGNATURE SECRET` in merchant dashboard, and copy it as
 # `PAY_WEBHOOK_SIGNATURE_SECRET`'s value in `.env`

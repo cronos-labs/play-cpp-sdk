@@ -29,8 +29,8 @@ jobs:
         # or run in msys2 shell
         cargo build --package extra-cpp-bindings --release
         cd demo
-        python3 helper.py  --target_dir ../target/release
+        python3 helper.py --target_dir ../target/release
 
     - name: compile
       working-directory: .\demo
-      run: msbuild .\demo.vcxproj -t:rebuild  -property:Configuration=Release /p:Platform=x64
+      run: msbuild .\demo.vcxproj -t:rebuild -property:Configuration=Release /p:Platform=x64
