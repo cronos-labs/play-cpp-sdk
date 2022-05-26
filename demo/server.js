@@ -10,9 +10,7 @@ const host = '127.0.0.1';
 // subscription. Retrieve your endpoint’s Signature Secret from your Merchant Dashboard's
 // Webhooks settings
 // Webhook `SIGNATURE SECRET` of one of the `PAYLOAD URL`s
-const SIGNATURE_SECRET_1 = process.env.PAY_WEBHOOK_SIGNATURE_SECRET_1;
-// Webhook `SIGNATURE SECRET` of one of the `PAYLOAD URL`s
-const SIGNATURE_SECRET_2 = process.env.PAY_WEBHOOK_SIGNATURE_SECRET_2;
+const SIGNATURE_SECRET = process.env.PAY_WEBHOOK_SIGNATURE_SECRET;
 // tolerance between the current timestamp and the received timestamp in seconds
 const timestamp_tolerance = 2;
 
@@ -58,13 +56,7 @@ function http_request_listener(request, response) {
         console.log(body);
         // Compute an HMAC with the SHA256 hash function. Use the endpoint’s Signature Secret
         // as the key, and use the aforesaid concatenated string as the message.
-        const hash_1 = crypto.createHmac('sha256', SIGNATURE_SECRET_1)
-          .update(`${timestamp}.${body}`)
-          .digest();
-
-        // Compute an HMAC with the SHA256 hash function. Use the endpoint’s Signature Secret
-        // as the key, and use the aforesaid concatenated string as the message.
-        const hash_2 = crypto.createHmac('sha256', SIGNATURE_SECRET_2)
+        const hash = crypto.createHmac('sha256', SIGNATURE_SECRET)
           .update(`${timestamp}.${body}`)
           .digest();
 
@@ -74,7 +66,7 @@ function http_request_listener(request, response) {
 
         // To protect against timing attacks, use a constant-time string comparison to compare
         // the expected signature to each of the received signatures.
-        if (crypto.timingSafeEqual(hash_1, sig) || crypto.timingSafeEqual(hash_2, sig)) {
+        if (crypto.timingSafeEqual(hash, sig)) {
           let current_timestamp = Math.floor(new Date().getTime() / 1000);
           let timestamp_difference = current_timestamp - timestamp;
           // Additionally, you may compute the difference between the current timestamp and the
