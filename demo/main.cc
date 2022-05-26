@@ -15,7 +15,6 @@ using namespace nlohmann;
 
 void test_crypto_pay();
 void websocket_client_thread(std::atomic<bool> &stop_thread, String &id);
-void handle_webhook_event(std::string msg);
 
 String getEnv(String key) {
   String ret;
@@ -139,7 +138,7 @@ void test_crypto_pay() {
   cout << resp.status << endl;
 
   std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-  stop_thread_1 = true; // stop websocket thread after timeout
+  stop_thread_1 = true; // force stopping websocket thread after timeout
   id = resp.id;         // pass the id to the thread
   t1.join();            // pauses until t1 finishes
 }
@@ -149,31 +148,36 @@ void websocket_client_thread(std::atomic<bool> &stop_thread, String &id) {
   using easywsclient::WebSocket;
   String r_port = PAY_WEBSOCKET_PORT;
   std::string port = r_port.c_str();
-  WebSocket::pointer ws =
-      WebSocket::from_url("ws://127.0.0.1:" + port);
-  if (ws != nullptr)
+  std::unique_ptr<WebSocket> ws(WebSocket::from_url("ws://127.0.0.1:" + port));
+  if (ws == nullptr)
     return;
-  while (true) {
+  while (ws->getReadyState() != WebSocket::CLOSED) {
+    WebSocket::pointer wsp =
+        &*ws; // <-- because a unique_ptr cannot be copied into a lambda
     ws->poll();
-    ws->dispatch(handle_webhook_event);
+    ws->dispatch([wsp](std::string msg) {
+      // cout << "Receive webhook event: " << msg << endl;
+      try {
+        auto message = json::parse(msg);
+        assert(message.at("type") == "payment.created");
+        String id = message.at("data").at("object").at("id");
+        CryptoComPaymentResponse resp = get_payment(PAY_API_KEY, id);
+        cout << "get payment: " << resp.id << " ";
+        cout << resp.main_app_qr_code << " ";
+        cout << resp.onchain_deposit_address << " ";
+        cout << resp.base_amount << " ";
+        cout << resp.currency << " ";
+        cout << resp.expiration << " ";
+        cout << resp.status << endl;
+        wsp->close();
+      } catch (const nlohmann::detail::parse_error &e) {
+        cout << e.what() << endl;
+        wsp->close();
+      }
+    });
     if (stop_thread) {
       return;
     }
   }
-  delete ws;
-}
-
-void handle_webhook_event(std::string msg) {
-  // cout << "Receive webhook event: " << msg << endl;
-  auto message = json::parse(msg);
-  assert(message.at("type") == "payment.created");
-  String id = message.at("data").at("object").at("id");
-  CryptoComPaymentResponse resp = get_payment(PAY_API_KEY, id);
-  cout << "get payment: " << resp.id << " ";
-  cout << resp.main_app_qr_code << " ";
-  cout << resp.onchain_deposit_address << " ";
-  cout << resp.base_amount << " ";
-  cout << resp.currency << " ";
-  cout << resp.expiration << " ";
-  cout << resp.status << endl;
+  cout << "websocket client thread ends" << endl;
 }

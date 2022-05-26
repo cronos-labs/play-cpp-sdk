@@ -38,4 +38,5 @@ jobs:
         env:
           CRONOSCAN_API_KEY: ${{ secrets.CRONOSCAN_API_KEY }}
           PAY_API_KEY: ${{ secrets.PAY_API_KEY }}
-        run: make cpp
+          PAY_WEBSOCKET_PORT: "4567"
+        run: make cpp_ci_test

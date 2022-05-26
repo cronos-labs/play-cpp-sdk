@@ -9,6 +9,9 @@ cpp: build_cpp
 # 2. Copy the `Publishable Key` or `Secret Key` as `PAY_API_KEY`'s value in `.env`
 	cd demo && . ./.env && make run
 
+cpp_ci_test: build_cpp
+	cd demo && make run # we load the envs in test.yml
+
 webhook:
 # 1. Install ngrok for crypto pay api testing: https://ngrok.com/download
 #

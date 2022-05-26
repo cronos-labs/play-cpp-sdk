@@ -90,24 +90,29 @@ function http_request_listener(request, response) {
   }
 }
 
-
+let websocket = null;
 // handle the websocket client connection (e.g. from c++ client)
 wss.on('connection', function wss_connection_listener(ws, req) {
   console.log(`Client ws://${req.socket.remoteAddress}:${req.socket.remotePort} connected`);
-
-  eventEmitter.on('event', function status(data) {
-    ws.send(`${data}`);
-  });
-
-  eventEmitter.on('error', function status(msg) {
-    console.error(msg);
-    ws.send(`error: ${msg}`);
-  });
-
-  ws.on('message', function message(data) {
+  // get ws after detecting connenction event
+  websocket = ws;
+  websocket.on('message', function message(data) {
     console.log('received: %s', data);
   });
 
+});
+
+eventEmitter.on('event', function status(data) {
+  if (websocket) {
+    websocket.send(`${data}`);
+  }
+});
+
+eventEmitter.on('error', function status(msg) {
+  console.error(msg);
+  if (websocket) {
+    websocket.send(`error: ${msg}`);
+  }
 });
 
 server.listen(webhook_port, host);
