@@ -151,7 +151,8 @@ void websocket_client_thread(std::atomic<bool> &stop_thread, String &id) {
   std::string port = r_port.c_str();
   WebSocket::pointer ws =
       WebSocket::from_url("ws://127.0.0.1:" + port);
-  assert(ws);
+  if (ws != nullptr)
+    return;
   while (true) {
     ws->poll();
     ws->dispatch(handle_webhook_event);
