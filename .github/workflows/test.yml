@@ -35,4 +35,6 @@ jobs:
           path: debug_files.tar.gz
           if-no-files-found: ignore
       - name: Run cpp tests
+        env:
+          PAY_API_KEY: ${{ secrets.PAY_API_KEY }}
         run: make cpp
