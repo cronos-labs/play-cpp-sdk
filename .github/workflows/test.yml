@@ -36,5 +36,6 @@ jobs:
           if-no-files-found: ignore
       - name: Run cpp tests
         env:
+          CRONOSCAN_API_KEY: ${{ secrets.CRONOSCAN_API_KEY }}
           PAY_API_KEY: ${{ secrets.PAY_API_KEY }}
         run: make cpp
