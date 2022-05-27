@@ -1,5 +1,8 @@
+#include "include/easywsclient/easywsclient.hpp"
 #include "include/extra-cpp-bindings/src/lib.rs.h"
+#include "include/json/single_include/nlohmann/json.hpp"
 #include "include/rust/cxx.h"
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -8,6 +11,10 @@
 using namespace std;
 using namespace com::crypto::game_sdk;
 using namespace rust;
+using namespace nlohmann;
+
+void test_crypto_pay();
+void websocket_client_thread(std::atomic<bool> &stop_thread, String &id);
 
 String getEnv(String key) {
   String ret;
@@ -19,6 +26,10 @@ String getEnv(String key) {
 
 // Read CronoScan api key in env
 const String CRONOSCAN_API_KEY = getEnv("CRONOSCAN_API_KEY");
+// Read pay api key in env
+const String PAY_API_KEY = getEnv("PAY_API_KEY");
+// Read websocket port in env
+const String PAY_WEBSOCKET_PORT = getEnv("PAY_WEBSOCKET_PORT");
 
 int main(int argc, char *argv[]) {
 
@@ -54,7 +65,7 @@ int main(int argc, char *argv[]) {
       cout << ptr->contract_address << " " << endl;
     }
 
-    Vec<RawTxDetail> erc721_txs = get_erc721_transfer_blocking(
+    Vec<RawTxDetail> erc721_txs = get_erc721_transfer_history_blocking(
         "0x668f126b87936df4f9a98f18c44eb73868fffea0",
         "0xbd6b9a1A0477d64E99F660b7b7C205f4604E4Ff3", QueryOption::ByContract,
         CRONOSCAN_API_KEY);
@@ -80,6 +91,7 @@ int main(int argc, char *argv[]) {
     cout << ptr->balance << " ";
     cout << ptr->contract_address << " ";
     cout << ptr->decimals << " ";
+    cout << ptr->id << " ";
     cout << ptr->name << " ";
     cout << ptr->symbol << " ";
     cout << ptr->token_type << endl;
@@ -99,5 +111,73 @@ int main(int argc, char *argv[]) {
     cout << ptr->contract_address << " " << endl;
   }
 
+  test_crypto_pay();
   return 0;
+}
+
+// pay api examples
+void test_crypto_pay() {
+  if (PAY_API_KEY == "")
+    return;
+
+  std::atomic<bool> stop_thread_1{false};
+  String id = "";
+  std::thread t1(websocket_client_thread, std::ref(stop_thread_1),
+                 std::ref(id));
+
+  OptionalArguments opiton_args;
+  opiton_args.description = "Crypto.com Tee (Unisex)";
+  CryptoComPaymentResponse resp =
+      create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
+  cout << "create payment:" << resp.id << " ";
+  cout << resp.main_app_qr_code << " ";
+  cout << resp.onchain_deposit_address << " ";
+  cout << resp.base_amount << " ";
+  cout << resp.currency << " ";
+  cout << resp.expiration << " ";
+  cout << resp.status << endl;
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+  stop_thread_1 = true; // force stopping websocket thread after timeout
+  id = resp.id;         // pass the id to the thread
+  t1.join();            // pauses until t1 finishes
+}
+
+// A simple websocket client thread
+void websocket_client_thread(std::atomic<bool> &stop_thread, String &id) {
+  using easywsclient::WebSocket;
+  String r_port = PAY_WEBSOCKET_PORT;
+  std::string port = r_port.c_str();
+  std::unique_ptr<WebSocket> ws(WebSocket::from_url("ws://127.0.0.1:" + port));
+  if (ws == nullptr)
+    return;
+  while (ws->getReadyState() != WebSocket::CLOSED) {
+    WebSocket::pointer wsp =
+        &*ws; // <-- because a unique_ptr cannot be copied into a lambda
+    ws->poll();
+    ws->dispatch([wsp](std::string msg) {
+      // cout << "Receive webhook event: " << msg << endl;
+      try {
+        auto message = json::parse(msg);
+        assert(message.at("type") == "payment.created");
+        String id = message.at("data").at("object").at("id");
+        CryptoComPaymentResponse resp = get_payment(PAY_API_KEY, id);
+        cout << "get payment: " << resp.id << " ";
+        cout << resp.main_app_qr_code << " ";
+        cout << resp.onchain_deposit_address << " ";
+        cout << resp.base_amount << " ";
+        cout << resp.currency << " ";
+        cout << resp.expiration << " ";
+        cout << resp.status << endl;
+        wsp->close();
+      } catch (const nlohmann::detail::parse_error &e) {
+        cout << e.what() << endl;
+        wsp->close();
+      }
+    });
+    if (stop_thread) {
+      return;
+    }
+  }
+  cout << "websocket client thread ends" << endl;
 }

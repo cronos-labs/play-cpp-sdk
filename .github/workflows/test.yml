@@ -15,6 +15,8 @@ jobs:
       WASM_BINDGEN_TEST_TIMEOUT: 60
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: cachix/install-nix-action@v15
       - uses: cachix/cachix-action@v10
         with:
@@ -33,4 +35,8 @@ jobs:
           path: debug_files.tar.gz
           if-no-files-found: ignore
       - name: Run cpp tests
-        run: make cpp
+        env:
+          CRONOSCAN_API_KEY: ${{ secrets.CRONOSCAN_API_KEY }}
+          PAY_API_KEY: ${{ secrets.PAY_API_KEY }}
+          PAY_WEBSOCKET_PORT: "4567"
+        run: make cpp_ci_test

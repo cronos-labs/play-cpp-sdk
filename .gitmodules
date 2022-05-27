@@ -1,0 +1,6 @@
+[submodule "demo/include/json"]
+	path = demo/include/json
+	url = git@github.com:nlohmann/json.git
+[submodule "demo/include/easywsclient"]
+	path = demo/include/easywsclient
+	url = git@github.com:dhbaird/easywsclient.git

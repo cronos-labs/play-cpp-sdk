@@ -1,7 +1,6 @@
+mod error;
 /// Crypto.com Pay basic support
 mod pay;
-
-use std::collections::HashMap;
 
 use anyhow::Result;
 use ethers_core::types::{BlockNumber, Chain};
@@ -15,22 +14,8 @@ use serde::{Deserialize, Serialize};
 
 #[cxx::bridge(namespace = "com::crypto::game_sdk")]
 mod ffi {
-
-    /// optional arguments for creating a payment on Crypto.com Pay
-    /// leave empty values or 0 if not needed
-    pub struct OptionalArguments {
-        description: String,
-        metadata_keys: Vec<String>,
-        metadata_values: Vec<String>,
-        order_id: String,
-        return_url: String,
-        cancel_url: String,
-        sub_merchant_id: String,
-        onchain_allowed: bool,
-        expired_at: u64,
-    }
-
     /// the subset of payment object from https://pay-docs.crypto.com
+    #[derive(Debug)]
     pub struct CryptoComPaymentResponse {
         /// uuid of the payment object
         pub id: String,
@@ -81,6 +66,9 @@ mod ffi {
         pub contract_address: String,
         /// the number of decimal places
         pub decimals: String,
+        /// the token id
+        #[serde(default)]
+        pub id: String,
         /// the human-readable name of the token
         pub name: String,
         /// the ticker for the token
@@ -108,7 +96,7 @@ mod ffi {
             option: QueryOption,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
-        pub fn get_erc721_transfer_blocking(
+        pub fn get_erc721_transfer_history_blocking(
             address: String,
             contract_address: String,
             option: QueryOption,
@@ -130,16 +118,31 @@ mod ffi {
             secret_or_publishable_api_key: String,
             base_unit_amount: String,
             currency: String,
-            optional_args: OptionalArguments,
+            optional_args: &OptionalArguments,
         ) -> Result<CryptoComPaymentResponse>;
         pub fn get_payment(
             secret_or_publishable_api_key: String,
             payment_id: String,
         ) -> Result<CryptoComPaymentResponse>;
     }
+
+    // C++ types and signatures exposed to Rust.
+    unsafe extern "C++" {
+        include!("extra-cpp-bindings/include/pay.h");
+
+        type OptionalArguments;
+        fn get_description(&self) -> &str;
+        fn get_metadata(&self) -> &str;
+        fn get_order_id(&self) -> &str;
+        fn get_return_url(&self) -> &str;
+        fn get_cancel_url(&self) -> &str;
+        fn get_sub_merchant_id(&self) -> &str;
+        fn get_onchain_allowed(&self) -> bool;
+        fn get_expired_at(&self) -> u64;
+    }
 }
 
-use ffi::{CryptoComPaymentResponse, OptionalArguments, QueryOption, RawTokenResult, RawTxDetail};
+use ffi::{CryptoComPaymentResponse, QueryOption, RawTokenResult, RawTxDetail};
 
 /// returns the transactions of a given address.
 /// The API key can be obtained from https://cronoscan.com
@@ -171,7 +174,7 @@ pub fn get_erc20_transfer_history_blocking(
 /// (address can be empty if option is ByContract)
 /// default option is by address
 /// The API key can be obtained from https://cronoscan.com
-pub fn get_erc721_transfer_blocking(
+pub fn get_erc721_transfer_history_blocking(
     address: String,
     contract_address: String,
     option: QueryOption,
@@ -227,15 +230,6 @@ pub fn get_token_transfers_blocking(
     Ok(resp.result.iter().flat_map(TryInto::try_into).collect())
 }
 
-#[inline]
-fn str_or_none(arg: &str) -> Option<&str> {
-    if arg.is_empty() {
-        None
-    } else {
-        Some(arg)
-    }
-}
-
 /// it creates the payment object
 /// https://pay-docs.crypto.com/#api-reference-resources-payments-create-a-payment
 /// This API can be called using either your Secret Key or Publishable Key.
@@ -244,41 +238,15 @@ pub fn create_payment(
     secret_or_publishable_api_key: String,
     base_unit_amount: String,
     currency: String,
-    optional_args: OptionalArguments,
+    optional_args: &ffi::OptionalArguments,
 ) -> Result<CryptoComPaymentResponse> {
-    let meta = if !optional_args.metadata_keys.is_empty()
-        && optional_args.metadata_keys.len() == optional_args.metadata_values.len()
-    {
-        Some(HashMap::from_iter(
-            optional_args
-                .metadata_keys
-                .iter()
-                .zip(optional_args.metadata_values.iter()),
-        ))
-    } else {
-        None
-    };
-    let args = pay::OptionalArgs {
-        metadata: meta,
-        description: str_or_none(&optional_args.description),
-        order_id: str_or_none(&optional_args.order_id),
-        return_url: str_or_none(&optional_args.return_url),
-        cancel_url: str_or_none(&optional_args.cancel_url),
-        sub_merchant_id: str_or_none(&optional_args.sub_merchant_id),
-        onchain_allowed: optional_args.onchain_allowed,
-        expired_at: if optional_args.expired_at == 0 {
-            None
-        } else {
-            Some(optional_args.expired_at)
-        },
-    };
-    pay::create_payment(
+    Ok(pay::create_payment(
         &secret_or_publishable_api_key,
         &base_unit_amount,
         &currency,
-        args,
-    )
-    .map(Into::into)
+        optional_args,
+    )?
+    .into())
 }
 
 /// it returns the payment object by id
@@ -288,7 +256,7 @@ pub fn get_payment(
     secret_or_publishable_api_key: String,
     payment_id: String,
 ) -> Result<CryptoComPaymentResponse> {
-    pay::get_payment(&secret_or_publishable_api_key, &payment_id).map(Into::into)
+    Ok(pay::get_payment(&secret_or_publishable_api_key, &payment_id)?.into())
 }
 
 impl From<pay::CryptoPayObject> for CryptoComPaymentResponse {
