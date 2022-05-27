@@ -1,7 +1,7 @@
 use super::pay::CryptoPayErrorObject;
 
 #[derive(Debug, thiserror::Error)]
-pub enum GameSdkError {
+pub(crate) enum GameSdkError {
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
     #[error(transparent)]

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 #[derive(Deserialize)]
 #[serde(untagged)]
-pub enum ResponseData {
+pub(crate) enum ResponseData {
     Success(Box<CryptoPayObject>),
     Error { error: CryptoPayErrorObject },
 }
@@ -13,7 +13,7 @@ pub enum ResponseData {
 // workaround, enable dead_code to suppress the  warnnings
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
-pub struct CryptoPayErrorObject {
+pub(crate) struct CryptoPayErrorObject {
     #[serde(rename = "type")]
     error_type: String,
     code: String,
@@ -22,7 +22,7 @@ pub struct CryptoPayErrorObject {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CryptoPayObject {
+pub(crate) struct CryptoPayObject {
     /// uuid
     pub id: String,
     /// arbitrary_precision amounts
