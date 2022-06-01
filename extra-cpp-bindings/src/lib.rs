@@ -2,7 +2,9 @@ mod error;
 /// Crypto.com Pay basic support
 mod pay;
 
+mod walletconnect;
 use anyhow::Result;
+
 use ethers_core::types::{BlockNumber, Chain};
 use ethers_etherscan::{
     account::{
@@ -10,10 +12,63 @@ use ethers_etherscan::{
     },
     Client,
 };
+use ffi::{CryptoComPaymentResponse, QueryOption, RawTokenResult, RawTxDetail};
 use serde::{Deserialize, Serialize};
+use walletconnect::WalletconnectClient;
 
 #[cxx::bridge(namespace = "com::crypto::game_sdk")]
 mod ffi {
+    unsafe extern "C++" {
+        include!("extra-cpp-bindings/include/walletconnectcallback.h");
+
+        type WalletConnectCallback;
+
+        fn new_walletconnect_callback() -> UniquePtr<WalletConnectCallback>;
+        fn onConnected(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
+        fn onDisconnected(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
+        fn onConnecting(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
+        fn onUpdated(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
+    }
+
+    unsafe extern "C++" {
+        include!("extra-cpp-bindings/include/walletconnectcallback.h");
+
+        type WalletConnectSessionInfo;
+
+        fn new_walletconnect_sessioninfo() -> UniquePtr<WalletConnectSessionInfo>;
+        fn set_chainid(self: Pin<&mut WalletConnectSessionInfo>, chainid: String);
+        fn set_connected(self: Pin<&mut WalletConnectSessionInfo>, connected: bool);
+        fn set_accounts(self: Pin<&mut WalletConnectSessionInfo>, accounts: Vec<String>);
+        fn set_bridge(self: Pin<&mut WalletConnectSessionInfo>, bridge: String);
+        fn set_key(self: Pin<&mut WalletConnectSessionInfo>, key: String);
+        fn set_clientid(self: Pin<&mut WalletConnectSessionInfo>, clientid: String);
+        fn set_clientmeta(self: Pin<&mut WalletConnectSessionInfo>, clientmeta: String);
+        fn set_peerid(self: Pin<&mut WalletConnectSessionInfo>, peerid: String);
+        fn set_peermeta(self: Pin<&mut WalletConnectSessionInfo>, peermeta: String);
+        fn set_handshaketopic(self: Pin<&mut WalletConnectSessionInfo>, handshaketopic: String);
+    }
+
+    /// wallet connect cronos(eth) legacy-tx signing info
+    pub struct WalletConnectTxLegacy {
+        pub to: String,        // hexstring, "0x..."
+        pub gas: String,       // decimal string, "1"
+        pub gas_price: String, // decimal string
+        pub value: String,     // decimal string, in wei units
+        pub data: Vec<u8>,     // data, as bytes
+        pub nonce: String,     // decimal string
+    }
+
+    /// cronos address info
+    pub struct WalletConnectAddress {
+        pub address: [u8; 20], // address, as bytes, 20 bytes
+    }
+
+    /// walletconnect ensure-session result
+    pub struct WalletConnectEnsureSessionResult {
+        pub addresses: Vec<WalletConnectAddress>,
+        pub chain_id: u64,
+    }
+
     /// the subset of payment object from https://pay-docs.crypto.com
     #[derive(Debug)]
     pub struct CryptoComPaymentResponse {
@@ -85,6 +140,46 @@ mod ffi {
     }
 
     extern "Rust" {
+        /// WallnetConnect API
+        type WalletconnectClient;
+        /// restore walletconnect-session from string
+        pub fn walletconnect_restore_client(
+            session_info: String,
+        ) -> Result<Box<WalletconnectClient>>;
+        /// create walletconnect-session
+        pub fn walletconnect_new_client(
+            description: String,
+            url: String,
+            icon_urls: Vec<String>,
+            name: String,
+        ) -> Result<Box<WalletconnectClient>>;
+
+        /// setup callback
+        pub fn setup_callback(&mut self) -> Result<()>;
+        /// create or restore a session
+        /// once session is created, it will be reused
+        pub fn ensure_session_blocking(
+            self: &mut WalletconnectClient,
+        ) -> Result<WalletConnectEnsureSessionResult>;
+        /// get connection string for qrcode
+        pub fn get_connection_string(&mut self) -> Result<String>;
+        /// write session-info to string, which can be written to file
+        pub fn save_client(&mut self) -> Result<String>;
+        /// print qrcode in termal, for debugging
+        pub fn print_uri(&mut self) -> Result<String>;
+        /// sign message
+        pub fn sign_personal_blocking(
+            &mut self,
+            message: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+        /// sign cronos(eth) legacy-tx
+        pub fn sign_legacy_transaction_blocking(
+            &mut self,
+            info: &WalletConnectTxLegacy,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
         /// Etherscan API
         pub fn get_transaction_history_blocking(
             address: String,
@@ -141,8 +236,6 @@ mod ffi {
         fn get_expired_at(&self) -> u64;
     }
 }
-
-use ffi::{CryptoComPaymentResponse, QueryOption, RawTokenResult, RawTxDetail};
 
 /// returns the transactions of a given address.
 /// The API key can be obtained from https://cronoscan.com
@@ -433,6 +526,34 @@ async fn get_erc721_transfer_history(
         .await?;
     Ok(transactions.iter().map(|tx| tx.into()).collect())
 }
+
+fn walletconnect_restore_client(session_info: String) -> Result<Box<WalletconnectClient>> {
+    let mut rt = tokio::runtime::Runtime::new()?;
+    let client = walletconnect::walletconnect_restore_client(&mut rt, session_info)?;
+
+    Ok(Box::new(WalletconnectClient {
+        client: Some(client),
+        rt,
+    }))
+}
+
+fn walletconnect_new_client(
+    description: String,
+    url: String,
+    icon_urls: Vec<String>,
+    name: String,
+) -> Result<Box<WalletconnectClient>> {
+    let mut rt = tokio::runtime::Runtime::new()?;
+    let client =
+        walletconnect::walletconnect_new_client(&mut rt, description, url, &icon_urls, name)?;
+
+    Ok(Box::new(WalletconnectClient {
+        client: Some(client),
+        rt,
+    }))
+}
+unsafe impl Send for ffi::WalletConnectCallback {}
+unsafe impl Sync for ffi::WalletConnectCallback {}
 
 #[cfg(test)]
 mod test {

@@ -18,4 +18,4 @@ jobs:
         with:
           submodules: recursive
       - name: Compile Cpp
-        run: make build_cpp
+        run: make cppx86_64

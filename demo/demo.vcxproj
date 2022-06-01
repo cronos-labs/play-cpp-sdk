@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\walletconnectcallback.cc" />
     <ClCompile Include="main.cc" />
   </ItemGroup>
   <ItemGroup>

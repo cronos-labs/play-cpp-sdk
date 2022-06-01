@@ -6,6 +6,8 @@ import shutil
 SOURCES = [
     "../extra-cpp-bindings/include/pay.h",
     "../extra-cpp-bindings/src/pay.cc",
+    "../extra-cpp-bindings/include/walletconnectcallback.h",
+    "../extra-cpp-bindings/src/walletconnectcallback.cc",
 ]
 INCLUDE_PATH = "./include"
 LIB_PATH = "./lib"
@@ -13,13 +15,23 @@ LIB_PATH = "./lib"
 INITIAL_INCLUDES = [
     '#include "extra-cpp-bindings/src/lib.rs.h"',
     '#include "extra-cpp-bindings/include/pay.h"',
+    '#include "extra-cpp-bindings/include/walletconnectcallback.h"'
 ]
-FINAL_INCLUDES = ['#include "lib.rs.h"', '#include "../../pay.h"']
+FINAL_INCLUDES = [
+    '#include "lib.rs.h"', 
+    '#include "../../pay.h"',
+    '#include "../../walletconnectcallback.h"'
+]
 
 INITIAL_SOURCES_INCLUDES = [
     '#include "extra-cpp-bindings/include/pay.h"',
+    '#include "extra-cpp-bindings/include/walletconnectcallback.h"',
 ]
-FINAL_SOURCES_INCLUDES = ['#include "pay.h"']
+FINAL_SOURCES_INCLUDES = [
+    '#include "pay.h"',
+    '#include "walletconnectcallback.h"'
+]
+
 
 TARGET_DIR = "../target/release"
 

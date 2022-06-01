@@ -8,7 +8,7 @@ use ethers::types::H160;
 use std::fs::File;
 use std::io::prelude::*;
 /// remove session.json to start new session
-const G_FILENAME: &str = "session.json";
+const G_FILENAME: &str = "sessioninfo.json";
 
 ///  temporary session is stored to session.json
 async fn make_client() -> Result<Client, Box<dyn Error>> {
@@ -60,6 +60,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let filename = G_FILENAME;
 
     let mut client = make_client().await?;
+
     client.run_callback(Box::new(move |message| match message.state {
         ClientChannelMessageType::Connected => {
             println!("Connected");
