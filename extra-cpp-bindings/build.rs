@@ -13,4 +13,6 @@ fn main() {
 
     println!("cargo:rerun-if-changed=src/pay.cc");
     println!("cargo:rerun-if-changed=include/pay.h");
+    println!("cargo:rerun-if-changed=src/walletconnectcallback.cc");
+    println!("cargo:rerun-if-changed=include/walletconnectcallback.h");
 }

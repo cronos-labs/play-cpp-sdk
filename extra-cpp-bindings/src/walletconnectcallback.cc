@@ -2,9 +2,6 @@
 #include "extra-cpp-bindings/src/lib.rs.h"
 #include <iostream>
 #include <memory>
-using namespace com::crypto::game_sdk;
-using namespace rust;
-using namespace std;
 
 namespace com {
 namespace crypto {
@@ -14,52 +11,52 @@ std::unique_ptr<WalletConnectSessionInfo> new_walletconnect_sessioninfo() {
   return std::make_unique<WalletConnectSessionInfo>();
 }
 
-void WalletConnectSessionInfo::set_connected(bool myconnected) 
+void WalletConnectSessionInfo::set_connected(bool myconnected)
 {
       connected=myconnected;
 }
 
-void WalletConnectSessionInfo::set_chainid(rust::String mychainid) 
+void WalletConnectSessionInfo::set_chainid(rust::String mychainid)
 {
       chain_id=mychainid;
 }
 
-void WalletConnectSessionInfo::set_accounts(Vec<String> myaccounts) 
+void WalletConnectSessionInfo::set_accounts(rust::Vec<rust::String> myaccounts)
 {
       accounts=myaccounts;
 }
 
-void WalletConnectSessionInfo::set_bridge(String mybridge) 
+void WalletConnectSessionInfo::set_bridge(rust::String mybridge)
 {
       bridge=mybridge;
 }
 
-void WalletConnectSessionInfo::set_key(String mykey) 
+void WalletConnectSessionInfo::set_key(rust::String mykey)
 {
       key=mykey;
 }
 
-void WalletConnectSessionInfo::set_clientid(String myclient_id) 
+void WalletConnectSessionInfo::set_clientid(rust::String myclient_id)
 {
       client_id=myclient_id;
 }
 
-void WalletConnectSessionInfo::set_clientmeta(String myclient_meta) 
+void WalletConnectSessionInfo::set_clientmeta(rust::String myclient_meta)
 {
       client_meta=myclient_meta;
 }
 
-void WalletConnectSessionInfo::set_peerid(String mypeer_id) 
+void WalletConnectSessionInfo::set_peerid(rust::String mypeer_id)
 {
       peer_id=mypeer_id;
 }
 
-void WalletConnectSessionInfo::set_peermeta(String mypeer_meta) 
+void WalletConnectSessionInfo::set_peermeta(rust::String mypeer_meta)
 {
       peer_meta=mypeer_meta;
 }
 
-void WalletConnectSessionInfo::set_handshaketopic(String myhandshake_topic) 
+void WalletConnectSessionInfo::set_handshaketopic(rust::String myhandshake_topic)
 {
       handshake_topic=myhandshake_topic;
 }
@@ -88,19 +85,19 @@ void print_session(std::unique_ptr<WalletConnectSessionInfo>& sessioninfo)
 
 }
 void WalletConnectCallback::onConnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
-  cout << "c++ onConnected"  << endl;
+  std::cout << "c++ onConnected"  << std::endl;
   print_session(sessioninfo);
 }
 void WalletConnectCallback::onDisconnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
-  cout << "c++ onDisconnected" << endl;
+  std::cout << "c++ onDisconnected" << std::endl;
   print_session(sessioninfo);
 }
 void WalletConnectCallback::onConnecting(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
-  cout << "c++ onConnecting" << endl;
+  std::cout << "c++ onConnecting" << std::endl;
   print_session(sessioninfo);
 }
 void WalletConnectCallback::onUpdated(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
-  cout << "c++ onUpdated"  << endl;
+  std::cout << "c++ onUpdated"  << std::endl;
   print_session(sessioninfo);
 }
 

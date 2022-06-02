@@ -15,22 +15,19 @@ LIB_PATH = "./lib"
 INITIAL_INCLUDES = [
     '#include "extra-cpp-bindings/src/lib.rs.h"',
     '#include "extra-cpp-bindings/include/pay.h"',
-    '#include "extra-cpp-bindings/include/walletconnectcallback.h"'
+    '#include "extra-cpp-bindings/include/walletconnectcallback.h"',
 ]
 FINAL_INCLUDES = [
-    '#include "lib.rs.h"', 
+    '#include "lib.rs.h"',
     '#include "../../pay.h"',
-    '#include "../../walletconnectcallback.h"'
+    '#include "../../walletconnectcallback.h"',
 ]
 
 INITIAL_SOURCES_INCLUDES = [
     '#include "extra-cpp-bindings/include/pay.h"',
     '#include "extra-cpp-bindings/include/walletconnectcallback.h"',
 ]
-FINAL_SOURCES_INCLUDES = [
-    '#include "pay.h"',
-    '#include "walletconnectcallback.h"'
-]
+FINAL_SOURCES_INCLUDES = ['#include "pay.h"', '#include "walletconnectcallback.h"']
 
 
 TARGET_DIR = "../target/release"
