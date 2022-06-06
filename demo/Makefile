@@ -21,6 +21,9 @@ prepare_x86_64:
 easywsclient.o:
 	g++ -c include/easywsclient/easywsclient.cpp
 
+easywsclient.o.x86_64:
+	arch -x86_64 g++ -c include/easywsclient/easywsclient.cpp
+
 static: easywsclient.o
 	g++ -o cppexamplestatic easywsclient.o main.cc lib/libextra_cpp_bindings.a -std=c++14 $(FLAGS)
 
@@ -36,7 +39,7 @@ dynamic: easywsclient.o
 		$(FLAGS) \
 		-L lib \
 
-x86_64_build: prepare_x86_64 easywsclient.o
+x86_64_build: prepare_x86_64 easywsclient.o.x86_64
 	arch -x86_64 g++ -o cppexample easywsclient.o main.cc lib/libextra_cpp_bindings.a -std=c++14 $(FLAGS)
 
 run_static:
