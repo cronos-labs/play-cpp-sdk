@@ -16,6 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          token: ${{ secrets.PAT }}
           submodules: recursive
-      - name: Compile Cpp
-        run: make cppx86_64
+
+      - name: Build play-cpp-sdk library
+        run: cargo build --package play-cpp-sdk --release
+
+      - name: Build demo project
+        working-directory: demo
+        run: make build

@@ -23,4 +23,5 @@ ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "0a031417d8ec9e86
 hex="0.4.3"
 
 [build-dependencies]
-cxx-build = "1"
+# Wait until https://github.com/dtolnay/cxx/pull/1048 is merged or similar solution is found
+cxx-build = { git = "https://github.com/crypto-com/cxx.git", rev = "42b011184b6d5a593cd7513edb1d554e0f086a0f", features=["doxygen"] }

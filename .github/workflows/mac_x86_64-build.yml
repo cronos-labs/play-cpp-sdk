@@ -1,0 +1,30 @@
+name: Mac x86_64 Build CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+  pull_request:
+    paths-ignore:
+      - README.md
+
+jobs:
+  mac-build:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+
+      - name: Add target x86_64-apple-darwin
+        run: rustup target add x86_64-apple-darwin
+
+      - name: Build play-cpp-sdk library (x86_64-apple-darwin)
+        run: ./checkmac.sh && cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
+
+      - name: Build demo project (x86_64-apple-darwin)
+        working-directory: demo
+        run: make x86_64_build

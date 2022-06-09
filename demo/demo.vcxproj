@@ -133,23 +133,35 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>bcrypt.lib;ntdll.lib;Secur32.Lib;crypt32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ncrypt.lib;userenv.lib;bcrypt.lib;ntdll.lib;Secur32.Lib;crypt32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="include\walletconnectcallback.cc" />
     <ClCompile Include="main.cc" />
+    <ClCompile Include="chainmain.cc" />
+    <ClCompile Include="chainmain.h" />
+    <ClCompile Include="cronos.cc" />
+    <ClCompile Include="cronos.h" />
+    <ClCompile Include="extra.cc" />
+    <ClCompile Include="extra.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bindings.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\extra_cpp_bindings.dll.lib" />
-    <Library Include="lib\libcxxbridge1.a" />
     <ClCompile Include="include\pay.cc" />
+    <ClCompile Include="include\walletconnectcallback.cc" />
     <ClCompile Include="include\extra-cpp-bindings\src\lib.rs.cc" />
     <ClCompile Include="include\easywsclient\easywsclient.cpp" />
     <ClCompile Include="include\json\single_include\nlohmann\json.hpp" />
+    <ClCompile Include="include\nft.cc" />
+    <ClCompile Include="include\defi-wallet-core-cpp\src\core.cc" />
+    <ClCompile Include="include\defi-wallet-core-cpp\src\nft.rs.cc" />
+    <ClCompile Include="include\defi-wallet-core-cpp\src\contract.rs.cc" />
+    <ClCompile Include="include\defi-wallet-core-cpp\src\uint.rs.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\play_cpp_sdk.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

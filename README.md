@@ -1,4 +1,25 @@
-# DeFi Wallet Core: WalletConnect 1.0 implementation
+# Cronos Play Cpp SDK
+
+This project includes the following crates:
+- `play-cpp-sdk`: the cpp sdk wrapper
+- `defi-wallet-core-rs`: a dependency of play-cpp-sdk
+- `extra-cpp-bindings`: a dependency of play-cpp-sdk
+- `wallet-connect`: wallet connect implementation
+
+# Build
+## Windows
+1. Install Visual Studio 2019 or newer
+2. Run `windows_build.bat` in x64 native command prompt. It will build all the things and setup the demo project
+
+### Notes on windows
+1. If you use Visual Studio 2022, you need to upgrade the PlatformToolset of `demo.vcxproj` to v143
+2. Only static lib `play-cpp-sdk.lib` is supported, linking `play-cpp-sdk.dll.lib` is not supported at this moment.
+3. Clean `~/.cargo/git/checkouts` if cxx fails to build.
+
+## Mac or Linux
+`make cpp`
+
+# wallet-connect
 This crate contains the WalletConnect 1.0 client implementation the could be used by dApps in integrations.
 
 ## WalletConnect 1.0

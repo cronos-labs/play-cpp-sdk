@@ -16,21 +16,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
+        token: ${{ secrets.PAT }}
         submodules: recursive
     - run: git config --global core.symlinks true
 
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
 
-    - name: prepare files in bash
+    - name: Build play-cpp-sdk crate
       shell: bash
-      run: |
-        # run command in git shell of windows
-        # or run in msys2 shell
-        cargo build --package extra-cpp-bindings --release
-        cd demo
-        python3 helper.py --target_dir ../target/release
+      run: cargo build --package play-cpp-sdk --release
 
-    - name: compile
+    - name: Collect cxxbrdiges files into demo
+      shell: bash
+      working-directory: demo
+      run: python3 helper.py --target_dir ../target/release
+
+    - name: Build demo project
       working-directory: .\demo
       run: msbuild .\demo.vcxproj -t:rebuild -property:Configuration=Release /p:Platform=x64

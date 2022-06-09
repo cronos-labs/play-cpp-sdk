@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   push:
-    branches: 
+    branches:
       - main
     paths-ignore:
       - README.md
@@ -20,6 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -41,6 +44,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -62,6 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -84,6 +93,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
