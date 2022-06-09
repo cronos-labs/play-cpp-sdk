@@ -49,10 +49,10 @@ class WalletConnectCallback {
     public:
     WalletConnectCallback();
     virtual ~WalletConnectCallback();
-    void onConnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
-    void onDisconnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const ;
-    void onConnecting(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const ;
-    void onUpdated(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
+    virtual void onConnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
+    virtual void onDisconnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const ;
+    virtual void onConnecting(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const ;
+    virtual void onUpdated(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
 };
 
 std::unique_ptr<WalletConnectCallback> new_walletconnect_callback();

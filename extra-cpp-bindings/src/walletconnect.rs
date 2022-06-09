@@ -264,8 +264,8 @@ impl WalletconnectClient {
         Ok(result.to_vec())
     }
 
-    pub fn setup_callback(&mut self) -> Result<()> {
-        let cppcallback = crate::ffi::new_walletconnect_callback();
+    pub fn setup_callback(&mut self, usercallback: UniquePtr<WalletConnectCallback>) -> Result<()> {
+        let cppcallback = usercallback;
         if let Some(client) = self.client.as_mut() {
             let result = self
                 .rt
