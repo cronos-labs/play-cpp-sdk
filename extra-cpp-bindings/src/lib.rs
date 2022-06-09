@@ -23,7 +23,6 @@ mod ffi {
 
         type WalletConnectCallback;
 
-        fn new_walletconnect_callback() -> UniquePtr<WalletConnectCallback>;
         fn onConnected(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
         fn onDisconnected(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
         fn onConnecting(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
@@ -155,7 +154,10 @@ mod ffi {
         ) -> Result<Box<WalletconnectClient>>;
 
         /// setup callback
-        pub fn setup_callback(&mut self) -> Result<()>;
+        pub fn setup_callback(
+            &mut self,
+            usercallback: UniquePtr<WalletConnectCallback>,
+        ) -> Result<()>;
         /// create or restore a session
         /// once session is created, it will be reused
         pub fn ensure_session_blocking(

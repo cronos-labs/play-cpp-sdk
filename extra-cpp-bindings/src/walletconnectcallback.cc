@@ -101,9 +101,6 @@ void WalletConnectCallback::onUpdated(std::unique_ptr<WalletConnectSessionInfo> 
   print_session(sessioninfo);
 }
 
-std::unique_ptr<WalletConnectCallback> new_walletconnect_callback() {
-  return std::make_unique<WalletConnectCallback>();
-}
 
 } // namespace game_sdk
 } // namespace crypto

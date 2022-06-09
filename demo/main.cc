@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <thread>
 
@@ -20,7 +21,6 @@ void test_crypto_pay();
 void websocket_client_thread(std::atomic<bool> &stop_thread, String &id);
 
 String getEnv(String key);
-
 
 String getEnv(String key) {
   String ret;
@@ -41,7 +41,7 @@ void test_wallet_connect();
 void test_blackscout_cronoscan();
 int main(int argc, char *argv[]) {
   test_blackscout_cronoscan();
-  //test_wallet_connect();
+  test_wallet_connect();
   return 0;
 }
 
@@ -125,7 +125,6 @@ void test_blackscout_cronoscan() {
   }
 
   test_crypto_pay();
-  
 }
 
 // convert byte array to hex string
@@ -167,13 +166,62 @@ Box<WalletconnectClient> make_new_client(std::string filename) {
   }
 }
 
+class UserWalletConnectCallback : public WalletConnectCallback {
+public:
+  UserWalletConnectCallback() {}
+  virtual ~UserWalletConnectCallback() {}
+  void onConnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
+  void
+  onDisconnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
+  void
+  onConnecting(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
+  void onUpdated(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
+};
+void print_session(std::unique_ptr<WalletConnectSessionInfo> &sessioninfo) {
+  std::cout << "connected: " << sessioninfo->connected << std::endl;
+  std::cout << "chain_id: " << sessioninfo->chain_id << std::endl;
+  // iterate over accounts
+  for (auto &account : sessioninfo->accounts) {
+    std::cout << "account: " << account << std::endl;
+  }
+  std::cout << "bridge: " << sessioninfo->bridge << std::endl;
+  std::cout << "client_id: " << sessioninfo->client_id << std::endl;
+  std::cout << "client_meta: " << sessioninfo->client_meta << std::endl;
+  std::cout << "peer_id: " << sessioninfo->peer_id << std::endl;
+  std::cout << "peer_meta: " << sessioninfo->peer_meta << std::endl;
+  std::cout << "handshake_topic: " << sessioninfo->handshake_topic << std::endl;
+}
+void UserWalletConnectCallback::onConnected(
+    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+  std::cout << "user c++ onConnected" << std::endl;
+  print_session(sessioninfo);
+}
+void UserWalletConnectCallback::onDisconnected(
+    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+  std::cout << "user c++ onDisconnected" << std::endl;
+  print_session(sessioninfo);
+}
+void UserWalletConnectCallback::onConnecting(
+    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+  std::cout << "user c++ onConnecting" << std::endl;
+  print_session(sessioninfo);
+  // this is testing purpose, comment this line for actual test
+  exit(0);
+}
+void UserWalletConnectCallback::onUpdated(
+    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+  std::cout << "user c++ onUpdated" << std::endl;
+  print_session(sessioninfo);
+}
+
 void test_wallet_connect() {
   bool test_personal = false;
   std::string filename = "sessioninfo.json";
-
   try {
     Box<WalletconnectClient> client = make_new_client(filename);
-    client->setup_callback();
+    WalletConnectCallback *usercallbackraw = new UserWalletConnectCallback();
+    std::unique_ptr<WalletConnectCallback> usercallback(usercallbackraw);
+    client->setup_callback(std::move(usercallback));
     String uri = client->print_uri();
     WalletConnectEnsureSessionResult result = client->ensure_session_blocking();
 
