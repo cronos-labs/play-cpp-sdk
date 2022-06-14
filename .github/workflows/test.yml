@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          token: ${{ secrets.PAT }}
           submodules: recursive
       - uses: cachix/install-nix-action@v15
       - uses: cachix/cachix-action@v10
@@ -39,4 +40,4 @@ jobs:
           CRONOSCAN_API_KEY: ${{ secrets.CRONOSCAN_API_KEY }}
           PAY_API_KEY: ${{ secrets.PAY_API_KEY }}
           PAY_WEBSOCKET_PORT: "4567"
-        run: make cpp_ci_test
+        run: make cpp-ci-tests

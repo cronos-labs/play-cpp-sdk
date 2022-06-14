@@ -1,0 +1,13 @@
+[package]
+name = "play-cpp-sdk"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+defi-wallet-core-cpp = { path = "../defi-wallet-core-rs/bindings/cpp/"}
+extra-cpp-bindings = { path = "../extra-cpp-bindings/"}
+
+[lib]
+crate-type = ["staticlib", "cdylib"]

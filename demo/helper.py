@@ -2,12 +2,22 @@
 import fnmatch
 import os
 import shutil
+from pathlib import Path
+
+EXAMPLE_SOURCES = [
+    "../defi-wallet-core-rs/example/cpp-example/chainmain.cc",
+    "../defi-wallet-core-rs/example/cpp-example/cronos.cc",
+    "../defi-wallet-core-rs/example/cpp-example/chainmain.h",
+    "../defi-wallet-core-rs/example/cpp-example/cronos.h",
+]
 
 SOURCES = [
     "../extra-cpp-bindings/include/pay.h",
     "../extra-cpp-bindings/src/pay.cc",
     "../extra-cpp-bindings/include/walletconnectcallback.h",
     "../extra-cpp-bindings/src/walletconnectcallback.cc",
+    "../defi-wallet-core-rs/bindings/cpp/src/nft.cc",
+    "../defi-wallet-core-rs/bindings/cpp/include/nft.h",
 ]
 INCLUDE_PATH = "./include"
 LIB_PATH = "./lib"
@@ -16,23 +26,36 @@ INITIAL_INCLUDES = [
     '#include "extra-cpp-bindings/src/lib.rs.h"',
     '#include "extra-cpp-bindings/include/pay.h"',
     '#include "extra-cpp-bindings/include/walletconnectcallback.h"',
+    '#include "defi-wallet-core-cpp/src/lib.rs.h"',
+    '#include "defi-wallet-core-cpp/src/uint.rs.h"',
+    '#include "defi-wallet-core-cpp/include/nft.h"',
 ]
 FINAL_INCLUDES = [
     '#include "lib.rs.h"',
     '#include "../../pay.h"',
     '#include "../../walletconnectcallback.h"',
+    '#include "lib.rs.h"',
+    '#include "uint.rs.h"',
+    '#include "../../nft.h"',
 ]
 
 INITIAL_SOURCES_INCLUDES = [
     '#include "extra-cpp-bindings/include/pay.h"',
     '#include "extra-cpp-bindings/include/walletconnectcallback.h"',
+    '#include "defi-wallet-core-cpp/include/nft.h"',
 ]
-FINAL_SOURCES_INCLUDES = ['#include "pay.h"', '#include "walletconnectcallback.h"']
+FINAL_SOURCES_INCLUDES = [
+    '#include "pay.h"',
+    '#include "walletconnectcallback.h"',
+    '#include "nft.h"',
+]
 
 
-TARGET_DIR = "../target/release"
+# the path of output target, defined by --target_dir
+TARGET_DIR = None
 
-OUT_DIR = "../target/cxxbridge"
+# the path of cxxbridge artifacts
+OUT_DIR = None
 
 
 # copy the generated binding files: `*.cc` and `*.h` to `output_path`
@@ -64,19 +87,33 @@ def copy_cxxbridge(output_path):
     # copy the bindings, need python 3.8+
     shutil.copytree(OUT_DIR, output_path, dirs_exist_ok=True)
 
+    # move lib.rs.cc of defi-wallet-core-cpp to core.cc to avoid name collision
+    # (extra-cpp-bindings also has a lib.rs.cc)
+    shutil.move(
+        Path(__file__).parent / output_path / "defi-wallet-core-cpp/src/lib.rs.cc",
+        Path(__file__).parent / output_path / "defi-wallet-core-cpp/src/core.cc",
+    )
 
-# copy library files: `*.a`, `*.dylib`, and `*.dll.lib` (windows) to `output_path`
+
+# copy library files: `*.a`, `*.dylib`, `*.lib` (windows), `*.dll` (windows) to `output_path`
 def copy_lib_files(output_path):
     os.makedirs(output_path, exist_ok=True)
     files = []
     files.extend(collect_files("*.a", TARGET_DIR, recursive=False))
     files.extend(collect_files("*.dylib", TARGET_DIR, recursive=False))
-    files.extend(collect_files("*.dll.lib", TARGET_DIR, recursive=False))
+    files.extend(collect_files("*.lib", TARGET_DIR, recursive=False))
+    files.extend(collect_files("*.dll", TARGET_DIR, recursive=False))
     # workaround: search libcxxbridge1.a and push the first one
     files.append(collect_files("libcxxbridge1.a", TARGET_DIR)[0])
 
     # copy the libraries, need python 3.8+
     for f in files:
+        shutil.copy(f, output_path)
+
+
+# copy `EXAMPLE_SOURCES` to `output_path`
+def copy_example_files(output_path):
+    for f in EXAMPLE_SOURCES:
         shutil.copy(f, output_path)
 
 
@@ -137,7 +174,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     TARGET_DIR = args.target_dir
+
+    OUT_DIR = Path(TARGET_DIR).parent / "cxxbridge"
     print("TARGET_DIR= ", TARGET_DIR)
+    print("OUT_DIR= ", OUT_DIR)
     copy_cxxbridge(INCLUDE_PATH)
     copy_lib_files(LIB_PATH)
     copy_sources_files(INCLUDE_PATH)
+
+    copy_example_files(".")

@@ -1,7 +1,8 @@
 [workspace]
+exclude = ["./defi-wallet-core-rs"]
 resolver = "2"
 members = [
     "wallet-connect",
-    "extra-cpp-bindings"
+    "extra-cpp-bindings",
+    "play-cpp-sdk",
 ]
-
