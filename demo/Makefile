@@ -65,6 +65,16 @@ x86_64_build: prepare_x86_64 easywsclient.o.x86_64
 		-std=c++14 \
 		$(FLAGS)
 
+examples:
+	g++ -o new_wallet new_wallet.cc lib/libplay_cpp_sdk.a -std=c++14 $(FLAGS)
+	g++ -o restore_wallet restore_wallet.cc lib/libplay_cpp_sdk.a -std=c++14 $(FLAGS)
+	g++ -o get_erc20_transfer_history_blocking get_erc20_transfer_history_blocking.cc lib/libplay_cpp_sdk.a -std=c++14 $(FLAGS)
+	g++ -o get_erc721_transfer_history_blocking get_erc721_transfer_history_blocking.cc lib/libplay_cpp_sdk.a -std=c++14 $(FLAGS)
+	./new_wallet
+	./restore_wallet
+	. .env && ./get_erc20_transfer_history_blocking
+	. .env && ./get_erc721_transfer_history_blocking
+
 run_static:
 	. ./.env && ./demostatic
 
