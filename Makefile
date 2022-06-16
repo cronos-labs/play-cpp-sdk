@@ -60,6 +60,10 @@ API=21
 
 all: build_cpp
 
+=======
+UNAME := $(shell uname)
+
+>>>>>>> d6186d7 (Problem: Missing support of uploading cpp documents to gitbook platform #82)
 clone:
 	git submodule update --init --recursive
 
@@ -165,3 +169,19 @@ install:
 
 uninstall:
 	rm -rf install
+	rm -rf build
+
+build_docs: build_play-cpp-sdk
+	@nix-shell ./defi-wallet-core-rs/docs/cpp/shell.nix --run "\
+	cd docs && doxygen && doxybook2 \
+		--input doxygen/xml \
+		--output gitbook \
+		--config config.json \
+		--summary-input SUMMARY.md.tmpl \
+		--summary-output gitbook/SUMMARY.md"
+
+docs: build_docs
+ifeq ($(UNAME), Darwin)
+	@nix-shell ./defi-wallet-core-rs/docs/cpp/shell.nix --run "\
+		cd docs/gitbook && gitbook serve --open"
+endif
