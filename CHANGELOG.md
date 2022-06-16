@@ -16,5 +16,11 @@
   - Add BlockScout function `get_tokens_blocking` returning the list of all owned tokens
   - Add BlockScout function `get_token_transfers_blocking` returning all the token transfers
   - Add Crypto.com Pay functions `create_payment` and `get_payment`
-  - Add wallet connect support
+  - Add WalletConnect support
+    - Add wallet connect function `walletconnect_new_client` to create opaque pointer for wallet-connect
+    - Add wallet connect function `setup_callback` to setup callbacks for wallet-connect events
+    - Add wallet connect function `ensure_session_blocking` to ensure that wallet-connnect session is created or restored
+    - Add wallet connect function `get_connection_string` to get string for qrcode generation
+    - Add wallet connect function `sign_personal_blocking` to sign general message
+    - Add wallet connect function `sign_legacy_transaction_blocking` to sign legacy transaction
 - Add a `demo` kick-starter project: link, build, and test the apis of the cpp sdk.
