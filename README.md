@@ -1,4 +1,4 @@
-# Cronos Play Cpp SDK
+# Cronos Play C++ SDK
 
 This project includes the following crates:
 - `play-cpp-sdk`: the cpp sdk wrapper

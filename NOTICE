@@ -1,5 +1,5 @@
-DeFi Wallet Core
-Copyright 2022, Foris Limited ("Crypto.com"). 
+Cronos Play C++ SDK
+Copyright 2022, Cronos Play authors. 
 
 This project contains portions of code derived from the following libraries:
 
@@ -12,3 +12,15 @@ This project contains portions of code derived from the following libraries:
  * Copyright: Copyright (c) 2021 HIHAHEHO Studio
  * License: Apache License 2.0
  * Repository: https://github.com/Hihaheho/Desk/tree/main/crates/libs/cross-websocket
+
+The sample demo code bundles the following libraries:
+
+* JSON for Modern C++
+ * Copyright: Copyright (c) 2013-2022 Niels Lohmann
+ * License: MIT
+ * Repository: https://github.com/nlohmann/json
+
+* easywsclient
+ * Copyright: Copyright (c) 2012, 2013 David Baird
+ * License: MIT
+ * Repository: https://github.com/dhbaird/easywsclient
