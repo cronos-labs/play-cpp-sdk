@@ -1,3 +1,5 @@
+UNAME := $(shell uname)
+
 clone:
 	git submodule update --init --recursive
 
@@ -44,3 +46,18 @@ install:
 
 uninstall:
 	rm -rf build
+
+docs: build_cpp
+	mkdir -p docs/gitbook/src
+	@nix-shell ./defi-wallet-core-rs/docs/cpp/shell.nix --run "\
+	cd docs && doxygen && doxybook2 \
+		--input doxygen/xml \
+		--output gitbook/src \
+		--config config.json \
+		--summary-input SUMMARY.md.tmpl \
+		--summary-output gitbook/src/SUMMARY.md \
+		&& cd gitbook/src && gitbook build"
+ifeq ($(UNAME), Darwin)
+	@nix-shell ./defi-wallet-core-rs/docs/cpp/shell.nix --run "\
+		cd docs/gitbook/src && gitbook serve --open"
+endif
