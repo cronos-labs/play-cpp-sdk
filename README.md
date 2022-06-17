@@ -6,6 +6,14 @@ This project includes the following crates:
 - `extra-cpp-bindings`: a dependency of play-cpp-sdk
 - `wallet-connect`: wallet connect implementation
 
+## Security Warning
+
+No security audits of this project have ever been performed.
+
+The project is still in development and is *alpha* quality. 
+
+USE AT YOUR OWN RISK!
+
 # Build
 ## Windows
 1. Install Visual Studio 2019 or newer
