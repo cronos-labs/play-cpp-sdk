@@ -1,5 +1,5 @@
 //! Copyright (c) 2020 Nicholas Rodrigues Lordello (licensed under the Apache License, Version 2.0)
-//! Modifications Copyright (c) 2022, Foris Limited (licensed under the Apache License, Version 2.0)
+//! Modifications Copyright (c) 2022, Cronos Labs (licensed under the Apache License, Version 2.0)
 use crate::crypto::Key;
 use crate::protocol::Topic;
 use qrcodegen::{QrCode, QrCodeEcc};
