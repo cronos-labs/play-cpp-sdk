@@ -83,11 +83,12 @@ The following build events are included in the project file:
   - `LICENSE`
 
 We suggest:
-- In case of same filename collision, we suggest you unzip the archive in a temporary folder
-  and review them first.
-- Review the files under `include` and `lib` folder to see if there are files that have same
-  names in your project, rename those files in your project to avoid collision.
-- Finally copy the `include` or `lib` folders into your project.
+- In case of same name collision, we suggest you unzip the archive in a temporary folder and
+  review them first.
+- Review the folder or file names under `include` and `lib` folder to see if there are files
+  that have same names as in your project, rename those files in your project to avoid
+  collision.
+- Finally copy `include` and `lib` folders into your project.
 - We will support CMAKE and provide you a better integration in future release.
 
 2. Include the following headers and use the namespaces in your source codes
