@@ -22,6 +22,19 @@ USE AT YOUR OWN RISK!
 
 # Pre-build Download
 Please download the archive file based on your os version: https://github.com/crypto-com/play-cpp-sdk/releases
+
+## Windows
+1. Unzip the archive file into `demo` folder
+2. Open `demo.sln` which includes two projects: `demo` (dynamic build) and `demostatic` (static
+   build). If you use Visual Studio 2022, retarget project, and upgrade PlatformToolset to
+   v143.
+3. Select `Release` profile.
+4. Build the solution
+
+### Build Events
+Pre-Build event: `call pre_build.bat`
+Post-Build event (dynamic build): `copy $(ProjectDir)lib\play_cpp_sdk.dll $(TargetDir)`
+
 ## Mac
 1. Unzip the archive file into `demo` folder
 2. In order to use the dynamic library correctly, please copy the dynamic library to `/usr/local/lib`
@@ -40,17 +53,10 @@ Please download the archive file based on your os version: https://github.com/cr
     make
     ```
 
-## Windows
-1. Unzip the archive file into `demo` folder
-2. Open `demo.sln` with Visual Studio, select `Release` profile.
-3. If you use Visual Studio 2022, right click the project, click `Retarget Projects`,
-   PlatformToolset: `Upgrade to v143`.
-4. Build the solution
-
-
 # Build from scratch
 ## Windows
-1. If you use Visual Studio 2022, open `demo.vcxproj` and upgrade PlatformToolset to v143.
+1. Open `demo.sln`. If you use Visual Studio 2022, retarget project, and upgrade
+   PlatformToolset to v143.
 2. Run `windows_build.bat` in x64 native command prompt. It will clone necessary submodules,
    build `play-cpp-sdk` crate, finally setup and build the demo project.
 3. Clean `~/.cargo/git/checkouts` if cxx fails to build.
