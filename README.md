@@ -29,7 +29,7 @@ Please download the archive file based on your os version: https://github.com/cr
    build). If you use Visual Studio 2022, retarget project, and upgrade PlatformToolset to
    v143.
 3. Select `Release` profile.
-4. Build the solution
+4. Right click `demo` or `demostatic` project, click `Build` or `Rebuild` to build the project
 
 ### Build Events
 Pre-Build event: `call pre_build.bat`
