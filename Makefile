@@ -40,5 +40,7 @@ cppx86_64: clone
 
 
 install:
-	. ./checkmac.sh
 	. ./install.sh
+
+uninstall:
+	rm -rf build
