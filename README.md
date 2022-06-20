@@ -41,15 +41,11 @@ Please download the archive file based on your os version: https://github.com/cr
     ```
 
 ## Windows
-1. Clone submodules in `demo` folder:
-    ``` sh
-    cd demo
-    git submodule update --init --recursive`
-    ```
+1. Unzip the archive file into `demo` folder
 2. Open `demo.sln` with Visual Studio, select `Release` profile.
 3. If you use Visual Studio 2022, right click the project, click `Retarget Projects`,
    PlatformToolset: `Upgrade to v143`.
-3. Build the solution
+4. Build the solution
 
 
 # Build from scratch

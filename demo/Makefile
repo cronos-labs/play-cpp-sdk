@@ -8,7 +8,7 @@ ifeq ($(UNAME), Linux)
 	FLAGS=-lpthread -lssl -lcrypto -ldl
 endif
 
-all: clone static dynamic
+all: clone build
 build: prepare static dynamic
 run: run_static run_dynamic
 
@@ -66,10 +66,10 @@ x86_64_build: prepare_x86_64 easywsclient.o.x86_64
 		$(FLAGS)
 
 run_static:
-	./demostatic
+	. ./.env && ./demostatic
 
 run_dynamic:
-	export LD_LIBRARY_PATH=$(PWD)/lib && ./demo
+	. ./.env && export LD_LIBRARY_PATH=$(PWD)/lib && ./demo
 
 clean:
 	rm easywsclient.o demo demostatic
