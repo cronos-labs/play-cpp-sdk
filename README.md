@@ -22,11 +22,12 @@ USE AT YOUR OWN RISK!
 4. Optional: Visual Studio 2019 or newer for windows
 
 # Pre-build Download
-Please download the archive file based on your OS release: https://github.com/crypto-com/play-cpp-sdk/releases
+Please download the archive file based on your OS release:
+https://github.com/crypto-com/play-cpp-sdk/releases
 
-- Visual Studio 2019 MSVC, x86_64, toolset 14.29: `play_cpp_sdk_Windows_x86_64.zip`
-- macOS 10.15: `play_cpp_sdk_Darwin_x86_64.tar.gz`
-- Ubuntu 20.04: `play_cpp_sdk_Linux_x86_64.tar.gz`
+- Visual Studio 2019 MSVC, x86_64, toolset 14.29 or newer: `play_cpp_sdk_Windows_x86_64.zip`
+- macOS 10.15 or newer: `play_cpp_sdk_Darwin_x86_64.tar.gz`
+- Ubuntu 20.04 or newer: `play_cpp_sdk_Linux_x86_64.tar.gz`
 
 ## Setup in a demo Visual C++ project
 
