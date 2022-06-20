@@ -139,7 +139,7 @@
       <Command>copy $(ProjectDir)lib\play_cpp_sdk.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>call $(ProjectDir)windows_build.bat</Command>
+      <Command>call $(ProjectDir)pre_build.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
