@@ -62,15 +62,6 @@ jobs:
         echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
         cat $GITHUB_ENV
 
-    - name: Upload binaries and bindings artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: upload-windows-artifact
-        path: |
-          ${{ env.release_file }}
-          ${{ env.checksum_file }}
-        if-no-files-found: error
-
     - name: Upload binaries and bindings to Release
       uses: softprops/action-gh-release@v1
       if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
