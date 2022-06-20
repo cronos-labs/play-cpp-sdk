@@ -170,16 +170,21 @@ if __name__ == "__main__":
         description="Generate bindings for the C++ example."
     )
     parser.add_argument(
-        "--target_dir", metavar="path", required=True, help="path to target dir"
+        "--target_dir",
+        default="../target/release",
+        metavar="path",
+        help="path to target dir",
     )
     args = parser.parse_args()
     TARGET_DIR = args.target_dir
 
     OUT_DIR = Path(TARGET_DIR).parent / "cxxbridge"
-    print("TARGET_DIR= ", TARGET_DIR)
-    print("OUT_DIR= ", OUT_DIR)
-    copy_cxxbridge(INCLUDE_PATH)
-    copy_lib_files(LIB_PATH)
-    copy_sources_files(INCLUDE_PATH)
+
+    if os.path.exists(TARGET_DIR):
+        print("TARGET_DIR= ", TARGET_DIR)
+        print("OUT_DIR= ", OUT_DIR)
+        copy_cxxbridge(INCLUDE_PATH)
+        copy_lib_files(LIB_PATH)
+        copy_sources_files(INCLUDE_PATH)
 
     copy_example_files(".")

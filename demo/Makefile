@@ -8,9 +8,12 @@ ifeq ($(UNAME), Linux)
 	FLAGS=-lpthread -lssl -lcrypto -ldl
 endif
 
-all: build run
+all: clone build
 build: prepare static dynamic
 run: run_static run_dynamic
+
+clone:
+	git submodule update --init --recursive
 
 prepare:
 	python3 helper.py --target_dir ../target/release
@@ -19,10 +22,10 @@ prepare_x86_64:
 	python3 helper.py --target_dir ../target/x86_64-apple-darwin/release
 
 easywsclient.o:
-	g++ -c include/easywsclient/easywsclient.cpp
+	g++ -c third_party/easywsclient/easywsclient.cpp
 
 easywsclient.o.x86_64:
-	arch -x86_64 g++ -c include/easywsclient/easywsclient.cpp
+	arch -x86_64 g++ -c third_party/easywsclient/easywsclient.cpp
 
 static: easywsclient.o
 	g++ -o demostatic \
@@ -63,10 +66,10 @@ x86_64_build: prepare_x86_64 easywsclient.o.x86_64
 		$(FLAGS)
 
 run_static:
-	./demostatic
+	. ./.env && ./demostatic
 
 run_dynamic:
-	export LD_LIBRARY_PATH=$(PWD)/lib && ./demo
+	. ./.env && export LD_LIBRARY_PATH=$(PWD)/lib && ./demo
 
 clean:
-	rm demo demostatic
+	rm easywsclient.o demo demostatic

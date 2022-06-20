@@ -1,4 +1,5 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -20,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{ad00f0ed-39e3-4901-a157-01d91c702a18}</ProjectGuid>
-    <RootNamespace>demo</RootNamespace>
+    <ProjectGuid>{ea4a9cc2-b88e-42fd-8310-883ef4b92db0}</ProjectGuid>
+    <RootNamespace>demostatic</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -135,9 +136,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Ncrypt.lib;userenv.lib;bcrypt.lib;ntdll.lib;Secur32.Lib;crypt32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(ProjectDir)lib\play_cpp_sdk.dll $(TargetDir)</Command>
-    </PostBuildEvent>
     <PreBuildEvent>
       <Command>call $(ProjectDir)pre_build.bat</Command>
     </PreBuildEvent>
@@ -167,8 +165,7 @@
     <ClCompile Include="third_party\json\single_include\nlohmann\json.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\libcxxbridge1.a" />
-    <Library Include="lib\play_cpp_sdk.dll.lib" />
+    <Library Include="lib\play_cpp_sdk.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
