@@ -46,8 +46,10 @@ Please download the archive file based on your os version: https://github.com/cr
     cd demo
     git submodule update --init --recursive`
     ```
-2. Open `demo.vcxproj` with Visual Studio, select `Release` profile,
-   and build the solution.
+2. Open `demo.sln` with Visual Studio, select `Release` profile.
+3. If you use Visual Studio 2022, right click the project, click `Retarget Projects`,
+   PlatformToolset: `Upgrade to v143`.
+3. Build the solution
 
 
 # Build from scratch
