@@ -75,11 +75,21 @@ The following build events are included in the project file:
     ```
 
 ## Setup in any other c++ 14 (or newer) projects
-1. Unzip the archive file into `demo` folder, you should see the following folders and files:
+1. Unzip the archive file into the root folder of your project, you should see the following
+   folders and files.
   - `include`: c++ source files and header files
   - `lib`: static and dynamic libraries
   - `CHANGELOG.md`
   - `LICENSE`
+
+We suggest:
+- In case of same filename collision, we suggest you unzip the archive in a temporary folder
+  and review them first.
+- Review the files under `include` and `lib` folder to see if there are files that have same
+  names in your project, rename those files in your project to avoid collision.
+- Finally copy the `include` or `lib` folders into your project.
+- We will support CMAKE and provide you a better integration in future release.
+
 2. Include the following headers and use the namespaces in your source codes
     ``` c++
     #include "include/defi-wallet-core-cpp/src/contract.rs.h" // erc20, erc721, erc1155 supports
@@ -113,7 +123,7 @@ Mac or Linux
     lib/libplay_cpp_sdk.dylib
     lib\libcxxbridge1.a
     ```
-- Linux dynamic build is not supported yet.
+- Linux dynamic build is under testing.
 
 # Build libraries and bindings from scratch
 If the Pre-built release does not support your platform, you can build the binaries and
