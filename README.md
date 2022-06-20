@@ -22,7 +22,7 @@ USE AT YOUR OWN RISK!
 4. Optional: Visual Studio 2019 or newer for windows
 
 # Pre-build Download
-Please download the archive file based on your os version: https://github.com/crypto-com/play-cpp-sdk/releases
+Please download the archive file based on your OS release: https://github.com/crypto-com/play-cpp-sdk/releases
 
 - Visual Studio 2019 MSVC, x86_64, toolset 14.29: `play_cpp_sdk_Windows_x86_64.zip`
 - macOS 10.15: `play_cpp_sdk_Darwin_x86_64.tar.gz`
@@ -31,13 +31,16 @@ Please download the archive file based on your os version: https://github.com/cr
 ## Setup in a demo Visual C++ project
 
 ### Windows
-
-1. Unzip the archive file into `demo` folder
-2. Open `demo.sln` which includes two projects: `demo` (dynamic build) and `demostatic` (static
+1. Clone the current repository
+    ``` sh
+    git clone https://github.com/crypto-com/play-cpp-sdk.git
+    ```
+2. Unzip the archive file into `demo` folder
+3. Open `demo.sln` which includes two projects: `demo` (dynamic build) and `demostatic` (static
    build). If you use Visual Studio 2022, retarget project, and upgrade PlatformToolset to
    v143.
-3. Select `Release` profile.
-4. Right click `demo` or `demostatic` project, click `Build` or `Rebuild` to build the project
+4. Select `Release` profile.
+5. Right click `demo` or `demostatic` project, click `Build` or `Rebuild` to build the project
 
 #### Build Events
 The following build events are included in the project file:
@@ -45,8 +48,12 @@ The following build events are included in the project file:
 - Post-Build event (`demo`): `copy $(ProjectDir)lib\play_cpp_sdk.dll $(TargetDir)`
 
 ### Mac
-1. Unzip the archive file into `demo` folder
-2. Copy the dynamic library to `/usr/local/lib`
+1. Clone the current repository
+    ``` sh
+    git clone https://github.com/crypto-com/play-cpp-sdk.git
+    ```
+2. Unzip the archive file into `demo` folder
+3. Copy the dynamic library to `/usr/local/lib`
     ``` sh
     cd demo
     cp lib/libplay_cpp_sdk.dylib /usr/local/lib
@@ -57,8 +64,12 @@ The following build events are included in the project file:
     ```
 
 ### Linux
-1. Unzip the archive file into `demo` folder
-2. Under `demo` folder and build the `demo` project
+1. Clone the current repository
+    ``` sh
+    git clone https://github.com/crypto-com/play-cpp-sdk.git
+    ```
+2. Unzip the archive file into `demo` folder
+3. Under `demo` folder and build the `demo` project
     ``` sh
     make
     ```
