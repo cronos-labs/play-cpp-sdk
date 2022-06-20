@@ -8,9 +8,12 @@ ifeq ($(UNAME), Linux)
 	FLAGS=-lpthread -lssl -lcrypto -ldl
 endif
 
-all: build run
+all: clone static dynamic
 build: prepare static dynamic
 run: run_static run_dynamic
+
+clone:
+	git submodule update --init --recursive
 
 prepare:
 	python3 helper.py --target_dir ../target/release
@@ -69,4 +72,4 @@ run_dynamic:
 	export LD_LIBRARY_PATH=$(PWD)/lib && ./demo
 
 clean:
-	rm demo demostatic
+	rm easywsclient.o demo demostatic
