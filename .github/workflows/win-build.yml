@@ -37,13 +37,13 @@ jobs:
       with:
         python-version: "3.8"
 
-    - name: Collect cxxbrdiges files into demo
-      working-directory: demo
-      run: python3 helper.py --target_dir ..\target\release
-
     - name: Build demo project
       working-directory: demo
       run: msbuild .\demo.vcxproj -t:rebuild -property:Configuration=Release /p:Platform=x64
+
+    - name: Build demostatic project
+      working-directory: demo
+      run: msbuild .\demostatic.vcxproj -t:rebuild -property:Configuration=Release /p:Platform=x64
 
     - name: Pack binaries and bindings
       shell: bash

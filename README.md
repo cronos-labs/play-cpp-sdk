@@ -57,8 +57,9 @@ Post-Build event (dynamic build): `copy $(ProjectDir)lib\play_cpp_sdk.dll $(Targ
 ## Windows
 1. Open `demo.sln`. If you use Visual Studio 2022, retarget project, and upgrade
    PlatformToolset to v143.
-2. Run `windows_build.bat` in x64 native command prompt. It will clone necessary submodules,
-   build `play-cpp-sdk` crate, finally setup and build the demo project.
+2. Run `windows_build.bat` in x64 Native Tools Command Prompt for VS 2019 (or 2022). It will
+   clone necessary submodules, build `play-cpp-sdk` crate, finally setup and build the demo
+   project.
 3. Clean `~/.cargo/git/checkouts` if cxx fails to build.
 
 ## Mac
