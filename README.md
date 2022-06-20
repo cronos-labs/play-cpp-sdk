@@ -82,14 +82,14 @@ The following build events are included in the project file:
   - `CHANGELOG.md`
   - `LICENSE`
 
-We suggest:
-- In case of same name collision, we suggest you unzip the archive in a temporary folder and
+  We suggest:
+  - In case of same name collision, we suggest you unzip the archive in a temporary folder and
   review them first.
-- Review the folder or file names under `include` and `lib` folder to see if there are files
+  - Review the folder or file names under `include` and `lib` folder to see if there are files
   that have same names as in your project, rename those files in your project to avoid
   collision.
-- Finally copy `include` and `lib` folders into your project.
-- We will support CMAKE and provide you a better integration in future release.
+  - Finally copy `include` and `lib` folders into your project.
+  - We will support CMAKE and provide you a better integration in future release.
 
 2. Include the following headers and use the namespaces in your source codes
     ``` c++
@@ -104,16 +104,18 @@ We suggest:
     using namespace org::defi_wallet_core;
     using namespace com::crypto::game_sdk;
     ```
-3. Link `play_cpp_sdk` static library in your build flow
-Windows
+3. Link `play_cpp_sdk` static library in your build flow (check `demo/Makefile` for more
+   details)
+- Windows
     ``` c++
         lib\play_cpp_sdk.lib
     ```
-Mac or Linux
+- Mac or Linux
     ``` c++
         lib/libplay_cpp_sdk.a
     ```
 4. Or link `play_cpp_sdk` dynamic library and `cxxbridge1` static library in your build flow
+   (check `demo/Makefile` for more details)
 - Windows
     ```
     lib\play_cpp_sdk.dll.lib
@@ -133,13 +135,13 @@ bindings on your own.
 ## Windows
 1. Run `windows_build.bat` in x64 Native Tools Command Prompt for VS 2019. It will clone
    necessary submodules, build `play-cpp-sdk` crate, finally setup and build the demo project.
-2. Clean `~/.cargo/git/checkouts` if cxx fails to build.
+2. Clean `~/.cargo/git/checkouts` if cxx fails to build, then run `windows_build.bat` again.
 3. The libraries would be copied into `demo\lib` and the bindings would be copied into
    `demo\include`
 
-### Notes about Visual Studio
+### Notes about Visual Studio 2022
 1. Open `demo.sln`. If you use Visual Studio 2022, retarget project, and upgrade
-   PlatformToolset to v143 before running `windows_build.bat`
+   PlatformToolset to `v143` before running `windows_build.bat`
 
 ## Mac
 1. Run `make build_cpp` or `make cppx86_64`
