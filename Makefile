@@ -37,3 +37,8 @@ cppx86_64: clone
 	rustup target add x86_64-apple-darwin
 	. ./checkmac.sh && cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
 	. ./checkmac.sh && cd demo && make x86_64_build
+
+
+install:
+	. ./checkmac.sh
+	. ./install.sh

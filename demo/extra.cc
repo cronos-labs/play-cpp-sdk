@@ -1,10 +1,10 @@
-#include "include/easywsclient/easywsclient.hpp"
-#include "include/extra-cpp-bindings/src/lib.rs.h"
+#include "extra.h"
 #include "include/defi-wallet-core-cpp/src/lib.rs.h"
 #include "include/defi-wallet-core-cpp/src/nft.rs.h"
-#include "include/json/single_include/nlohmann/json.hpp"
+#include "include/extra-cpp-bindings/src/lib.rs.h"
 #include "include/rust/cxx.h"
-#include "extra.h"
+#include "third_party/easywsclient/easywsclient.hpp"
+#include "third_party/json/single_include/nlohmann/json.hpp"
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -24,7 +24,6 @@ void test_crypto_pay();
 void websocket_client_thread(std::atomic<bool> &stop_thread, String &id);
 
 inline String getEnv(String key);
-
 
 inline String getEnv(String key) {
   String ret;

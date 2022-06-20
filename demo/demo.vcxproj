@@ -152,13 +152,13 @@
     <ClCompile Include="include\pay.cc" />
     <ClCompile Include="include\walletconnectcallback.cc" />
     <ClCompile Include="include\extra-cpp-bindings\src\lib.rs.cc" />
-    <ClCompile Include="include\easywsclient\easywsclient.cpp" />
-    <ClCompile Include="include\json\single_include\nlohmann\json.hpp" />
     <ClCompile Include="include\nft.cc" />
     <ClCompile Include="include\defi-wallet-core-cpp\src\core.cc" />
     <ClCompile Include="include\defi-wallet-core-cpp\src\nft.rs.cc" />
     <ClCompile Include="include\defi-wallet-core-cpp\src\contract.rs.cc" />
     <ClCompile Include="include\defi-wallet-core-cpp\src\uint.rs.cc" />
+    <ClCompile Include="third_party\easywsclient\easywsclient.cpp" />
+    <ClCompile Include="third_party\json\single_include\nlohmann\json.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\play_cpp_sdk.lib" />

@@ -2,8 +2,8 @@
 
 ## [Unreleased]
 ### Added
-- Add `play-cpp-sdk` crate for building static library `play_cpp_sdk.lib` and providing
-  bindings (headers and sources) for c++ projects
+- Add `play-cpp-sdk` crate for building static or dynamic libraries and providing bindings
+  (headers and sources) for c++ projects
 - Add [defi-wallet-core-rs](https://github.com/crypto-com/defi-wallet-core-rs) as submodule,
   and one of dependencies of `play-cpp-sdk` crate
 - Add `extra-cpp-bindings` as one of dependencies of `play-cpp-sdk` crate

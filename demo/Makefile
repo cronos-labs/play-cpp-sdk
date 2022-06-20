@@ -19,10 +19,10 @@ prepare_x86_64:
 	python3 helper.py --target_dir ../target/x86_64-apple-darwin/release
 
 easywsclient.o:
-	g++ -c include/easywsclient/easywsclient.cpp
+	g++ -c third_party/easywsclient/easywsclient.cpp
 
 easywsclient.o.x86_64:
-	arch -x86_64 g++ -c include/easywsclient/easywsclient.cpp
+	arch -x86_64 g++ -c third_party/easywsclient/easywsclient.cpp
 
 static: easywsclient.o
 	g++ -o demostatic \

@@ -6,14 +6,20 @@ on:
       - main
     paths-ignore:
       - README.md
+    tags:
+      - "v*.*.*"
   pull_request:
     paths-ignore:
       - README.md
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
+    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x86_64
+        toolset: 14.29
     - uses: actions/checkout@v2
       with:
         token: ${{ secrets.PAT }}
@@ -24,14 +30,52 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
 
     - name: Build play-cpp-sdk crate
-      shell: bash
       run: cargo build --package play-cpp-sdk --release
 
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.8"
+
     - name: Collect cxxbrdiges files into demo
-      shell: bash
       working-directory: demo
-      run: python3 helper.py --target_dir ../target/release
+      run: python3 helper.py --target_dir ..\target\release
 
     - name: Build demo project
-      working-directory: .\demo
+      working-directory: demo
       run: msbuild .\demo.vcxproj -t:rebuild -property:Configuration=Release /p:Platform=x64
+
+    - name: Pack binaries and bindings
+      shell: bash
+      run: |
+        PLATFORM="Windows_x86_64"
+        mkdir -p build
+        cp -r demo/include build
+        cp -r demo/lib build
+        cp ./LICENSE build
+        cp ./CHANGELOG.md build
+        cd build
+        7z a -tzip ../play_cpp_sdk_${PLATFORM}.zip *
+        cd ..
+        sha256sum *.zip > "checksums-$PLATFORM.txt"
+        echo "release_file=play_cpp_sdk_$PLATFORM.zip" >> $GITHUB_ENV
+        echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+        cat $GITHUB_ENV
+
+    - name: Upload binaries and bindings artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: upload-windows-artifact
+        path: |
+          ${{ env.release_file }}
+          ${{ env.checksum_file }}
+        if-no-files-found: error
+
+    - name: Upload binaries and bindings to Release
+      uses: softprops/action-gh-release@v1
+      if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      with:
+        draft: true
+        files: |
+          ${{ env.release_file }}
+          ${{ env.checksum_file }}

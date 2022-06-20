@@ -10,21 +10,26 @@ This project includes the following crates:
 
 No security audits of this project have ever been performed.
 
-The project is still in development and is *alpha* quality. 
+The project is still in development and is *alpha* quality.
 
 USE AT YOUR OWN RISK!
 
+# Requirements
+1. python 3.8 or newer
+2. rust 1.61 or newer
+3. For windows, Visual Studio 2019 or newer
+
 # Build
 ## Windows
-1. Install Visual Studio 2019 or newer
-2. Run `windows_build.bat` in x64 native command prompt. It will build all the things and setup the demo project
-
-### Notes on windows
-1. If you use Visual Studio 2022, you need to upgrade the PlatformToolset of `demo.vcxproj` to v143
-2. Only static lib `play-cpp-sdk.lib` is supported, linking `play-cpp-sdk.dll.lib` is not supported at this moment.
+1. If you use Visual Studio 2022, open `demo.vcxproj` and upgrade PlatformToolset to v143.
+2. Run `windows_build.bat` in x64 native command prompt. It will clone necessary submodules,
+   build `play-cpp-sdk` crate, finally setup and build the demo project.
 3. Clean `~/.cargo/git/checkouts` if cxx fails to build.
 
-## Mac or Linux
+## Mac
+`make cpp` or `make cppx86_64`
+
+### Linux
 `make cpp`
 
 # wallet-connect

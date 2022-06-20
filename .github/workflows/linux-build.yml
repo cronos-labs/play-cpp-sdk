@@ -1,5 +1,4 @@
-name: Mac x86_64 Build CI
-
+name: Linux Build CI
 on:
   push:
     branches:
@@ -13,23 +12,20 @@ on:
       - README.md
 
 jobs:
-  mac-build:
-    runs-on: macos-11
+  build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
 
-      - name: Add target x86_64-apple-darwin
-        run: rustup target add x86_64-apple-darwin
+      - name: Build play-cpp-sdk library
+        run: cargo build --package play-cpp-sdk --release
 
-      - name: Build play-cpp-sdk library (x86_64-apple-darwin)
-        run: ./checkmac.sh && cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
-
-      - name: Build demo project (x86_64-apple-darwin)
+      - name: Build demo project
         working-directory: demo
-        run: make x86_64_build
+        run: make build
 
       - name: Pack binaries and bindings
         run: |
@@ -43,7 +39,7 @@ jobs:
           cd build
           tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
           cd ..
-          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
+          sha256sum *.tar.gz > "checksums-$PLATFORM.txt"
           echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
           echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
           cat $GITHUB_ENV
