@@ -21,18 +21,33 @@ USE AT YOUR OWN RISK!
 4. For windows, Visual Studio 2019 or newer
 
 # Pre-build Download
-1. Please download the archive file based on your os version: https://github.com/crypto-com/play-cpp-sdk/releases
-2. Clone submodules:
-``` sh
-cd demo && git submodule update --init --recursive`
-```
-3. Unzip the archive file into `demo` folder, then build the `demo` project with `make`. If use
-    Visual Studio, you can also open `demo.vcxproj`, select `Release` profile, and build the
-    solution.
-4. In mac, to use the dynamic library, copy the library to `/usr/local/lib`
-``` sh
-cp lib/libplay_cpp_sdk.dylib /usr/local/lib
-```
+Please download the archive file based on your os version: https://github.com/crypto-com/play-cpp-sdk/releases
+## Mac
+1. Unzip the archive file into `demo` folder
+2. In order to use the dynamic library correctly, please copy the dynamic library to `/usr/local/lib`
+    ``` sh
+    cd demo
+    cp lib/libplay_cpp_sdk.dylib /usr/local/lib
+    ```
+4. Build the `demo` project
+    ``` sh
+    make
+    ```
+## Linux
+1. Unzip the archive file into `demo` folder
+2. Build the `demo` project
+    ``` sh
+    make
+    ```
+
+## Windows
+1. Clone submodules in `demo` folder:
+    ``` sh
+    cd demo
+    git submodule update --init --recursive`
+    ```
+2. Open `demo.vcxproj` with Visual Studio, select `Release` profile,
+   and build the solution.
 
 
 # Build from scratch
