@@ -47,17 +47,17 @@ install:
 uninstall:
 	rm -rf build
 
-docs: build_cpp
-	mkdir -p docs/gitbook/src
+build_docs: build_play-cpp-sdk
 	@nix-shell ./defi-wallet-core-rs/docs/cpp/shell.nix --run "\
 	cd docs && doxygen && doxybook2 \
 		--input doxygen/xml \
-		--output gitbook/src \
+		--output gitbook \
 		--config config.json \
 		--summary-input SUMMARY.md.tmpl \
-		--summary-output gitbook/src/SUMMARY.md \
-		&& cd gitbook/src && gitbook build"
+		--summary-output gitbook/SUMMARY.md"
+
+docs: build_docs
 ifeq ($(UNAME), Darwin)
 	@nix-shell ./defi-wallet-core-rs/docs/cpp/shell.nix --run "\
-		cd docs/gitbook/src && gitbook serve --open"
+		cd docs/gitbook && gitbook serve --open"
 endif
