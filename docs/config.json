@@ -11,5 +11,5 @@
     "indexExamplesName": "README",
     "mainPageInRoot": true,
     "mainPageName": "README",
-    "foldersToGenerate": ["classes", "pages", "namespaces", "examples"]
+    "foldersToGenerate": ["classes", "namespaces"]
 }

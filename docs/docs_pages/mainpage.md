@@ -1,2 +1,1 @@
-@mainpage Cronos Play Cpp Documentation
-Documentation of Cronos Play
+@mainpage Cronos Play C++ SDK Reference
