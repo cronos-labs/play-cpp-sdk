@@ -23,7 +23,7 @@ USE AT YOUR OWN RISK!
 
 # Pre-build Download
 Please download the archive file based on your OS release:
-https://github.com/crypto-com/play-cpp-sdk/releases
+https://github.com/cronos-labs/play-cpp-sdk/releases
 
 - Visual Studio 2019 MSVC, x86_64, toolset 14.29 or newer: `play_cpp_sdk_Windows_x86_64.zip`
 - macOS 10.15 or newer: `play_cpp_sdk_Darwin_x86_64.tar.gz`
