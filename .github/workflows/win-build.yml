@@ -22,7 +22,6 @@ jobs:
         toolset: 14.29
     - uses: actions/checkout@v2
       with:
-        token: ${{ secrets.PAT }}
         submodules: recursive
     - run: git config --global core.symlinks true
 

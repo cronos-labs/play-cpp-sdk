@@ -1,12 +1,16 @@
 name: integration tests
 on:
-  pull_request:
   push:
     branches:
       - main
       - release/**
+    paths-ignore:
+      - README.md
     tags:
       - "*"
+  pull_request:
+    paths-ignore:
+      - README.md
 
 jobs:
   integration_tests:
@@ -16,7 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          token: ${{ secrets.PAT }}
           submodules: recursive
       - uses: cachix/install-nix-action@v15
       - uses: cachix/cachix-action@v10
