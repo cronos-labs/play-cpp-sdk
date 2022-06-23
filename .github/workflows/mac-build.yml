@@ -26,6 +26,10 @@ jobs:
       - name: Build play-cpp-sdk library
         run: ./checkmac.sh && cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
 
+      - name: Test building demo project
+        working-directory: demo
+        run: make x86_64_build_test
+
       - name: Build demo project
         working-directory: demo
         run: make x86_64_build
@@ -40,6 +44,8 @@ jobs:
           cp ./LICENSE build
           cp ./CHANGELOG.md build
           cd build
+          install_name_tool -id @rpath/libplay_cpp_sdk.dylib ./lib/libplay_cpp_sdk.dylib
+          otool -L ./lib/libplay_cpp_sdk.dylib
           tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
           cd ..
           shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"

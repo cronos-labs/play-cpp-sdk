@@ -54,14 +54,9 @@ The following build events are included in the project file:
     git clone https://github.com/crypto-com/play-cpp-sdk.git
     ```
 2. Unzip the archive file into `demo` folder
-3. Copy the dynamic library to `/usr/local/lib`
+3. Under `demo` folder and build the `demo` project
     ``` sh
-    cd demo
-    cp lib/libplay_cpp_sdk.dylib /usr/local/lib
-    ```
-4. Under `demo` folder and build the `demo` project
-    ``` sh
-    make
+    make x86_64_build
     ```
 
 ### Linux
