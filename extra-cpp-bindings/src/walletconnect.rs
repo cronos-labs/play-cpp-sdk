@@ -156,7 +156,9 @@ async fn do_walletconnect_set_callback(
                     println!("session info: {:?}", info);
 
                     if let Ok(sessioninfo) = convert_session_info(&info) {
-                        cppcallback.onConnected(sessioninfo);
+                        if let Some(myref) = sessioninfo.as_ref() {
+                            cppcallback.onConnected(myref);
+                        }
                     } else {
                         println!("invalid session info");
                     }
@@ -167,7 +169,9 @@ async fn do_walletconnect_set_callback(
                 if let Some(info) = message.session {
                     println!("session info: {:?}", info);
                     if let Ok(sessioninfo) = convert_session_info(&info) {
-                        cppcallback.onDisconnected(sessioninfo);
+                        if let Some(myref) = sessioninfo.as_ref() {
+                            cppcallback.onDisconnected(myref);
+                        }
                     } else {
                         println!("invalid session info");
                     }
@@ -178,7 +182,9 @@ async fn do_walletconnect_set_callback(
                 if let Some(info) = &message.session {
                     println!("session info: {:?}", info);
                     if let Ok(sessioninfo) = convert_session_info(info) {
-                        cppcallback.onConnecting(sessioninfo);
+                        if let Some(myref) = sessioninfo.as_ref() {
+                            cppcallback.onConnecting(myref);
+                        }
                     } else {
                         println!("invalid session info");
                     }
@@ -188,8 +194,11 @@ async fn do_walletconnect_set_callback(
                 println!("Updated");
                 if let Some(info) = &message.session {
                     println!("session info: {:?}", info);
+
                     if let Ok(sessioninfo) = convert_session_info(info) {
-                        cppcallback.onUpdated(sessioninfo);
+                        if let Some(myref) = sessioninfo.as_ref() {
+                            cppcallback.onUpdated(myref);
+                        }
                     } else {
                         println!("invalid session info");
                     }

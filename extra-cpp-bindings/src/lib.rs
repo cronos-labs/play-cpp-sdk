@@ -23,10 +23,10 @@ mod ffi {
 
         type WalletConnectCallback;
 
-        fn onConnected(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
-        fn onDisconnected(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
-        fn onConnecting(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
-        fn onUpdated(&self, sessioninfo: UniquePtr<WalletConnectSessionInfo>);
+        fn onConnected(&self, sessioninfo: &WalletConnectSessionInfo);
+        fn onDisconnected(&self, sessioninfo: &WalletConnectSessionInfo);
+        fn onConnecting(&self, sessioninfo: &WalletConnectSessionInfo);
+        fn onUpdated(&self, sessioninfo: &WalletConnectSessionInfo);
     }
 
     unsafe extern "C++" {
