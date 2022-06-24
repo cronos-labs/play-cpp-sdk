@@ -16,3 +16,5 @@ demo/cppexamplestatic
 demo/sessioninfo.json
 wallet-connect/sessioninfo.json
 demo/easywsclient.o
+
+docs/doxygen
