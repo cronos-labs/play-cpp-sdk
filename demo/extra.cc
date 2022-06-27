@@ -165,46 +165,44 @@ class UserWalletConnectCallback : public WalletConnectCallback {
 public:
   UserWalletConnectCallback() {}
   virtual ~UserWalletConnectCallback() {}
-  void onConnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
-  void
-  onDisconnected(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
-  void
-  onConnecting(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
-  void onUpdated(std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const;
+  void onConnected(const WalletConnectSessionInfo &sessioninfo) const;
+  void onDisconnected(const WalletConnectSessionInfo &sessioninfo) const;
+  void onConnecting(const WalletConnectSessionInfo &sessioninfo) const;
+  void onUpdated(const WalletConnectSessionInfo &sessioninfo) const;
 };
-void print_session(std::unique_ptr<WalletConnectSessionInfo> &sessioninfo) {
-  std::cout << "connected: " << sessioninfo->connected << std::endl;
-  std::cout << "chain_id: " << sessioninfo->chain_id << std::endl;
+void print_session(const WalletConnectSessionInfo &sessioninfo) {
+  std::cout << "connected: " << sessioninfo.connected << std::endl;
+  std::cout << "chain_id: " << sessioninfo.chain_id << std::endl;
   // iterate over accounts
-  for (auto &account : sessioninfo->accounts) {
+  for (auto &account : sessioninfo.accounts) {
     std::cout << "account: " << account << std::endl;
   }
-  std::cout << "bridge: " << sessioninfo->bridge << std::endl;
-  std::cout << "client_id: " << sessioninfo->client_id << std::endl;
-  std::cout << "client_meta: " << sessioninfo->client_meta << std::endl;
-  std::cout << "peer_id: " << sessioninfo->peer_id << std::endl;
-  std::cout << "peer_meta: " << sessioninfo->peer_meta << std::endl;
-  std::cout << "handshake_topic: " << sessioninfo->handshake_topic << std::endl;
+  std::cout << "bridge: " << sessioninfo.bridge << std::endl;
+  std::cout << "client_id: " << sessioninfo.client_id << std::endl;
+  std::cout << "client_meta: " << sessioninfo.client_meta << std::endl;
+  std::cout << "peer_id: " << sessioninfo.peer_id << std::endl;
+  std::cout << "peer_meta: " << sessioninfo.peer_meta << std::endl;
+  std::cout << "handshake_topic: " << sessioninfo.handshake_topic << std::endl;
 }
 void UserWalletConnectCallback::onConnected(
-    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+    const WalletConnectSessionInfo &sessioninfo) const {
   std::cout << "user c++ onConnected" << std::endl;
   print_session(sessioninfo);
 }
 void UserWalletConnectCallback::onDisconnected(
-    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+    const WalletConnectSessionInfo &sessioninfo) const {
   std::cout << "user c++ onDisconnected" << std::endl;
   print_session(sessioninfo);
 }
 void UserWalletConnectCallback::onConnecting(
-    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+    const WalletConnectSessionInfo &sessioninfo) const {
   std::cout << "user c++ onConnecting" << std::endl;
   print_session(sessioninfo);
   // this is testing purpose, comment this line for actual test
   exit(0);
 }
 void UserWalletConnectCallback::onUpdated(
-    std::unique_ptr<WalletConnectSessionInfo> sessioninfo) const {
+    const WalletConnectSessionInfo &sessioninfo) const {
   std::cout << "user c++ onUpdated" << std::endl;
   print_session(sessioninfo);
 }

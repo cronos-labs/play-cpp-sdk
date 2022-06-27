@@ -51,48 +51,6 @@ void WalletConnectSessionInfo::set_handshaketopic(
   handshake_topic = myhandshake_topic;
 }
 
-WalletConnectCallback::WalletConnectCallback() {
-  std::cout << "WalletConnectCallback created" << std::endl;
-}
-
-WalletConnectCallback::~WalletConnectCallback() {}
-
-void print_session(const WalletConnectSessionInfo &sessioninfo) {
-  // print sessioninfo
-  std::cout << "connected: " << sessioninfo.connected << std::endl;
-  std::cout << "chain_id: " << sessioninfo.chain_id << std::endl;
-  // iterate over accounts
-  for (auto &account : sessioninfo.accounts) {
-    std::cout << "account: " << account << std::endl;
-  }
-  std::cout << "bridge: " << sessioninfo.bridge << std::endl;
-  std::cout << "client_id: " << sessioninfo.client_id << std::endl;
-  std::cout << "client_meta: " << sessioninfo.client_meta << std::endl;
-  std::cout << "peer_id: " << sessioninfo.peer_id << std::endl;
-  std::cout << "peer_meta: " << sessioninfo.peer_meta << std::endl;
-  std::cout << "handshake_topic: " << sessioninfo.handshake_topic << std::endl;
-}
-void WalletConnectCallback::onConnected(
-    const WalletConnectSessionInfo &sessioninfo) const {
-  std::cout << "c++ onConnected" << std::endl;
-  print_session(sessioninfo);
-}
-void WalletConnectCallback::onDisconnected(
-    const WalletConnectSessionInfo &sessioninfo) const {
-  std::cout << "c++ onDisconnected" << std::endl;
-  print_session(sessioninfo);
-}
-void WalletConnectCallback::onConnecting(
-    const WalletConnectSessionInfo &sessioninfo) const {
-  std::cout << "c++ onConnecting" << std::endl;
-  print_session(sessioninfo);
-}
-void WalletConnectCallback::onUpdated(
-    const WalletConnectSessionInfo &sessioninfo) const {
-  std::cout << "c++ onUpdated" << std::endl;
-  print_session(sessioninfo);
-}
-
 } // namespace game_sdk
 } // namespace crypto
 } // namespace com
