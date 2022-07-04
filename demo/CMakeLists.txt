@@ -49,3 +49,5 @@ if (UNIX AND NOT APPLE)
   # link library play_cpp_sdk built from subdirectory
   target_link_libraries(demo PUBLIC play_cpp_sdk)
 endif()
+
+add_subdirectory(examples)

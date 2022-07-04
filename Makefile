@@ -26,15 +26,8 @@ cpp: build_cpp
 # cd demo && git submodule update --init --recursive && make build
 	cd demo && make run
 
-cpp-ci-tests: build_cpp
-# Please notice: some env, for example, CRONOSCAN_API_KEY, PAY_API_KEY, and PAY_WEBSOCKET_PORT
-# will be loaded in test.yml
-#
-# Or you can edit `demo/.env` then run `source demo/.env` to load them
-#
-# Set up `CPP_EXAMPLE_PATH` for cpp integration test
-	export CPP_EXAMPLE_PATH='$(PWD)/demo/bin/demostatic' && \
-	nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
+cpp-ci-tests:
+	./integration_test.sh
 
 webhook:
 # 1. Install ngrok for crypto pay api testing: https://ngrok.com/download
