@@ -1,75 +1,117 @@
 UNAME := $(shell uname)
+sdk_dir = ./sdk
+ifeq ($(shell uname -m), x86_64)
+	CXX = g++
+	TARGET_DIR = ../target/release
+endif
+
+ifeq ($(shell uname -m), arm64)
+	CXX = arch -x86_64 g++
+	TARGET_DIR = ../target/x86_64-apple-darwin/release
+else
+
+endif
 
 ifeq ($(UNAME), Darwin)
 	FLAGS=-framework Security -framework CoreFoundation
 endif
 
 ifeq ($(UNAME), Linux)
-	FLAGS=-lpthread -lssl -lcrypto -ldl
+	FLAGS=-lpthread -ldl
 endif
 
-all: clone build
-build: prepare static dynamic
-run: run_static run_dynamic
+all: clean clone build
+build: prepare static dynamic cmake
+run: run_static run_dynamic run_examples
 
 clone:
 	git submodule update --init --recursive
 
 prepare:
-	python3 helper.py --target_dir ../target/release
-
-prepare_x86_64:
-	python3 helper.py --target_dir ../target/x86_64-apple-darwin/release
+	python3 helper.py --target_dir $(TARGET_DIR)
 
 easywsclient.o:
-	g++ -c third_party/easywsclient/easywsclient.cpp
+	$(CXX) -c third_party/easywsclient/easywsclient.cpp
 
-easywsclient.o.x86_64:
-	arch -x86_64 g++ -c third_party/easywsclient/easywsclient.cpp
+# wrapper of libplay_cpp_sdk.a
+libplay_cpp_sdk.so:
+ifeq ($(UNAME), Linux)
+	$(CXX) -fPIC -shared -o $(sdk_dir)/lib/libplay_cpp_sdk.so \
+		$(sdk_dir)/include/*.cc \
+		$(sdk_dir)/include/extra-cpp-bindings/src/*.cc \
+		$(sdk_dir)/include/defi-wallet-core-cpp/src/*.cc \
+		$(sdk_dir)/lib/libcxxbridge1.a \
+		$(sdk_dir)/lib/libplay_cpp_sdk.a \
+		$(FLAGS)
+endif
+
+# add rpath to dylib
+libplay_cpp_sdk.dylib:
+ifeq ($(UNAME), Darwin)
+	install_name_tool -id @rpath/libplay_cpp_sdk.dylib $(sdk_dir)/lib/libplay_cpp_sdk.dylib
+endif
 
 static: easywsclient.o
-	g++ -o demostatic \
+	mkdir -p bin
+	$(CXX) -o bin/demostatic \
 		easywsclient.o \
 		main.cc \
 		chainmain.cc \
 		cronos.cc \
 		extra.cc \
-		lib/libplay_cpp_sdk.a \
+		$(sdk_dir)/lib/libplay_cpp_sdk.a \
 		-std=c++14 $(FLAGS)
 
-dynamic: easywsclient.o
-	g++ -o demo \
+dynamic: easywsclient.o libplay_cpp_sdk.so libplay_cpp_sdk.dylib
+	mkdir -p bin
+ifeq ($(UNAME), Linux)
+	$(CXX) -o bin/demo \
 		easywsclient.o \
 		main.cc \
 		chainmain.cc \
 		cronos.cc \
 		extra.cc \
-		include/*.cc \
-		include/extra-cpp-bindings/src/*.cc \
-		include/defi-wallet-core-cpp/src/*.cc \
-		lib/libcxxbridge1.a \
-		-lplay_cpp_sdk \
-		-std=c++14 \
-		$(FLAGS) \
-		-L lib \
+		$(sdk_dir)/lib/libplay_cpp_sdk.so \
+		-std=c++14 $(FLAGS)
+endif
+ifeq ($(UNAME), Darwin)
+	$(CXX) -o bin/demo \
+		easywsclient.o \
+		main.cc \
+		chainmain.cc \
+		cronos.cc \
+		extra.cc \
+		$(sdk_dir)/include/*.cc \
+		$(sdk_dir)/include/extra-cpp-bindings/src/*.cc \
+		$(sdk_dir)/include/defi-wallet-core-cpp/src/*.cc \
+		$(sdk_dir)/lib/libcxxbridge1.a \
+		$(sdk_dir)/lib/libplay_cpp_sdk.dylib \
+		-rpath $(sdk_dir)/lib \
+		-std=c++14 $(FLAGS)
+endif
 
-x86_64_build: prepare_x86_64 easywsclient.o.x86_64
-	arch -x86_64 \
-		g++ -o demo \
-		easywsclient.o \
-		main.cc \
-		chainmain.cc \
-		cronos.cc \
-		extra.cc \
-		lib/libplay_cpp_sdk.a \
-		-std=c++14 \
-		$(FLAGS)
+cmake:
+	mkdir -p build
+	cd build && cmake .. && make
 
 run_static:
-	. ./.env && ./demostatic
+	. ./.env && ./bin/demostatic && ./build/demostatic
 
 run_dynamic:
-	. ./.env && export LD_LIBRARY_PATH=$(PWD)/lib && ./demo
+	. ./.env && export LD_LIBRARY_PATH=$(PWD)/lib && ./bin/demo && ./build/demo
+
+run_examples:
+	./build/new_wallet
+	./build/restore_wallet
+	. .env && ./build/get_erc20_transfer_history_blocking
+	. .env && ./build/get_erc721_transfer_history_blocking
+	./build/get_tokens_blocking
+	./build/get_token_transfers_blocking
 
 clean:
-	rm easywsclient.o demo demostatic
+	rm -rf easywsclient.o bin build
+
+# clean-artifacts can not be run if user uses prebuilt binaries and bindings
+clean-artifacts:
+	rm -rf $(sdk_dir)/lib
+	rm -rf $(sdk_dir)/include

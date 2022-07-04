@@ -1,6 +1,21 @@
 # Changelog
-
 ## [Unreleased]
+
+### Added
+- Add CMake support
+
+### Changed
+
+### Removed
+
+## [v0.0.1-alpha] - 2022-06-21
+### Security Warning
+No security audits of this release have ever been performed yet.
+
+The project is still in development and is alpha quality.
+
+USE AT YOUR OWN RISK!
+
 ### Added
 - Add `play-cpp-sdk` crate for building static or dynamic libraries and providing bindings
   (headers and sources) for c++ projects

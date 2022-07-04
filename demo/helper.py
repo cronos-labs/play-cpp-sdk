@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import fnmatch
 import os
+import platform
 import shutil
 from pathlib import Path
 
@@ -19,8 +20,8 @@ SOURCES = [
     "../defi-wallet-core-rs/bindings/cpp/src/nft.cc",
     "../defi-wallet-core-rs/bindings/cpp/include/nft.h",
 ]
-INCLUDE_PATH = "./include"
-LIB_PATH = "./lib"
+INCLUDE_PATH = "./sdk/include"
+LIB_PATH = "./sdk/lib"
 
 INITIAL_INCLUDES = [
     '#include "extra-cpp-bindings/src/lib.rs.h"',
@@ -86,6 +87,7 @@ def copy_cxxbridge(output_path):
 
     # copy the bindings, need python 3.8+
     shutil.copytree(OUT_DIR, output_path, dirs_exist_ok=True)
+    print("Copied", OUT_DIR, "to", output_path)
 
     # move lib.rs.cc of defi-wallet-core-cpp to core.cc to avoid name collision
     # (extra-cpp-bindings also has a lib.rs.cc)
@@ -95,20 +97,30 @@ def copy_cxxbridge(output_path):
     )
 
 
-# copy library files: `*.a`, `*.dylib`, `*.lib` (windows), `*.dll` (windows) to `output_path`
+# copy library files to `output_path`
 def copy_lib_files(output_path):
     os.makedirs(output_path, exist_ok=True)
     files = []
-    files.extend(collect_files("*.a", TARGET_DIR, recursive=False))
-    files.extend(collect_files("*.dylib", TARGET_DIR, recursive=False))
-    files.extend(collect_files("*.lib", TARGET_DIR, recursive=False))
-    files.extend(collect_files("*.dll", TARGET_DIR, recursive=False))
-    # workaround: search libcxxbridge1.a and push the first one
-    files.append(collect_files("libcxxbridge1.a", TARGET_DIR)[0])
+    if platform.system() == 'Windows':
+        files.extend(collect_files("*.lib", TARGET_DIR, recursive=False))
+        files.extend(collect_files("*.dll", TARGET_DIR, recursive=False))
+        # workaround: search libcxxbridge1.lib and push the first one
+        files.append(collect_files("cxxbridge1.lib", TARGET_DIR)[0])
+    elif platform.system() == 'Linux':
+        files.extend(collect_files("*.a", TARGET_DIR, recursive=False))
+        # TODO support *.so
+        files.append(collect_files("libcxxbridge1.a", TARGET_DIR)[0])
+    elif platform.system() == "Darwin":
+        files.extend(collect_files("*.a", TARGET_DIR, recursive=False))
+        files.extend(collect_files("*.dylib", TARGET_DIR, recursive=False))
+        files.append(collect_files("libcxxbridge1.a", TARGET_DIR)[0])
+    else:
+        print(platform.system(), "is not supported.")
 
     # copy the libraries, need python 3.8+
     for f in files:
         shutil.copy(f, output_path)
+        print("Copied", f, "to", output_path)
 
 
 # copy `EXAMPLE_SOURCES` to `output_path`
