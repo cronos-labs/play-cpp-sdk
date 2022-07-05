@@ -276,11 +276,8 @@ impl WalletconnectClient {
     pub fn setup_callback(&mut self, usercallback: UniquePtr<WalletConnectCallback>) -> Result<()> {
         let cppcallback = usercallback;
         if let Some(client) = self.client.as_mut() {
-            let result = self
-                .rt
-                .block_on(do_walletconnect_set_callback(client, cppcallback))?;
-
-            Ok(result)
+            self.rt
+                .block_on(do_walletconnect_set_callback(client, cppcallback))
         } else {
             anyhow::bail!("no client");
         }
