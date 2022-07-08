@@ -5,6 +5,9 @@
 - Add CMake support
 
 ### Changed
+- Replace openssl with `rustls`
+- Improve dynamic build for mac (change to rapth using `install_name_tool`) and linux (build a
+dynamic library wrapper on a static library)
 
 ### Removed
 
