@@ -22,7 +22,7 @@ USE AT YOUR OWN RISK!
 5. Optional: GNU make for mac and linux, ninja for windows
 6. Optional: Visual Studio 2019 or newer for windows
 
-# Pre-build Download
+# Pre-built Download
 Please download the archive file based on your OS release:
 https://github.com/cronos-labs/play-cpp-sdk/releases
 
