@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 PLATFORM=$(uname -s)
 
-mkdir -p build
-cp -r demo/include build
-cp -r demo/lib build
-cp ./LICENSE build
-cp ./CHANGELOG.md build
+mkdir -p install
+cp -r demo/sdk install
+cp ./LICENSE install/sdk
+cp ./CHANGELOG.md install/sdk

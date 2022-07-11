@@ -75,9 +75,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -136,39 +138,40 @@
       <AdditionalDependencies>Ncrypt.lib;userenv.lib;bcrypt.lib;ntdll.lib;Secur32.Lib;crypt32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)lib\play_cpp_sdk.dll $(TargetDir)</Command>
+      <Command>copy $(SolutionDir)sdk\lib\play_cpp_sdk.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>call $(ProjectDir)pre_build.bat</Command>
+      <Command>cd ..
+call $(SolutionDir)pre_build.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cc" />
-    <ClCompile Include="chainmain.cc" />
-    <ClCompile Include="chainmain.h" />
-    <ClCompile Include="cronos.cc" />
-    <ClCompile Include="cronos.h" />
-    <ClCompile Include="extra.cc" />
-    <ClCompile Include="extra.h" />
+    <ClCompile Include="..\main.cc" />
+    <ClCompile Include="..\chainmain.cc" />
+    <ClCompile Include="..\chainmain.h" />
+    <ClCompile Include="..\cronos.cc" />
+    <ClCompile Include="..\cronos.h" />
+    <ClCompile Include="..\extra.cc" />
+    <ClCompile Include="..\extra.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bindings.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\pay.cc" />
-    <ClCompile Include="include\walletconnectcallback.cc" />
-    <ClCompile Include="include\extra-cpp-bindings\src\lib.rs.cc" />
-    <ClCompile Include="include\nft.cc" />
-    <ClCompile Include="include\defi-wallet-core-cpp\src\core.cc" />
-    <ClCompile Include="include\defi-wallet-core-cpp\src\nft.rs.cc" />
-    <ClCompile Include="include\defi-wallet-core-cpp\src\contract.rs.cc" />
-    <ClCompile Include="include\defi-wallet-core-cpp\src\uint.rs.cc" />
-    <ClCompile Include="third_party\easywsclient\easywsclient.cpp" />
-    <ClCompile Include="third_party\json\single_include\nlohmann\json.hpp" />
+    <ClCompile Include="..\sdk\include\pay.cc" />
+    <ClCompile Include="..\sdk\include\walletconnectcallback.cc" />
+    <ClCompile Include="..\sdk\include\extra-cpp-bindings\src\lib.rs.cc" />
+    <ClCompile Include="..\sdk\include\nft.cc" />
+    <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\core.cc" />
+    <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\nft.rs.cc" />
+    <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\contract.rs.cc" />
+    <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\uint.rs.cc" />
+    <ClCompile Include="..\third_party\easywsclient\easywsclient.cpp" />
+    <ClCompile Include="..\third_party\json\single_include\nlohmann\json.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="lib\libcxxbridge1.a" />
-    <Library Include="lib\play_cpp_sdk.dll.lib" />
+    <Library Include="..\sdk\lib\cxxbridge1.lib" />
+    <Library Include="..\sdk\lib\play_cpp_sdk.dll.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

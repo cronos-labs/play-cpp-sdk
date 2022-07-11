@@ -36,24 +36,34 @@ jobs:
       with:
         python-version: "3.8"
 
-    - name: Build demo project
+    - name: Build demo solution
       working-directory: demo
-      run: msbuild .\demo.vcxproj -t:rebuild -property:Configuration=Release /p:Platform=x64
+      run: msbuild .\demo.sln -t:rebuild -property:Configuration=Release /p:Platform=x64
 
-    - name: Build demostatic project
+    - name: Build demo with cmake
       working-directory: demo
-      run: msbuild .\demostatic.vcxproj -t:rebuild -property:Configuration=Release /p:Platform=x64
+      run: |
+        cmake.exe `
+            -B "out\build\x64-Release" `
+            -G "Ninja" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX:PATH="out\install\x64-Release" `
+            -DCMAKE_C_COMPILER="cl.exe" `
+            -DCMAKE_CXX_COMPILER="cl.exe" `
+            -DCMAKE_MAKE_PROGRAM="ninja.exe" `
+            .
+        cd out\build\x64-Release
+        ninja
 
     - name: Pack binaries and bindings
       shell: bash
       run: |
         PLATFORM="Windows_x86_64"
-        mkdir -p build
-        cp -r demo/include build
-        cp -r demo/lib build
-        cp ./LICENSE build
-        cp ./CHANGELOG.md build
-        cd build
+        mkdir -p install
+        cp -r demo/sdk install
+        cp ./LICENSE install/sdk
+        cp ./CHANGELOG.md install/sdk
+        cd install
         7z a -tzip ../play_cpp_sdk_${PLATFORM}.zip *
         cd ..
         sha256sum *.zip > "checksums-$PLATFORM.txt"

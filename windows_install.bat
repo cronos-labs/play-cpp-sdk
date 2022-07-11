@@ -1,5 +1,4 @@
-if not exist "build" mkdir build
-Xcopy /E/I demo\include build\include
-Xcopy /E/I demo\lib build\lib
-copy LICENSE build
-copy CHANGELOG.md build
+if not exist "install" mkdir install
+Xcopy /E/I demo\sdk install\sdk
+copy LICENSE install\sdk
+copy CHANGELOG.md install\sdk

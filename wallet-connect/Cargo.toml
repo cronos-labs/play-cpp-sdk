@@ -8,7 +8,7 @@ aes = "0.8"
 async-trait = { version = "0.1", default-features = false }
 cbc = { version = "0.1", features = ["alloc"] }
 dashmap = "5"
-ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "0a031417d8ec9e8696229eb5d172f7155ec3c79c" }
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "b287fcca4dd392824f7f0643a51f759b0f5e5fd7", features = ["rustls"] }
 eyre = "0.6"
 futures = "0.3"
 hmac = "0.12"
@@ -24,7 +24,7 @@ url = { version = "2", features = ["serde"] }
 zeroize = "1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio-tungstenite = { version = "0.17", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.17", features = ["rustls-tls-native-roots"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 
