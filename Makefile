@@ -33,7 +33,7 @@ cpp-ci-tests: build_cpp
 # Or you can edit `demo/.env` then run `source demo/.env` to load them
 #
 # Set up `CPP_EXAMPLE_PATH` for cpp integration test
-	export CPP_EXAMPLE_PATH='demo/bin/demostatic'
+	export CPP_EXAMPLE_PATH='$(PWD)/demo/bin/demostatic' && \
 	nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
 webhook:
