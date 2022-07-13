@@ -24,16 +24,14 @@ int main(int argc, char *argv[]) {
   rust::Vec<RawTxDetail> erc721_txs = get_erc721_transfer_history_blocking(
       "0x668f126b87936df4f9a98f18c44eb73868fffea0", "", QueryOption::ByAddress,
       CRONOSCAN_API_KEY);
-
-  for (rust::Vec<RawTxDetail>::iterator ptr = erc721_txs.begin();
-       ptr < erc721_txs.end(); ptr++) {
-    std::cout << "hash: " << ptr->hash << " ";
-    std::cout << "to: " << ptr->to_address << " ";
-    std::cout << "from: " << ptr->from_address << " ";
-    std::cout << "TokenID:" << ptr->value << " ";
-    std::cout << "block_no: " << ptr->block_no << " ";
-    std::cout << "timestamp: " << ptr->timestamp << " ";
-    std::cout << "contract: " << ptr->contract_address << " " << std::endl;
+  for (const RawTxDetail &tx : erc721_txs) {
+    std::cout << "hash: " << tx.hash << " ";
+    std::cout << "to: " << tx.to_address << " ";
+    std::cout << "from: " << tx.from_address << " ";
+    std::cout << "TokenID:" << tx.value << " ";
+    std::cout << "block_no: " << tx.block_no << " ";
+    std::cout << "timestamp: " << tx.timestamp << " ";
+    std::cout << "contract: " << tx.contract_address << " " << std::endl;
   }
 
   std::cout << "A total of " << erc721_txs.size() << " transactions"
@@ -46,17 +44,16 @@ int main(int argc, char *argv[]) {
       "0x668f126b87936df4f9a98f18c44eb73868fffea0",
       "0x562F021423D75A1636DB5bE1C4D99Bc005ccebFe",
       QueryOption::ByAddressAndContract, CRONOSCAN_API_KEY);
-
-  for (rust::Vec<RawTxDetail>::iterator ptr = erc721_txs.begin();
-       ptr < erc721_txs.end(); ptr++) {
-    std::cout << "hash: " << ptr->hash << " ";
-    std::cout << "to: " << ptr->to_address << " ";
-    std::cout << "from: " << ptr->from_address << " ";
-    std::cout << "TokenID:" << ptr->value << " ";
-    std::cout << "block_no: " << ptr->block_no << " ";
-    std::cout << "timestamp: " << ptr->timestamp << " ";
-    std::cout << "contract: " << ptr->contract_address << " " << std::endl;
+  for (const RawTxDetail &tx : erc721_txs) {
+    std::cout << "hash: " << tx.hash << " ";
+    std::cout << "to: " << tx.to_address << " ";
+    std::cout << "from: " << tx.from_address << " ";
+    std::cout << "TokenID:" << tx.value << " ";
+    std::cout << "block_no: " << tx.block_no << " ";
+    std::cout << "timestamp: " << tx.timestamp << " ";
+    std::cout << "contract: " << tx.contract_address << " " << std::endl;
   }
+
   std::cout << "A total of " << erc721_txs.size() << " transactions"
             << std::endl;
 
@@ -66,15 +63,14 @@ int main(int argc, char *argv[]) {
   erc721_txs = get_erc721_transfer_history_blocking(
       "", "0x18b73D1f9e2d97057deC3f8D6ea9e30FCADB54D7", QueryOption::ByContract,
       CRONOSCAN_API_KEY);
-  for (rust::Vec<RawTxDetail>::iterator ptr = erc721_txs.begin();
-       ptr < erc721_txs.end(); ptr++) {
-    std::cout << "hash: " << ptr->hash << " ";
-    std::cout << "to: " << ptr->to_address << " ";
-    std::cout << "from: " << ptr->from_address << " ";
-    std::cout << "TokenID:" << ptr->value << " ";
-    std::cout << "block_no: " << ptr->block_no << " ";
-    std::cout << "timestamp: " << ptr->timestamp << " ";
-    std::cout << "contract: " << ptr->contract_address << " " << std::endl;
+  for (const RawTxDetail &tx : erc721_txs) {
+    std::cout << "hash: " << tx.hash << " ";
+    std::cout << "to: " << tx.to_address << " ";
+    std::cout << "from: " << tx.from_address << " ";
+    std::cout << "TokenID:" << tx.value << " ";
+    std::cout << "block_no: " << tx.block_no << " ";
+    std::cout << "timestamp: " << tx.timestamp << " ";
+    std::cout << "contract: " << tx.contract_address << " " << std::endl;
   }
 
   std::cout << "A total of " << erc721_txs.size() << " transactions"
