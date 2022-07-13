@@ -25,15 +25,14 @@ int main(int argc, char *argv[]) {
       "0xa9b34a4b568e640d5e5d1e6e13101025e1262864", "", QueryOption::ByAddress,
       CRONOSCAN_API_KEY);
 
-  for (rust::Vec<RawTxDetail>::iterator ptr = erc20_txs.begin();
-       ptr < erc20_txs.end(); ptr++) {
-    std::cout << "hash: " << ptr->hash << " ";
-    std::cout << "to: " << ptr->to_address << " ";
-    std::cout << "from: " << ptr->from_address << " ";
-    std::cout << "value:" << ptr->value << " ";
-    std::cout << "block_no: " << ptr->block_no << " ";
-    std::cout << "timestamp: " << ptr->timestamp << " ";
-    std::cout << "contract: " << ptr->contract_address << " " << std::endl;
+  for (const RawTxDetail &tx : erc20_txs) {
+    std::cout << "hash: " << tx.hash << " ";
+    std::cout << "to: " << tx.to_address << " ";
+    std::cout << "from: " << tx.from_address << " ";
+    std::cout << "value:" << tx.value << " ";
+    std::cout << "block_no: " << tx.block_no << " ";
+    std::cout << "timestamp: " << tx.timestamp << " ";
+    std::cout << "contract: " << tx.contract_address << " " << std::endl;
   }
 
   std::cout << "A total of " << erc20_txs.size() << " transactions"
@@ -47,15 +46,14 @@ int main(int argc, char *argv[]) {
       "0x2D03bECE6747ADC00E1a131BBA1469C15fD11e03",
       QueryOption::ByAddressAndContract, CRONOSCAN_API_KEY);
 
-  for (rust::Vec<RawTxDetail>::iterator ptr = erc20_txs.begin();
-       ptr < erc20_txs.end(); ptr++) {
-    std::cout << "hash: " << ptr->hash << " ";
-    std::cout << "to: " << ptr->to_address << " ";
-    std::cout << "from: " << ptr->from_address << " ";
-    std::cout << "value:" << ptr->value << " ";
-    std::cout << "block_no: " << ptr->block_no << " ";
-    std::cout << "timestamp: " << ptr->timestamp << " ";
-    std::cout << "contract: " << ptr->contract_address << " " << std::endl;
+  for (const RawTxDetail &tx : erc20_txs) {
+    std::cout << "hash: " << tx.hash << " ";
+    std::cout << "to: " << tx.to_address << " ";
+    std::cout << "from: " << tx.from_address << " ";
+    std::cout << "value:" << tx.value << " ";
+    std::cout << "block_no: " << tx.block_no << " ";
+    std::cout << "timestamp: " << tx.timestamp << " ";
+    std::cout << "contract: " << tx.contract_address << " " << std::endl;
   }
   std::cout << "A total of " << erc20_txs.size() << " transactions"
             << std::endl;
