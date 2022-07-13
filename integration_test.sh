@@ -5,36 +5,37 @@
 # Or you can edit `demo/.env` then run `source demo/.env` to load them
 
 # Set up `CPP_EXAMPLE_PATH` for cpp integration test
-export CPP_EXAMPLE_PATH='$(pwd)/demo/bin/demostatic' && \
+PWD=$(pwd)
+export CPP_EXAMPLE_PATH=$PWD/demo/bin/demostatic
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/chainmain_bank_send' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/chainmain_bank_send
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/chainmain_nft' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/chainmain_nft
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/uint' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/uint
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/eth' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/eth
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/eth_login' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/eth_login
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/erc20' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/erc20
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/erc721' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/erc721
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-export CPP_EXAMPLE_PATH='$(pwd)/demo/build/examples/erc1155' && \
+export CPP_EXAMPLE_PATH=$PWD/demo/build/examples/erc1155
 nix-shell defi-wallet-core-rs/integration_tests/shell.nix --run defi-wallet-core-rs/scripts/python-tests
 
-$(pwd)/demo/build/examples/get_erc20_transfer_history_blocking
-$(pwd)/demo/build/examples/get_erc721_transfer_history_blocking
-$(pwd)/demo/build/examples/get_tokens_blocking
-$(pwd)/demo/build/examples/get_token_transfers_blocking
-$(pwd)/demo/build/examples/create_payment
-$(pwd)/demo/build/examples/wallet_connect
+$PWD/demo/build/examples/get_erc20_transfer_history_blocking
+$PWD/demo/build/examples/get_erc721_transfer_history_blocking
+$PWD/demo/build/examples/get_tokens_blocking
+$PWD/demo/build/examples/get_token_transfers_blocking
+$PWD/demo/build/examples/create_payment
+$PWD/demo/build/examples/wallet_connect
