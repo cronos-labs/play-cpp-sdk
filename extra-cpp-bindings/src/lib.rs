@@ -243,7 +243,7 @@ mod ffi {
         /// offset: A nonnegative integer that represents the maximum number of records to
         /// return when paginating. 'page' must be provided in conjunction.
         ///
-        /// It will return the list of owners and balances (sorting from largetst to smallest),
+        /// it will return the list of owners and balances (sorting from largest to smallest),
         /// but no token ids.
         ///
         /// (ref: https://cronos.org/explorer/api-docs#token)
@@ -382,7 +382,7 @@ pub fn get_token_transfers_blocking(
 /// offset: A nonnegative integer that represents the maximum number of records to
 /// return when paginating. 'page' must be provided in conjunction.
 ///
-/// It will return the list of owners and balances (sorting from largetst to smallest), but no
+/// it will return the list of owners and balances (sorting from largest to smallest), but no
 /// token ids.
 ///
 /// (ref: https://cronos.org/explorer/api-docs#token)
