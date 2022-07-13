@@ -241,9 +241,10 @@ mod ffi {
         /// pagination. 'offset' must be provided in conjunction.
         ///
         /// offset: A nonnegative integer that represents the maximum number of records to
-        /// return when paginating. 'page' must be provided in conjunction. token ids.
+        /// return when paginating. 'page' must be provided in conjunction.
         ///
-        /// It will return the list of owners and balances (sorting from largetst to smallest), but no
+        /// It will return the list of owners and balances (sorting from largetst to smallest),
+        /// but no token ids.
         ///
         /// (ref: https://cronos.org/explorer/api-docs#token)
         pub fn get_token_holders(
@@ -379,9 +380,10 @@ pub fn get_token_transfers_blocking(
 /// pagination. 'offset' must be provided in conjunction.
 ///
 /// offset: A nonnegative integer that represents the maximum number of records to
-/// return when paginating. 'page' must be provided in conjunction. token ids.
+/// return when paginating. 'page' must be provided in conjunction.
 ///
 /// It will return the list of owners and balances (sorting from largetst to smallest), but no
+/// token ids.
 ///
 /// (ref: https://cronos.org/explorer/api-docs#token)
 pub fn get_token_holders<S: AsRef<str> + std::fmt::Display>(
