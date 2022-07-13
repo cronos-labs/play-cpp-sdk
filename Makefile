@@ -26,7 +26,7 @@ cpp: build_cpp
 # cd demo && git submodule update --init --recursive && make build
 	cd demo && make run
 
-cpp-ci-tests:
+cpp-ci-tests: build_cpp
 	./integration_test.sh
 
 webhook:
