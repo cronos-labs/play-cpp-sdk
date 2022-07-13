@@ -250,8 +250,8 @@ mod ffi {
         pub fn get_token_holders(
             blockscout_base_url: String,
             contract_address: String,
-            page: String,
-            offset: String,
+            page: u64,
+            offset: u64,
         ) -> Result<Vec<TokenHolderDetail>>;
         /// it creates the payment object
         /// https://pay-docs.crypto.com/#api-reference-resources-payments-create-a-payment
@@ -389,8 +389,8 @@ pub fn get_token_transfers_blocking(
 pub fn get_token_holders<S: AsRef<str> + std::fmt::Display>(
     blockscout_base_url: S,
     contract_address: S,
-    page: S,
-    offset: S,
+    page: u64,
+    offset: u64,
 ) -> Result<Vec<TokenHolderDetail>> {
     let blockscout_url =
         format!("{blockscout_base_url}?module=token&action=getTokenHolders&contractaddress={contract_address}&page={page}&offset={offset}");
@@ -738,8 +738,8 @@ mod test {
         let actual_result = get_token_holders(
             "https://blockscout.com/xdai/mainnet/api",
             "0xed1efc6efceaab9f6d609fec89c9e675bf1efb0a",
-            "1",
-            "10",
+            1,
+            10,
         );
         println!("{:?}", actual_result);
     }
