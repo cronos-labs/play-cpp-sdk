@@ -12,7 +12,7 @@ use ethers_etherscan::{
     },
     Client,
 };
-use ffi::{CryptoComPaymentResponse, QueryOption, RawTokenResult, RawTxDetail};
+use ffi::{CryptoComPaymentResponse, QueryOption, RawTokenResult, RawTxDetail, TokenHolderDetail};
 use serde::{Deserialize, Serialize};
 use walletconnect::WalletconnectClient;
 
@@ -132,6 +132,15 @@ mod ffi {
         pub token_type: String,
     }
 
+    /// Token holder detail from BlockScout API
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+    pub struct TokenHolderDetail {
+        /// the holder address
+        pub address: String,
+        /// balance of the target token
+        pub value: String,
+    }
+
     pub enum QueryOption {
         ByContract,
         ByAddressAndContract,
@@ -175,48 +184,87 @@ mod ffi {
             message: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
-        /// sign cronos(eth) legacy-tx
+        /// sign cronos(eth) legacy transaction
         pub fn sign_legacy_transaction_blocking(
             &mut self,
             info: &WalletConnectTxLegacy,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
-
-        /// Etherscan API
+        /// returns the transactions of a given address.
+        /// The API key can be obtained from https://cronoscan.com
         pub fn get_transaction_history_blocking(
             address: String,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
+        /// returns the ERC20 transfers of a given address of a given contract.
+        /// (address can be empty if option is ByContract)
+        /// default option is by address
+        /// The API key can be obtained from https://cronoscan.com
         pub fn get_erc20_transfer_history_blocking(
             address: String,
             contract_address: String,
             option: QueryOption,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
+        /// returns the ERC721 transfers of a given address of a given contract.
+        /// (address can be empty if option is ByContract)
+        /// default option is by address
+        /// The API key can be obtained from https://cronoscan.com
         pub fn get_erc721_transfer_history_blocking(
             address: String,
             contract_address: String,
             option: QueryOption,
             api_key: String,
         ) -> Result<Vec<RawTxDetail>>;
-        /// BlockScout API
+        /// given the BlockScout REST API base url and the account address (hexadecimal),
+        /// it will return the list of all owned tokens
+        /// (ref: https://cronos.org/explorer/testnet3/api-docs)
         pub fn get_tokens_blocking(
             blockscout_base_url: String,
             account_address: String,
         ) -> Result<Vec<RawTokenResult>>;
+        /// given the BlockScout REST API base url and the account address (hexadecimal; required)
+        /// and optional contract address (hexadecimal; optional -- it can be empty if the option is ByAddress),
+        /// it will return all the token transfers (ERC20, ERC721... in the newer BlockScout
+        /// releases, also ERC1155)
+        /// (ref: https://cronos.org/explorer/testnet3/api-docs)
+        /// NOTE: QueryOption::ByContract is not supported by BlockScout
         pub fn get_token_transfers_blocking(
             blockscout_base_url: String,
             address: String,
             contract_address: String,
             option: QueryOption,
         ) -> Result<Vec<RawTxDetail>>;
-        /// Crypto.com Pay API
+        /// given the BlockScout REST API base url and the contract address (hexadecimal),
+        ///
+        /// page: A nonnegative integer that represents the page number to be used for
+        /// pagination. 'offset' must be provided in conjunction.
+        ///
+        /// offset: A nonnegative integer that represents the maximum number of records to
+        /// return when paginating. 'page' must be provided in conjunction. token ids.
+        ///
+        /// It will return the list of owners and balances (sorting from largetst to smallest), but no
+        ///
+        /// (ref: https://cronos.org/explorer/api-docs#token)
+        pub fn get_token_holders(
+            blockscout_base_url: String,
+            contract_address: String,
+            page: String,
+            offset: String,
+        ) -> Result<Vec<TokenHolderDetail>>;
+        /// it creates the payment object
+        /// https://pay-docs.crypto.com/#api-reference-resources-payments-create-a-payment
+        /// This API can be called using either your Secret Key or Publishable Key.
+        /// The amount should be given in base units (e.g. for USD, the base unit is cents 1 USD == 100 cents).
         pub fn create_payment(
             secret_or_publishable_api_key: String,
             base_unit_amount: String,
             currency: String,
             optional_args: &OptionalArguments,
         ) -> Result<CryptoComPaymentResponse>;
+        /// it returns the payment object by id
+        /// https://pay-docs.crypto.com/#api-reference-resources-payments-get-payment-by-id
+        /// This API can be called using either your Secret Key or Publishable Key.
         pub fn get_payment(
             secret_or_publishable_api_key: String,
             payment_id: String,
@@ -323,6 +371,29 @@ pub fn get_token_transfers_blocking(
         reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<RawBlockScoutTransfer>>()?;
 
     Ok(resp.result.iter().flat_map(TryInto::try_into).collect())
+}
+
+/// given the BlockScout REST API base url and the contract address (hexadecimal),
+///
+/// page: A nonnegative integer that represents the page number to be used for
+/// pagination. 'offset' must be provided in conjunction.
+///
+/// offset: A nonnegative integer that represents the maximum number of records to
+/// return when paginating. 'page' must be provided in conjunction. token ids.
+///
+/// It will return the list of owners and balances (sorting from largetst to smallest), but no
+///
+/// (ref: https://cronos.org/explorer/api-docs#token)
+pub fn get_token_holders<S: AsRef<str> + std::fmt::Display>(
+    blockscout_base_url: S,
+    contract_address: S,
+    page: S,
+    offset: S,
+) -> Result<Vec<TokenHolderDetail>> {
+    let blockscout_url =
+        format!("{blockscout_base_url}?module=token&action=getTokenHolders&contractaddress={contract_address}&page={page}&offset={offset}");
+    let resp = reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<TokenHolderDetail>>()?;
+    Ok(resp.result)
 }
 
 /// it creates the payment object
@@ -658,5 +729,16 @@ mod test {
         )
         .expect("blockscout query");
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    pub fn test_get_token_holders() {
+        let actual_result = get_token_holders(
+            "https://blockscout.com/xdai/mainnet/api",
+            "0xed1efc6efceaab9f6d609fec89c9e675bf1efb0a",
+            "1",
+            "10",
+        );
+        println!("{:?}", actual_result);
     }
 }

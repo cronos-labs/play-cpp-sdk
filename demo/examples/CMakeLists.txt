@@ -49,3 +49,6 @@ target_link_libraries(create_payment PUBLIC play_cpp_sdk)
 
 add_executable(wallet_connect src/wallet_connect.cc)
 target_link_libraries(wallet_connect PUBLIC play_cpp_sdk)
+
+add_executable(get_token_holders src/get_token_holders.cc)
+target_link_libraries(get_token_holders PUBLIC play_cpp_sdk)
