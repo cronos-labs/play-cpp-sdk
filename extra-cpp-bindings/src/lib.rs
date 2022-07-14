@@ -743,12 +743,58 @@ mod test {
 
     #[test]
     pub fn test_get_token_holders() {
-        let actual_result = get_token_holders(
+        let expected: Vec<TokenHolderDetail> = serde_json::from_str(
+            r#"[
+                {
+                    "address": "0x8bd0e10424255e71ab18d192503f751ef62167b0",
+                    "value": "67738518631326470638584975590"
+                },
+                {
+                    "address": "0x652d53227d7013f3fbbea542443dc2eef05719de",
+                    "value": "36330128084034373866325"
+                },
+                {
+                    "address": "0x8bd0e10424255e71ab18d192503f751ef62167b0",
+                    "value": "14678105397136827551403"
+                },
+                {
+                    "address": "0xaf3a0f20580dcb7d251126fc6a45897ac760c550",
+                    "value": "2331440245657701757142"
+                },
+                {
+                    "address": "0x1253594843798ff0fcd7fa221b820c2d3ca58fd5",
+                    "value": "1457125011469162132201"
+                },
+                {
+                    "address": "0x8bd0e10424255e71ab18d192503f751ef62167b0",
+                    "value": "906981481481475281365"
+                },
+                {
+                    "address": "0x097f16e2931a86107dd0f900c0b5f060889f65a2",
+                    "value": "3158512111945682"
+                },
+                {
+                    "address": "0x1253594843798ff0fcd7fa221b820c2d3ca58fd5",
+                    "value": "1755139738543195"
+                },
+                {
+                    "address": "0x1253594843798ff0fcd7fa221b820c2d3ca58fd5",
+                    "value": "426803243704652"
+                },
+                {
+                    "address": "0x1253594843798ff0fcd7fa221b820c2d3ca58fd5",
+                    "value": "426803243704652"
+                }
+          ]"#,
+        )
+        .expect("parse");
+        let actual = get_token_holders(
             "https://blockscout.com/xdai/mainnet/api",
             "0xed1efc6efceaab9f6d609fec89c9e675bf1efb0a",
             1,
             10,
-        );
-        println!("{:?}", actual_result);
+        )
+        .expect("blockscout query");
+        assert_eq!(actual, expected);
     }
 }
