@@ -133,6 +133,8 @@ mod ffi {
     }
 
     /// Token holder detail from BlockScout API
+    ///
+    /// tokenid is not supported yet.
     #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
     pub struct TokenHolderDetail {
         /// the holder address
@@ -247,6 +249,9 @@ mod ffi {
         /// but no token ids.
         ///
         /// (ref: https://cronos.org/explorer/api-docs#token)
+        ///
+        /// ::TIPS:: Use another functions to get more token/owner details, e.g.
+        /// `get_tokens_blocking` to get owned tokens by account_address
         pub fn get_token_holders(
             blockscout_base_url: String,
             contract_address: String,
@@ -386,6 +391,9 @@ pub fn get_token_transfers_blocking(
 /// token ids.
 ///
 /// (ref: https://cronos.org/explorer/api-docs#token)
+///
+/// ::TIPS:: Use another functions to get more token/owner details, e.g.
+/// `get_tokens_blocking` to get owned tokens by account_address
 pub fn get_token_holders<S: AsRef<str> + std::fmt::Display>(
     blockscout_base_url: S,
     contract_address: S,
