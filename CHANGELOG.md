@@ -1,13 +1,25 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.2-alpha] - 2022-07-18
+### Security Warning
+No security audits of this release have ever been performed yet.
+
+The project is still in development and is alpha quality.
+
+USE AT YOUR OWN RISK!
+
 ### Added
 - Add CMake support
+- Add `get_token_holders` function
+- Add examples
 
 ### Changed
 - Replace openssl with `rustls`
 - Improve dynamic build for mac (change to rapth using `install_name_tool`) and linux (build a
 dynamic library wrapper on a static library)
+- Replace the `cargo test` execution with `cargo llvm-cov`
+- Replace `grpc-web-client` with `tonic-web-wasm-client`
 
 ### Removed
 
