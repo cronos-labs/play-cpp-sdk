@@ -36,7 +36,7 @@ https://github.com/cronos-labs/play-cpp-sdk/releases
 Start with a C++ project with `.sln` and `.vcxproj` files:
 1. Clone the current repository
     ``` sh
-    git clone https://github.com/crypto-com/play-cpp-sdk.git
+    git clone https://github.com/cronos-labs/play-cpp-sdk.git
     ```
 2. Unzip the archive file into `demo` folder, and replace the original `sdk` folder
 3. Open `demo.sln` which includes two projects: `demo` (dynamic build) and `demostatic` (static
@@ -55,7 +55,7 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
 ### Mac
 1. Clone the current repository
     ``` sh
-    git clone https://github.com/crypto-com/play-cpp-sdk.git
+    git clone https://github.com/cronos-labs/play-cpp-sdk.git
     ```
 2. Unzip the archive file into `demo` folder, and replace the original `sdk` folder
 3. Under `demo` folder and build the `demo` project
@@ -66,7 +66,7 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
 ### Linux
 1. Clone the current repository
     ``` sh
-    git clone https://github.com/crypto-com/play-cpp-sdk.git
+    git clone https://github.com/cronos-labs/play-cpp-sdk.git
     ```
 2. Unzip the archive file into `demo` folder, and replace the original `sdk` folder
 3. Under `demo` folder and build the `demo` project
