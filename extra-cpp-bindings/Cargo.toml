@@ -10,8 +10,8 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 [dependencies]
 anyhow = "1"
 cxx = "1"
-ethers-core = { git = "https://github.com/gakonst/ethers-rs", rev="b287fcca4dd392824f7f0643a51f759b0f5e5fd7"}
-ethers-etherscan = { git = "https://github.com/gakonst/ethers-rs", rev = "b287fcca4dd392824f7f0643a51f759b0f5e5fd7" }
+ethers-core = { version = "0.15" }
+ethers-etherscan = { version = "0.15" }
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 serde = "1"
 serde_json = { version = "1", features = ["arbitrary_precision"] }
@@ -19,9 +19,9 @@ thiserror = "1"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 defi-wallet-connect= { path="../wallet-connect" }
 url = { version = "2", features = ["serde"] }
-ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "b287fcca4dd392824f7f0643a51f759b0f5e5fd7", features = ["rustls"] }
+ethers = { version = "0.15", features = ["rustls"] }
 hex="0.4.3"
 
 [build-dependencies]
 # Wait until https://github.com/dtolnay/cxx/pull/1048 is merged or similar solution is found
-cxx-build = { git = "https://github.com/crypto-com/cxx.git", rev = "42b011184b6d5a593cd7513edb1d554e0f086a0f", features=["doxygen"] }
+cxx-build = { git = "https://github.com/crypto-com/cxx.git", rev = "0cbae78a33dadbc601448c3b9cb955df568793ef", features=["doxygen"] }
