@@ -59,6 +59,19 @@ TARGET_DIR = None
 OUT_DIR = None
 
 
+# in windows to prevent illegal multibyte sequence error
+def read_file(filename):
+    buf=""
+    try:
+        with open(filename, encoding='utf-8') as f:
+            buf=f.read()
+    except:
+        with open(filename) as f:
+            buf=f.read()        
+    finally:
+        return buf       
+        
+        
 # copy the generated binding files: `*.cc` and `*.h` to `output_path`
 def copy_cxxbridge(output_path):
     files = []
@@ -74,10 +87,9 @@ def copy_cxxbridge(output_path):
     # replace string
     for filename in files:
         # Safely read the input filename using 'with'
-        with open(filename) as f:
-            s = f.read()
-            if not has_include_string(s):
-                continue
+        s=read_file(filename)            
+        if not has_include_string(s):
+            continue
 
         # Safely write the changed content, if found in the file
         with open(filename, "w") as f:
