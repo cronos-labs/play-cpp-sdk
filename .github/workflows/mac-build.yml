@@ -15,18 +15,14 @@ on:
 jobs:
   mac-build:
     runs-on: macos-11
+    env: 
+          MACOSX_DEPLOYMENT_TARGET: 10.15        
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
       - name: Build play-cpp-sdk library
-        run: ./checkmac.sh && cargo build --package play-cpp-sdk --release
-
-      - name: Build demo project
-        working-directory: demo
         run: make
-
       - name: Pack binaries and bindings
         run: |
           PLATFORM="$(uname -s)_x86_64"
@@ -42,7 +38,6 @@ jobs:
           echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
           echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
           cat $GITHUB_ENV
-
       - name: Upload binaries and bindings to Release
         uses: softprops/action-gh-release@v1
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
