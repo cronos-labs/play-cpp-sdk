@@ -19,7 +19,7 @@ thiserror = "1"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 defi-wallet-connect= { path="../wallet-connect" }
 url = { version = "2", features = ["serde"] }
-ethers = { version = "0.15", features = ["rustls"] }
+ethers = { version = "0.17", features = ["rustls"] }
 hex="0.4.3"
 
 [build-dependencies]
