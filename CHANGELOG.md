@@ -1,6 +1,12 @@
 # Changelog
 ## [Unreleased]
 
+
+## [v0.0.3-alpha] - 2020-08-01
+Mac release to support 10.15 
+Fix unicode decode error on windows 11
+Update ethers and cxx-build
+
 ## [v0.0.2-alpha] - 2022-07-18
 ### Security Warning
 No security audits of this release have ever been performed yet.
