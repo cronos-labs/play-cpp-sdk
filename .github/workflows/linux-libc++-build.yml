@@ -1,4 +1,4 @@
-name: Linux Build CI
+name: Linux (libc++) Build CI
 on:
   push:
     branches:
@@ -20,11 +20,11 @@ jobs:
           submodules: recursive
 
       - name: Build play-cpp-sdk library
-        run: cargo build --package play-cpp-sdk --release
+        run: CXX=clang++-10 CXXFLAGS=-stdlib=libc++ cargo build --package play-cpp-sdk --release
 
       - name: Build demo project
         working-directory: demo
-        run: make
+        run: make CXX=clang++-10
 
       - name: Pack binaries and bindings
         run: |
@@ -35,10 +35,10 @@ jobs:
           cp ./LICENSE install/sdk
           cp ./CHANGELOG.md install/sdk
           cd install
-          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
+          tar zcvf ../play_cpp_sdk_libc++_${PLATFORM}.tar.gz *
           cd ..
           sha256sum *.tar.gz > "checksums-$PLATFORM.txt"
-          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
+          echo "release_file=play_cpp_sdk_libc++_$PLATFORM.tar.gz" >> $GITHUB_ENV
           echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
           cat $GITHUB_ENV
 

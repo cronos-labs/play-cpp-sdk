@@ -38,9 +38,17 @@ jobs:
           name: debug-files
           path: debug_files.tar.gz
           if-no-files-found: ignore
+
+      - name: Build play-cpp-sdk library
+        run: CXX=clang++-10 CXXFLAGS=-stdlib=libc++ cargo build --package play-cpp-sdk --release
+
+      - name: Build demo project
+        working-directory: demo
+        run: make CXX=clang++-10
+
       - name: Run cpp tests
         env:
           CRONOSCAN_API_KEY: ${{ secrets.CRONOSCAN_API_KEY }}
           PAY_API_KEY: ${{ secrets.PAY_API_KEY }}
           PAY_WEBSOCKET_PORT: "4567"
-        run: make cpp-ci-tests
+        run: ./integration_test.sh

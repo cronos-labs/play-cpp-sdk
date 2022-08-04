@@ -11,3 +11,4 @@ extra-cpp-bindings = { path = "../extra-cpp-bindings/"}
 
 [lib]
 crate-type = ["staticlib", "cdylib"]
+
