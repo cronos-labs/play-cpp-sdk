@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use defi_wallet_connect::session::SessionInfo;
 use defi_wallet_connect::ClientChannelMessageType;
 use defi_wallet_connect::{Client, Metadata, WCMiddleware};
-use ethers_core::types::transaction::eip2718::TypedTransaction;
+use ethers::core::types::transaction::eip2718::TypedTransaction;
 use url::Url;
 
 use crate::ffi::WalletConnectSessionInfo;

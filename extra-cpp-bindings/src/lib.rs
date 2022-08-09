@@ -5,8 +5,8 @@ mod pay;
 mod walletconnect;
 use anyhow::Result;
 
-use ethers_core::types::{BlockNumber, Chain};
-use ethers_etherscan::{
+use ethers::core::types::{BlockNumber, Chain};
+use ethers::etherscan::{
     account::{
         ERC20TokenTransferEvent, ERC721TokenTransferEvent, NormalTransaction, TokenQueryOption,
     },
