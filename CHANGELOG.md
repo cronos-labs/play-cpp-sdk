@@ -2,6 +2,9 @@
 ## [Unreleased]
 
 
+## [v0.0.4-alpha] - 2020-08-10
+Add get-backup-mnemonics, generate-mnemonics
+
 ## [v0.0.3-alpha] - 2020-08-01
 Mac release to support 10.15 
 Fix unicode decode error on windows 11
