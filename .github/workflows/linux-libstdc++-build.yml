@@ -1,0 +1,52 @@
+name: Linux (libstdc++) Build CI
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+    tags:
+      - "v*.*.*"
+  pull_request:
+    paths-ignore:
+      - README.md
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Build play-cpp-sdk library
+        run: cargo build --package play-cpp-sdk --release
+
+      - name: Build demo project
+        working-directory: demo
+        run: make CXX=g++
+
+      - name: Pack binaries and bindings
+        run: |
+          PLATFORM="$(uname -s)_x86_64"
+          BUILD_TYPE="tarball"
+          mkdir -p install
+          cp -r demo/sdk install
+          cp ./LICENSE install/sdk
+          cp ./CHANGELOG.md install/sdk
+          cd install
+          tar zcvf ../play_cpp_sdk_libstdc++_${PLATFORM}.tar.gz *
+          cd ..
+          sha256sum *.tar.gz > "checksums-$PLATFORM.txt"
+          echo "release_file=play_cpp_sdk_libstdc++_$PLATFORM.tar.gz" >> $GITHUB_ENV
+          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+
+      - name: Upload binaries and bindings to Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: |
+            ${{ env.release_file }}
+            ${{ env.checksum_file }}

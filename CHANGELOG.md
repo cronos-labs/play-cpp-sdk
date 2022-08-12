@@ -1,12 +1,15 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.5-alpha] - 2020-08-12
+- Support both g++ and clang
+- Add libc++ build for linux Unreal plugin
 
 ## [v0.0.4-alpha] - 2020-08-10
 Add get-backup-mnemonics, generate-mnemonics
 
 ## [v0.0.3-alpha] - 2020-08-01
-Mac release to support 10.15 
+Mac release to support 10.15
 Fix unicode decode error on windows 11
 Update ethers and cxx-build
 

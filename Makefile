@@ -1,3 +1,20 @@
+# Compile with g++: make CXX=g++
+# Compile with clang++: make CXX=clang++
+# Compile with default compiler: make
+UNAME := $(shell uname)
+
+GCC_CXXFLAGS =
+CLANG_CXXFLAGS = -stdlib=libc++
+DEFAULT_CXXFLAGS =
+
+ifeq ($(CXX),g++)
+  CXXFLAGS += $(GCC_CXXFLAGS)
+else ifneq (,$(findstring clang,$(CXX)))
+  CXXFLAGS += $(CLANG_CXXFLAGS)
+else
+  CXXFLAGS += $(DEFAULT_CXXFLAGS)
+endif
+
 all: build_cpp
 
 clone:
@@ -5,18 +22,23 @@ clone:
 
 build_play-cpp-sdk: clone
 ifeq ($(shell uname -m), x86_64)
-	./checkmac.sh && cargo build --package play-cpp-sdk --release
+ifeq ($(UNAME), Darwin)
+	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
+endif
+ifeq ($(UNAME), Linux)
+	CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
+endif
 endif
 ifeq ($(shell uname -m), arm64)
 	rustup target add x86_64-apple-darwin
-	./checkmac.sh && cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
+	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
 endif
 
 build_extra-cpp-bindings:
-	cargo build --package extra-cpp-bindings --release
+	CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package extra-cpp-bindings --release
 
 build_cpp: build_play-cpp-sdk
-	./checkmac.sh && cd demo && make build
+	MACOSX_DEPLOYMENT_TARGET=10.15 && cd demo && make build
 
 cpp: build_cpp
 # 1. In order to use crypto pay api, you need to Generate Keys in

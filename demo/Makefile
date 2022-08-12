@@ -1,23 +1,38 @@
+# Compile with g++: make CXX=g++
+# Compile with clang++: make CXX=clang++
+# Compile with default compiler: make
 UNAME := $(shell uname)
 sdk_dir = ./sdk
+
+GCC_CXXFLAGS =
+CLANG_CXXFLAGS = -stdlib=libc++
+DEFAULT_CXXFLAGS =
+
+ifeq ($(CXX),g++)
+  CXXFLAGS += $(GCC_CXXFLAGS)
+else ifneq (,$(findstring clang,$(CXX)))
+  CXXFLAGS += $(CLANG_CXXFLAGS)
+else
+  CXXFLAGS += $(DEFAULT_CXXFLAGS)
+endif
+
 ifeq ($(shell uname -m), x86_64)
-	CXX = g++
 	TARGET_DIR = ../target/release
 endif
 
 ifeq ($(shell uname -m), arm64)
-	CXX = arch -x86_64 g++
+	CXX = arch -x86_64 clang++ # for arm64, we only use clang++
 	TARGET_DIR = ../target/x86_64-apple-darwin/release
 else
 
 endif
 
 ifeq ($(UNAME), Darwin)
-	FLAGS=-framework Security -framework CoreFoundation
+	FLAGS=$(CXXFLAGS) -framework Security -framework CoreFoundation
 endif
 
 ifeq ($(UNAME), Linux)
-	FLAGS=-lpthread -ldl
+	FLAGS=$(CXXFLAGS) -lpthread -ldl
 endif
 
 all: clean clone build
@@ -31,7 +46,7 @@ prepare:
 	python3 helper.py --target_dir $(TARGET_DIR)
 
 easywsclient.o:
-	$(CXX) -c third_party/easywsclient/easywsclient.cpp
+	$(CXX) -c third_party/easywsclient/easywsclient.cpp $(CXXFLAGS)
 
 # wrapper of libplay_cpp_sdk.a
 libplay_cpp_sdk.so:
@@ -92,7 +107,7 @@ endif
 
 cmake:
 	mkdir -p build
-	cd build && cmake .. && make
+	cd build && CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cmake .. && make
 
 run_static:
 	. ./.env && ./bin/demostatic && ./build/demostatic
