@@ -13,6 +13,8 @@ use ethers::etherscan::{
     Client,
 };
 use ffi::{CryptoComPaymentResponse, QueryOption, RawTokenResult, RawTxDetail, TokenHolderDetail};
+use qrcodegen::QrCode;
+use qrcodegen::QrCodeEcc;
 use serde::{Deserialize, Serialize};
 use walletconnect::WalletconnectClient;
 
@@ -45,6 +47,12 @@ mod ffi {
         fn set_peerid(self: Pin<&mut WalletConnectSessionInfo>, peerid: String);
         fn set_peermeta(self: Pin<&mut WalletConnectSessionInfo>, peermeta: String);
         fn set_handshaketopic(self: Pin<&mut WalletConnectSessionInfo>, handshaketopic: String);
+    }
+
+    pub struct WalletQrcode {
+        pub qrcode: String,
+        pub image: Vec<u8>, /* size* size*/
+        pub size: u32,
     }
 
     /// wallet connect cronos(eth) legacy-tx signing info
@@ -150,6 +158,7 @@ mod ffi {
     }
 
     extern "Rust" {
+        pub fn generate_qrcode(qrcodestring: String) -> Result<WalletQrcode>;
         /// WallnetConnect API
         type WalletconnectClient;
         /// restore walletconnect-session from string
@@ -638,9 +647,31 @@ fn walletconnect_new_client(
 unsafe impl Send for ffi::WalletConnectCallback {}
 unsafe impl Sync for ffi::WalletConnectCallback {}
 
+fn generate_qrcode(qrcodestring: String) -> Result<crate::ffi::WalletQrcode> {
+    let qr: QrCode = QrCode::encode_text(&qrcodestring, QrCodeEcc::Low)?;
+    let size = qr.size() as u32;
+    let mut image: Vec<u8> = Vec::with_capacity((size * size) as usize);
+    for y in 0..qr.size() {
+        for x in 0..qr.size() {
+            image.push(if qr.get_module(x, y) { 1 } else { 0 });
+        }
+    }
+
+    assert!(image.len() as u32 == size * size);
+
+    let qrcode = crate::ffi::WalletQrcode {
+        qrcode: qrcodestring,
+        image,
+        size: size as u32,
+    };
+    Ok(qrcode)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
+    use hex_literal::hex;
+    use sha2::Digest;
 
     // run this test manually and adjust the expect balance, as this changes on the testnet
     // TODO: deploy a contract and test a more stable balance
@@ -741,6 +772,19 @@ mod test {
         assert_eq!(actual, expected);
     }
 
+    #[test]
+    pub fn test_generate_qrcode() {
+        let qrcode = generate_qrcode("play-cpp-sdk".to_string()).expect("get qrcode");
+        assert!("play-cpp-sdk" == qrcode.qrcode);
+        assert!(qrcode.image.len() as u32 == qrcode.size * qrcode.size);
+        let mut hasher = sha2::Sha256::new();
+        hasher.update(&qrcode.image);
+        let result = hasher.finalize();
+        assert!(
+            result[..]
+                == hex!("1f58cd5bd78e427d4f6459937110eec31dada129bb4466a171cd741e81af266e")[..]
+        );
+    }
     #[test]
     pub fn test_get_token_holders() {
         let expected: Vec<TokenHolderDetail> = serde_json::from_str(

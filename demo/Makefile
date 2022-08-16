@@ -107,7 +107,7 @@ endif
 
 cmake:
 	mkdir -p build
-	cd build && CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cmake .. && make
+	cd build && CXX="$(CXX)" CXXFLAGS=$(CXXFLAGS) cmake .. && make
 
 run_static:
 	. ./.env && ./bin/demostatic && ./build/demostatic
