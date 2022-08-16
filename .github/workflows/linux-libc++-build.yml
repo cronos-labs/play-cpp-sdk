@@ -37,9 +37,9 @@ jobs:
           cd install
           tar zcvf ../play_cpp_sdk_libc++_${PLATFORM}.tar.gz *
           cd ..
-          sha256sum *.tar.gz > "checksums-$PLATFORM.txt"
+          sha256sum *.tar.gz > "checksums-libc++_$PLATFORM.txt"
           echo "release_file=play_cpp_sdk_libc++_$PLATFORM.tar.gz" >> $GITHUB_ENV
-          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+          echo "checksum_file=checksums-libc++_$PLATFORM.txt" >> $GITHUB_ENV
           cat $GITHUB_ENV
 
       - name: Upload binaries and bindings to Release
