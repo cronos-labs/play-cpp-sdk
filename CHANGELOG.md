@@ -1,6 +1,10 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.6-alpha] - 2020-08-17
+- Add checksum for linux libc++ release
+- Add qrcode api
+
 ## [v0.0.5-alpha] - 2020-08-12
 - Support both g++ and clang
 - Add libc++ build for linux Unreal plugin
