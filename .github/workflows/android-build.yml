@@ -24,6 +24,8 @@ jobs:
           SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
           echo y | $SDKMANAGER "ndk;21.4.7075529"
       - name: Build play-cpp-sdk library
+        env:
+          TARGET: armv7-linux-androideabi
         run: make armv7-linux-androideabi
       - name: Pack binaries and bindings
         run: |
@@ -61,6 +63,8 @@ jobs:
           SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
           echo y | $SDKMANAGER "ndk;21.4.7075529"
       - name: Build play-cpp-sdk library
+        env:
+          TARGET: aarch64-linux-android
         run: make aarch64-linux-android
       - name: Pack binaries and bindings
         run: |
@@ -98,6 +102,8 @@ jobs:
           SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
           echo y | $SDKMANAGER "ndk;21.4.7075529"
       - name: Build play-cpp-sdk library
+        env:
+          TARGET: i686-linux-android
         run: make i686-linux-android
       - name: Pack binaries and bindings
         run: |
@@ -135,6 +141,8 @@ jobs:
           SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
           echo y | $SDKMANAGER "ndk;21.4.7075529"
       - name: Build play-cpp-sdk library
+        env:
+          TARGET: x86_64-linux-android
         run: make x86_64-linux-android
       - name: Pack binaries and bindings
         run: |
