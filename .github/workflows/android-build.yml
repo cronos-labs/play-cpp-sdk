@@ -1,0 +1,161 @@
+name: Android Build CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+    tags:
+      - "v*.*.*"
+  pull_request:
+    paths-ignore:
+      - README.md
+jobs:
+  armv7-linux-androideabi:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Android NDK r21e
+        run: |
+          ANDROID_HOME=$HOME/Library/Android/sdk
+          SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+          echo y | $SDKMANAGER "ndk;21.4.7075529"
+      - name: Build play-cpp-sdk library
+        run: make armv7-linux-androideabi
+      - name: Pack binaries and bindings
+        run: |
+          PLATFORM="armv7-linux-androideabi"
+          BUILD_TYPE="tarball"
+          mkdir -p install
+          cp -r demo/sdk install
+          cp ./LICENSE install/sdk
+          cp ./CHANGELOG.md install/sdk
+          cd install
+          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
+          cd ..
+          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
+          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
+          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+      - name: Upload binaries and bindings to Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: |
+            ${{ env.release_file }}
+            ${{ env.checksum_file }}
+
+  aarch64-linux-android:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Android NDK r21e
+        run: |
+          ANDROID_HOME=$HOME/Library/Android/sdk
+          SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+          echo y | $SDKMANAGER "ndk;21.4.7075529"
+      - name: Build play-cpp-sdk library
+        run: make aarch64-linux-android
+      - name: Pack binaries and bindings
+        run: |
+          PLATFORM="aarch64-linux-android"
+          BUILD_TYPE="tarball"
+          mkdir -p install
+          cp -r demo/sdk install
+          cp ./LICENSE install/sdk
+          cp ./CHANGELOG.md install/sdk
+          cd install
+          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
+          cd ..
+          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
+          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
+          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+      - name: Upload binaries and bindings to Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: |
+            ${{ env.release_file }}
+            ${{ env.checksum_file }}
+
+  i686-linux-android:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Android NDK r21e
+        run: |
+          ANDROID_HOME=$HOME/Library/Android/sdk
+          SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+          echo y | $SDKMANAGER "ndk;21.4.7075529"
+      - name: Build play-cpp-sdk library
+        run: make i686-linux-android
+      - name: Pack binaries and bindings
+        run: |
+          PLATFORM="i686-linux-android"
+          BUILD_TYPE="tarball"
+          mkdir -p install
+          cp -r demo/sdk install
+          cp ./LICENSE install/sdk
+          cp ./CHANGELOG.md install/sdk
+          cd install
+          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
+          cd ..
+          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
+          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
+          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+      - name: Upload binaries and bindings to Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: |
+            ${{ env.release_file }}
+            ${{ env.checksum_file }}
+
+  x86_64-linux-android:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Android NDK r21e
+        run: |
+          ANDROID_HOME=$HOME/Library/Android/sdk
+          SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+          echo y | $SDKMANAGER "ndk;21.4.7075529"
+      - name: Build play-cpp-sdk library
+        run: make x86_64-linux-android
+      - name: Pack binaries and bindings
+        run: |
+          PLATFORM="x86_64-linux-android"
+          BUILD_TYPE="tarball"
+          mkdir -p install
+          cp -r demo/sdk install
+          cp ./LICENSE install/sdk
+          cp ./CHANGELOG.md install/sdk
+          cd install
+          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
+          cd ..
+          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
+          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
+          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+      - name: Upload binaries and bindings to Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: |
+            ${{ env.release_file }}
+            ${{ env.checksum_file }}

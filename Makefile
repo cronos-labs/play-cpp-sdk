@@ -15,6 +15,21 @@ else
   CXXFLAGS += $(DEFAULT_CXXFLAGS)
 endif
 
+ifeq ($(UNAME), Darwin)
+# Please install NDK via Android Studio
+	NDK_HOME=$(HOME)/Library/Android/sdk/ndk/21.4.7075529
+	TOOLCHAIN=$(NDK_HOME)/toolchains/llvm/prebuilt/darwin-x86_64
+endif
+
+ifeq ($(UNAME), Linux)
+# Change NDK_HOME if necessary
+	NDK_HOME=/usr/local/lib/android/sdk/ndk/21.4.7075529
+	TOOLCHAIN=$(NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64
+endif
+
+# Set this to your minSdkVersion.
+API=21
+
 all: build_cpp
 
 clone:
@@ -39,6 +54,46 @@ build_extra-cpp-bindings:
 
 build_cpp: build_play-cpp-sdk
 	MACOSX_DEPLOYMENT_TARGET=10.15 && cd demo && make build
+
+armv7-linux-androideabi: TARGET=armv7a-linux-androideabi
+armv7-linux-androideabi: android_armv7
+
+aarch64-linux-android: TARGET=aarch64-linux-android
+aarch64-linux-android: android_aarch64
+
+i686-linux-android: TARGET=i686-linux-android
+i686-linux-android: android_i686
+
+x86_64-linux-android: TARGET=x86_64-linux-android
+x86_64-linux-android: android_x86_64
+
+android_armv7:
+	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
+	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	cargo build --target=armv7-linux-androideabi --package play-cpp-sdk --release
+
+android_aarch64:
+	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
+	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
+
+android_i686:
+	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
+	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_I686_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
+
+android_x86_64:
+	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
+	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 cpp: build_cpp
 # 1. In order to use crypto pay api, you need to Generate Keys in
