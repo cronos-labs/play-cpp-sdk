@@ -57,15 +57,19 @@ build_cpp: build_play-cpp-sdk
 
 armv7-linux-androideabi: TARGET=armv7-linux-androideabi
 armv7-linux-androideabi: android_armv7
+	cd demo && make android_build
 
 aarch64-linux-android: TARGET=aarch64-linux-android
 aarch64-linux-android: android_aarch64
+	cd demo && make android_build
 
 i686-linux-android: TARGET=i686-linux-android
 i686-linux-android: android_i686
+	cd demo && make android_build
 
 x86_64-linux-android: TARGET=x86_64-linux-android
 x86_64-linux-android: android_x86_64
+	cd demo && make android_build
 
 android_armv7:
 	rustup target add $(TARGET)

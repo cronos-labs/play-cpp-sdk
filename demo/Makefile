@@ -39,6 +39,12 @@ all: clean clone build
 build: prepare static dynamic cmake
 run: run_static run_dynamic run_examples
 
+# TARGET is specified in ../Makefile
+# for example,
+# Run `make aarch64-linux-android`, `TARGET` is `aarch64-linux-android`
+android_build: TARGET_DIR=../target/$(TARGET)
+android_build: prepare
+
 clone:
 	git submodule update --init --recursive
 
