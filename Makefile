@@ -55,7 +55,7 @@ build_extra-cpp-bindings:
 build_cpp: build_play-cpp-sdk
 	MACOSX_DEPLOYMENT_TARGET=10.15 && cd demo && make build
 
-armv7-linux-androideabi: TARGET=armv7a-linux-androideabi
+armv7-linux-androideabi: TARGET=armv7-linux-androideabi
 armv7-linux-androideabi: android_armv7
 
 aarch64-linux-android: TARGET=aarch64-linux-android
@@ -68,13 +68,15 @@ x86_64-linux-android: TARGET=x86_64-linux-android
 x86_64-linux-android: android_x86_64
 
 android_armv7:
-	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
+	rustup target add $(TARGET)
+	TARGET_CC=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang \
+	CXX=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
-	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	cargo build --target=armv7-linux-androideabi --package play-cpp-sdk --release
+	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang \
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_aarch64:
+	rustup target add $(TARGET)
 	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
@@ -82,6 +84,7 @@ android_aarch64:
 	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_i686:
+	rustup target add $(TARGET)
 	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
@@ -89,6 +92,7 @@ android_i686:
 	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_x86_64:
+	rustup target add $(TARGET)
 	TARGET_CC=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
