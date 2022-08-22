@@ -42,7 +42,7 @@ run: run_static run_dynamic run_examples
 # TARGET is specified in ../Makefile
 # for example,
 # Run `make aarch64-linux-android`, `TARGET` is `aarch64-linux-android`
-android_build: TARGET_DIR=../target/$(TARGET)
+android_build: TARGET_DIR=../target/$(TARGET)/release
 android_build: prepare
 
 clone:
