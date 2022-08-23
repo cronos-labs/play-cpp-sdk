@@ -18,33 +18,10 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Build play-cpp-sdk library
-        env:
-          TARGET: armv7-linux-androideabi
-        run: make armv7-linux-androideabi
-      - name: Pack binaries and bindings
-        run: |
-          PLATFORM="armv7-linux-androideabi"
-          BUILD_TYPE="tarball"
-          mkdir -p install
-          cp -r demo/sdk install
-          cp ./LICENSE install/sdk
-          cp ./CHANGELOG.md install/sdk
-          cd install
-          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
-          cd ..
-          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
-          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
-          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - name: Upload binaries and bindings to Release
-        uses: softprops/action-gh-release@v1
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      - uses: ./.github/actions/android
         with:
-          draft: true
-          files: |
-            ${{ env.release_file }}
-            ${{ env.checksum_file }}
+          ndk_version: 25.0.8775105
+          target: armv7-linux-androideabi
 
   aarch64-linux-android:
     runs-on: macos-11
@@ -52,33 +29,10 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Build play-cpp-sdk library
-        env:
-          TARGET: aarch64-linux-android
-        run: make aarch64-linux-android
-      - name: Pack binaries and bindings
-        run: |
-          PLATFORM="aarch64-linux-android"
-          BUILD_TYPE="tarball"
-          mkdir -p install
-          cp -r demo/sdk install
-          cp ./LICENSE install/sdk
-          cp ./CHANGELOG.md install/sdk
-          cd install
-          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
-          cd ..
-          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
-          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
-          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - name: Upload binaries and bindings to Release
-        uses: softprops/action-gh-release@v1
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      - uses: ./.github/actions/android
         with:
-          draft: true
-          files: |
-            ${{ env.release_file }}
-            ${{ env.checksum_file }}
+          ndk_version: 25.0.8775105
+          target: aarch64-linux-android
 
   i686-linux-android:
     runs-on: macos-11
@@ -86,33 +40,10 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Build play-cpp-sdk library
-        env:
-          TARGET: i686-linux-android
-        run: make i686-linux-android
-      - name: Pack binaries and bindings
-        run: |
-          PLATFORM="i686-linux-android"
-          BUILD_TYPE="tarball"
-          mkdir -p install
-          cp -r demo/sdk install
-          cp ./LICENSE install/sdk
-          cp ./CHANGELOG.md install/sdk
-          cd install
-          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
-          cd ..
-          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
-          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
-          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - name: Upload binaries and bindings to Release
-        uses: softprops/action-gh-release@v1
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      - uses: ./.github/actions/android
         with:
-          draft: true
-          files: |
-            ${{ env.release_file }}
-            ${{ env.checksum_file }}
+          ndk_version: 25.0.8775105
+          target: i686-linux-android
 
   x86_64-linux-android:
     runs-on: macos-11
@@ -120,30 +51,51 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Build play-cpp-sdk library
-        env:
-          TARGET: x86_64-linux-android
-        run: make x86_64-linux-android
-      - name: Pack binaries and bindings
-        run: |
-          PLATFORM="x86_64-linux-android"
-          BUILD_TYPE="tarball"
-          mkdir -p install
-          cp -r demo/sdk install
-          cp ./LICENSE install/sdk
-          cp ./CHANGELOG.md install/sdk
-          cd install
-          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
-          cd ..
-          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
-          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
-          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - name: Upload binaries and bindings to Release
-        uses: softprops/action-gh-release@v1
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      - uses: ./.github/actions/android
         with:
-          draft: true
-          files: |
-            ${{ env.release_file }}
-            ${{ env.checksum_file }}
+          ndk_version: 25.0.8775105
+          target: x86_64-linux-android
+
+  armv7-linux-androideabi-unreal:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/android
+        with:
+          ndk_version: 21.4.7075529
+          target: armv7-linux-androideabi
+
+  aarch64-linux-android-unreal:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/android
+        with:
+          ndk_version: 21.4.7075529
+          target: aarch64-linux-android
+
+  i686-linux-android-unreal:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/android
+        with:
+          ndk_version: 21.4.7075529
+          target: i686-linux-android
+
+  x86_64-linux-android-unreal:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/android
+        with:
+          ndk_version: 21.4.7075529
+          target: x86_64-linux-android

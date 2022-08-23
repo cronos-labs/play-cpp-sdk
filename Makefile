@@ -16,7 +16,13 @@ else
 endif
 
 # Set this to your ndk version
-NDK_VERSION=25.0.8775105
+# The ndk requirement for unreal, please check
+# https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Mobile/Android/AndroidSDKRequirements/
+# https://docs.unrealengine.com/5.0/en-US/android-development-requirements-for-unreal-engine/
+#
+# Uncomment one of the follwing settings
+# NDK_VERSION=21.4.7075529 # r21e, for unreal 4.27 and 5
+# NDK_VERSION=25.0.8775105 # r25a
 
 ifeq ($(UNAME), Darwin)
 # Please install NDK via Android Studio
