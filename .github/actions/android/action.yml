@@ -24,6 +24,7 @@ runs:
     shell: bash
     env:
       TARGET:  ${{ inputs.target }}
+      NDK_VERSION: ${{ inputs.ndk_version }}
     run: make ${{ inputs.target }}
   - name: Pack binaries and bindings
     shell: bash
