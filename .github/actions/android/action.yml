@@ -13,6 +13,7 @@ runs:
   using: "composite"
   steps:
   - name: Install Android NDK
+    shell: bash
     env:
       NDK_VERSION: ${{ inputs.ndk_version }}
     run: |
@@ -20,10 +21,12 @@ runs:
       SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
       echo y | $SDKMANAGER "ndk;$NDK_VERSION"
   - name: Build play-cpp-sdk library
+    shell: bash
     env:
       TARGET:  ${{ inputs.target }}
     run: make ${{ inputs.target }}
   - name: Pack binaries and bindings
+    shell: bash
     run: |
       PLATFORM="${{ inputs.target }}-${{ inputs.ndk_version }}"
       BUILD_TYPE="tarball"
