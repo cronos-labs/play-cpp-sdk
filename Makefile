@@ -15,15 +15,18 @@ else
   CXXFLAGS += $(DEFAULT_CXXFLAGS)
 endif
 
+# Set this to your ndk version
+NDK_VERSION=25.0.8775105
+
 ifeq ($(UNAME), Darwin)
 # Please install NDK via Android Studio
-	NDK_HOME=$(HOME)/Library/Android/sdk/ndk/21.4.7075529
+	NDK_HOME=$(HOME)/Library/Android/sdk/ndk/$(NDK_VERSION)
 	TOOLCHAIN=$(NDK_HOME)/toolchains/llvm/prebuilt/darwin-x86_64
 endif
 
 ifeq ($(UNAME), Linux)
 # Change NDK_HOME if necessary
-	NDK_HOME=/usr/local/lib/android/sdk/ndk/21.4.7075529
+	NDK_HOME=/usr/local/lib/android/sdk/ndk/$(NDK_VERSION)
 	TOOLCHAIN=$(NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64
 endif
 
@@ -57,19 +60,19 @@ build_cpp: build_play-cpp-sdk
 
 armv7-linux-androideabi: TARGET=armv7-linux-androideabi
 armv7-linux-androideabi: android_armv7
-	cd demo && make android_build
+	cd demo && TARGET=$(TARGET) make android_build
 
 aarch64-linux-android: TARGET=aarch64-linux-android
 aarch64-linux-android: android_aarch64
-	cd demo && make android_build
+	cd demo && TARGET=$(TARGET) make android_build
 
 i686-linux-android: TARGET=i686-linux-android
 i686-linux-android: android_i686
-	cd demo && make android_build
+	cd demo && TARGET=$(TARGET) make android_build
 
 x86_64-linux-android: TARGET=x86_64-linux-android
 x86_64-linux-android: android_x86_64
-	cd demo && make android_build
+	cd demo && TARGET=$(TARGET) make android_build
 
 android_armv7:
 	rustup target add $(TARGET)
@@ -77,7 +80,11 @@ android_armv7:
 	CXX=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang \
-	cargo build --target=$(TARGET) --package play-cpp-sdk --release
+    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
+    # standard libraries depend on. As a workaround for newer NDKs we redirect
+    # libgcc to libunwind.
+    # See https://github.com/rust-lang/rust/pull/85806
+	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_aarch64:
 	rustup target add $(TARGET)
@@ -85,7 +92,11 @@ android_aarch64:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	cargo build --target=$(TARGET) --package play-cpp-sdk --release
+    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
+    # standard libraries depend on. As a workaround for newer NDKs we redirect
+    # libgcc to libunwind.
+    # See https://github.com/rust-lang/rust/pull/85806
+	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_i686:
 	rustup target add $(TARGET)
@@ -93,7 +104,11 @@ android_i686:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_I686_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	cargo build --target=$(TARGET) --package play-cpp-sdk --release
+    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
+    # standard libraries depend on. As a workaround for newer NDKs we redirect
+    # libgcc to libunwind.
+    # See https://github.com/rust-lang/rust/pull/85806
+	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_x86_64:
 	rustup target add $(TARGET)
@@ -101,7 +116,11 @@ android_x86_64:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	cargo build --target=$(TARGET) --package play-cpp-sdk --release
+    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
+    # standard libraries depend on. As a workaround for newer NDKs we redirect
+    # libgcc to libunwind.
+    # See https://github.com/rust-lang/rust/pull/85806
+	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 cpp: build_cpp
 # 1. In order to use crypto pay api, you need to Generate Keys in
