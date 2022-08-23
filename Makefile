@@ -74,16 +74,16 @@ x86_64-linux-android: TARGET=x86_64-linux-android
 x86_64-linux-android: android_x86_64
 	cd demo && TARGET=$(TARGET) make android_build
 
+# NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
+# standard libraries depend on. As a workaround for newer NDKs we redirect
+# libgcc to libunwind.
+# See https://github.com/rust-lang/rust/pull/85806
 android_armv7:
 	rustup target add $(TARGET)
 	TARGET_CC=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang \
 	CXX=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang \
-    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
-    # standard libraries depend on. As a workaround for newer NDKs we redirect
-    # libgcc to libunwind.
-    # See https://github.com/rust-lang/rust/pull/85806
 	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_aarch64:
@@ -92,10 +92,6 @@ android_aarch64:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
-    # standard libraries depend on. As a workaround for newer NDKs we redirect
-    # libgcc to libunwind.
-    # See https://github.com/rust-lang/rust/pull/85806
 	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_i686:
@@ -104,10 +100,6 @@ android_i686:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_I686_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
-    # standard libraries depend on. As a workaround for newer NDKs we redirect
-    # libgcc to libunwind.
-    # See https://github.com/rust-lang/rust/pull/85806
 	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_x86_64:
@@ -116,10 +108,6 @@ android_x86_64:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-    # NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
-    # standard libraries depend on. As a workaround for newer NDKs we redirect
-    # libgcc to libunwind.
-    # See https://github.com/rust-lang/rust/pull/85806
 	RUSTFLAGS="-L$(shell pwd)/env/android" cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 cpp: build_cpp
