@@ -10,6 +10,8 @@ inputs:
     required: true
     default: aarch64-linux-android
 runs:
+  using: "composite"
+  steps:
   - name: Install Android NDK
     env:
       NDK_VERSION: ${{ inputs.ndk_version }}
