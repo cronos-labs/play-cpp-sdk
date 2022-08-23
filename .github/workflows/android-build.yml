@@ -20,7 +20,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/android
         with:
-          ndk_version: 25.0.8775105
+          ndk_version: 25.1.8937393
           target: armv7-linux-androideabi
 
   aarch64-linux-android:
@@ -31,7 +31,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/android
         with:
-          ndk_version: 25.0.8775105
+          ndk_version: 25.1.8937393
           target: aarch64-linux-android
 
   i686-linux-android:
@@ -42,7 +42,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/android
         with:
-          ndk_version: 25.0.8775105
+          ndk_version: 25.1.8937393
           target: i686-linux-android
 
   x86_64-linux-android:
@@ -53,7 +53,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/android
         with:
-          ndk_version: 25.0.8775105
+          ndk_version: 25.1.8937393
           target: x86_64-linux-android
 
   armv7-linux-androideabi-unreal:

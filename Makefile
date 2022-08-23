@@ -17,7 +17,7 @@ endif
 
 # Comment out to set your ndk version
 # NDK_VERSION=21.4.7075529 # r21e, for unreal 4.27 and 5
-# NDK_VERSION=25.0.8775105 # r25a
+# NDK_VERSION=25.1.8937393 # the newest ndk version
 
 # The ndk requirement for unreal, please check
 # https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Mobile/Android/AndroidSDKRequirements/
