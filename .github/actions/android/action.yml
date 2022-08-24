@@ -1,0 +1,52 @@
+name: 'Android Build CI'
+description: 'Build play-cpp-sdk for android'
+inputs:
+  ndk_version:
+    description: 'Set this to your ndk version'
+    required: true
+    default: 21.4.7075529
+  target:
+    description: 'Set this to your target'
+    required: true
+    default: aarch64-linux-android
+runs:
+  using: "composite"
+  steps:
+  - name: Install Android NDK
+    shell: bash
+    env:
+      NDK_VERSION: ${{ inputs.ndk_version }}
+    run: |
+      ANDROID_HOME=$HOME/Library/Android/sdk
+      SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+      echo y | $SDKMANAGER "ndk;$NDK_VERSION"
+  - name: Build play-cpp-sdk library
+    shell: bash
+    env:
+      TARGET:  ${{ inputs.target }}
+      NDK_VERSION: ${{ inputs.ndk_version }}
+    run: make ${{ inputs.target }}
+  - name: Pack binaries and bindings
+    shell: bash
+    run: |
+      PLATFORM="${{ inputs.target }}-${{ inputs.ndk_version }}"
+      BUILD_TYPE="tarball"
+      mkdir -p install
+      cp -r demo/sdk install
+      cp ./LICENSE install/sdk
+      cp ./CHANGELOG.md install/sdk
+      cd install
+      tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
+      cd ..
+      shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
+      echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
+      echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+      cat $GITHUB_ENV
+  - name: Upload binaries and bindings to Release
+    uses: softprops/action-gh-release@v1
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    with:
+      draft: true
+      files: |
+        ${{ env.release_file }}
+        ${{ env.checksum_file }}

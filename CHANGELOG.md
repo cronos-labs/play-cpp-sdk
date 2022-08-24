@@ -1,6 +1,9 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.6-alpha] - 2020-08-24
+- Add android builds
+
 ## [v0.0.6-alpha] - 2020-08-17
 - Add checksum for linux libc++ release
 - Add qrcode api
