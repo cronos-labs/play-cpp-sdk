@@ -28,7 +28,8 @@ https://github.com/cronos-labs/play-cpp-sdk/releases
 
 - Visual Studio 2019 MSVC, x86_64, toolset 14.29 or newer: `play_cpp_sdk_Windows_x86_64.zip`
 - macOS 10.15 or newer: `play_cpp_sdk_Darwin_x86_64.tar.gz`
-- Ubuntu 20.04 or newer: `play_cpp_sdk_Linux_x86_64.tar.gz`
+- Ubuntu 20.04 or newer: `play_cpp_sdk_libstdc++_Linux_x86_64.tar.gz` or `play_cpp_sdk_libc++_Linux_x86_64.tar.gz`
+- Android: `play_cpp_sdk_$(TARGET)-$(NDK_VERSION).tar.gz`
 
 ## Setup a demo project
 ### Windows
@@ -60,7 +61,9 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
 2. Unzip the archive file into `demo` folder, and replace the original `sdk` folder
 3. Under `demo` folder and build the `demo` project
     ``` sh
-    make
+    make CXX=g++     # Compile with g++
+    make CXX=clang++ # Compile with clang++
+    make             # Compile with default compiler
     ```
 
 ### Linux
@@ -71,7 +74,9 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
 2. Unzip the archive file into `demo` folder, and replace the original `sdk` folder
 3. Under `demo` folder and build the `demo` project
     ``` sh
-    make
+    make CXX=g++     # Compile with g++
+    make CXX=clang++ # Compile with clang++
+    make             # Compile with default compiler
     ```
 
 ## Setup a c++ 14 (or newer) project
@@ -124,6 +129,17 @@ bindings on your own.
 ### Linux
 1. Run `make`
 2. Run `make install`, libraries and bindings will be copied into a new created folder: `install`
+
+### Android
+1. Install android NDK (e.g. 21.4.7075529) via Android Studio
+2. Run make for one of the following android targets on Mac or Linux
+``` sh
+NDK_VERSION=21.4.7075529 make armv7-linux-androideabi
+NDK_VERSION=21.4.7075529 make aarch64-linux-android
+NDK_VERSION=21.4.7075529 make i686-linux-android
+NDK_VERSION=21.4.7075529 make x86_64-linux-android
+```
+3. Run `make install`, libraries and bindings will be copied into a new created folder: `install`
 
 ### More information for Cronos Play
 If you are a game developer, please visit [Cronos Play](https://cronos.org/play) or fill this [Contact Form](https://airtable.com/shrFiQnLrcpeBp2lS) for more information.
