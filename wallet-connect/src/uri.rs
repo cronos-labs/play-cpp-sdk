@@ -21,11 +21,15 @@ const VERSION: u64 = 1;
 /// use as_url().as_str().to_string() for qrcode generation
 /// Prints the given QrCode object to the console.
 fn print_qr(qr: &QrCode) {
-    let border: i32 = 4;
+    let border: i32 = 1;
     for y in -border..qr.size() + border {
         for x in -border..qr.size() + border {
-            let c: char = if qr.get_module(x, y) { '█' } else { ' ' };
-            print!("{0}{0}", c);
+            let c = if qr.get_module(x, y) {
+                "\x1b[40m  \x1b[0m"
+            } else {
+                "\x1b[47m  \x1b[0m"
+            };
+            print!("{0}", c);
         }
         println!();
     }
@@ -36,7 +40,7 @@ impl Uri {
     /// prints the URI + its QR code representation in a console
     pub fn print_qr_uri(&self) {
         println!("session uri: {}", self.url);
-        if let Ok(qr) = QrCode::encode_text(self.url.as_str(), QrCodeEcc::Low) {
+        if let Ok(qr) = QrCode::encode_text(self.url.as_str(), QrCodeEcc::Medium) {
             print_qr(&qr);
         } else {
             eprintln!("failed to encode URI as a QR code");
