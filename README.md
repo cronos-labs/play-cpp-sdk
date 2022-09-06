@@ -59,7 +59,7 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
     git clone https://github.com/cronos-labs/play-cpp-sdk.git
     ```
 2. Unzip the archive file into `demo` folder, and replace the original `sdk` folder
-3. Under `demo` folder and build the `demo` project
+3. Under `demo` folder and build the `demo` project with g++, clang++ or default compiler
     ``` sh
     make CXX=g++     # Compile with g++
     make CXX=clang++ # Compile with clang++
@@ -72,7 +72,7 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
     git clone https://github.com/cronos-labs/play-cpp-sdk.git
     ```
 2. Unzip the archive file into `demo` folder, and replace the original `sdk` folder
-3. Under `demo` folder and build the `demo` project
+3. Under `demo` folder and build the `demo` project with g++, clang++ or default compiler
     ``` sh
     make CXX=g++     # Compile with g++
     make CXX=clang++ # Compile with clang++
@@ -133,12 +133,12 @@ bindings on your own.
 ### Android
 1. Install android NDK (e.g. 21.4.7075529) via Android Studio
 2. Run make for one of the following android targets on Mac or Linux
-``` sh
-NDK_VERSION=21.4.7075529 make armv7-linux-androideabi
-NDK_VERSION=21.4.7075529 make aarch64-linux-android
-NDK_VERSION=21.4.7075529 make i686-linux-android
-NDK_VERSION=21.4.7075529 make x86_64-linux-android
-```
+    ``` sh
+    NDK_VERSION=21.4.7075529 make armv7-linux-androideabi
+    NDK_VERSION=21.4.7075529 make aarch64-linux-android
+    NDK_VERSION=21.4.7075529 make i686-linux-android
+    NDK_VERSION=21.4.7075529 make x86_64-linux-android
+    ```
 3. Run `make install`, libraries and bindings will be copied into a new created folder: `install`
 
 ### More information for Cronos Play
