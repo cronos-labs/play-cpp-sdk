@@ -78,12 +78,14 @@ void UserWalletConnectCallback::onDisconnected(
     const WalletConnectSessionInfo &sessioninfo) const {
   std::cout << "user c++ onDisconnected" << std::endl;
   print_session(sessioninfo);
+  exit(0);
 }
 void UserWalletConnectCallback::onConnecting(
     const WalletConnectSessionInfo &sessioninfo) const {
   std::cout << "user c++ onConnecting" << std::endl;
   print_session(sessioninfo);
-  // this is testing purpose, comment this line for actual test
+  // !!! Important !!!
+  // Comment out this line for actual test
   exit(0);
 }
 void UserWalletConnectCallback::onUpdated(
@@ -93,24 +95,33 @@ void UserWalletConnectCallback::onUpdated(
 }
 
 int main(int argc, char *argv[]) {
-  bool test_personal = false;
   std::string filename = "sessioninfo.json";
   try {
     rust::Box<WalletconnectClient> client = make_new_client(filename);
     WalletConnectCallback *usercallbackraw = new UserWalletConnectCallback();
     std::unique_ptr<WalletConnectCallback> usercallback(usercallbackraw);
     client->setup_callback(std::move(usercallback));
+
+    // Print the QR code on terminal
     rust::String uri = client->print_uri();
+
+    // program is blocked here for waiting connecting
     WalletConnectEnsureSessionResult result = client->ensure_session_blocking();
 
-    rust::String sessioninfo = client->save_client();
-    {
-      std::ofstream outfile(filename);
-      outfile.write(sessioninfo.c_str(), sessioninfo.size());
-    }
-
+    // once connected, program continues
+    std::cout << "connected chain_id: " << result.chain_id << std::endl;
     assert(result.addresses.size() > 0);
 
+    // get the connected session info as string and save it into a file
+    rust::String sessioninfo = client->save_client();
+    std::cout << "sessioninfo = " << sessioninfo << std::endl;
+    std::ofstream outfile(filename);
+    outfile.write(sessioninfo.c_str(), sessioninfo.size());
+    // it is important to close file and release the session file
+    outfile.close();
+
+    // sign
+    bool test_personal = true;
     if (test_personal) {
       /* message signing */
       rust::Vec<uint8_t> sig1 =
@@ -135,6 +146,10 @@ int main(int argc, char *argv[]) {
       std::cout << "signature=" << bytes_to_hex_string(sig1).c_str()
                 << std::endl;
       std::cout << "signature length=" << sig1.size() << std::endl;
+    }
+
+    // waiting update or disconnect
+    while (true) {
     }
 
   } catch (const rust::Error e) {

@@ -151,56 +151,56 @@ async fn do_walletconnect_set_callback(
     client.run_callback(Box::new(move |message| {
         match message.state {
             ClientChannelMessageType::Connected => {
-                println!("Connected");
+                // println!("Connected");
                 if let Some(info) = message.session {
-                    println!("session info: {:?}", info);
+                    // println!("session info: {:?}", info);
 
                     if let Ok(sessioninfo) = convert_session_info(&info) {
                         if let Some(myref) = sessioninfo.as_ref() {
                             cppcallback.onConnected(myref);
                         }
                     } else {
-                        println!("invalid session info");
+                        // println!("invalid session info");
                     }
                 }
             }
             ClientChannelMessageType::Disconnected => {
-                println!("Disconnected");
+                // println!("Disconnected");
                 if let Some(info) = message.session {
-                    println!("session info: {:?}", info);
+                    // println!("session info: {:?}", info);
                     if let Ok(sessioninfo) = convert_session_info(&info) {
                         if let Some(myref) = sessioninfo.as_ref() {
                             cppcallback.onDisconnected(myref);
                         }
                     } else {
-                        println!("invalid session info");
+                        // println!("invalid session info");
                     }
                 }
             }
             ClientChannelMessageType::Connecting => {
-                println!("Connecting");
+                // println!("Connecting");
                 if let Some(info) = &message.session {
-                    println!("session info: {:?}", info);
+                    // println!("session info: {:?}", info);
                     if let Ok(sessioninfo) = convert_session_info(info) {
                         if let Some(myref) = sessioninfo.as_ref() {
                             cppcallback.onConnecting(myref);
                         }
                     } else {
-                        println!("invalid session info");
+                        // println!("invalid session info");
                     }
                 }
             }
             ClientChannelMessageType::Updated => {
-                println!("Updated");
+                // println!("Updated");
                 if let Some(info) = &message.session {
-                    println!("session info: {:?}", info);
+                    // println!("session info: {:?}", info);
 
                     if let Ok(sessioninfo) = convert_session_info(info) {
                         if let Some(myref) = sessioninfo.as_ref() {
                             cppcallback.onUpdated(myref);
                         }
                     } else {
-                        println!("invalid session info");
+                        // println!("invalid session info");
                     }
                 }
             }

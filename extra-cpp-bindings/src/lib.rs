@@ -648,15 +648,15 @@ unsafe impl Send for ffi::WalletConnectCallback {}
 unsafe impl Sync for ffi::WalletConnectCallback {}
 
 fn generate_qrcode(qrcodestring: String) -> Result<crate::ffi::WalletQrcode> {
-    let qr: QrCode = QrCode::encode_text(&qrcodestring, QrCodeEcc::Low)?;
-    let size = qr.size() as u32;
+    let qr: QrCode = QrCode::encode_text(&qrcodestring, QrCodeEcc::Medium)?;
+    let border: i32 = 2;
+    let size = (qr.size() + border * 2) as u32;
     let mut image: Vec<u8> = Vec::with_capacity((size * size) as usize);
-    for y in 0..qr.size() {
-        for x in 0..qr.size() {
-            image.push(if qr.get_module(x, y) { 1 } else { 0 });
+    for y in -border..qr.size() + border {
+        for x in -border..qr.size() + border {
+            image.push(if qr.get_module(x, y) { 0 } else { 1 });
         }
     }
-
     assert!(image.len() as u32 == size * size);
 
     let qrcode = crate::ffi::WalletQrcode {
