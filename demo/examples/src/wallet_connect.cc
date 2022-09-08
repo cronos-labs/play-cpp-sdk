@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     rust::Box<WalletconnectClient> client = make_new_client(filename);
     WalletConnectCallback *usercallbackraw = new UserWalletConnectCallback();
     std::unique_ptr<WalletConnectCallback> usercallback(usercallbackraw);
-    client->setup_callback(std::move(usercallback));
+    client->setup_callback_blocking(std::move(usercallback));
 
     // Print the QR code on terminal
     rust::String uri = client->print_uri();

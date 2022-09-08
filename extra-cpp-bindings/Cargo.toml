@@ -12,6 +12,7 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 anyhow = "1"
 cxx = "1"
 ethers = { version = "0.17", features = ["rustls"] }
+eyre = "0.6"
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 serde = "1"
 serde_json = { version = "1", features = ["arbitrary_precision"] }

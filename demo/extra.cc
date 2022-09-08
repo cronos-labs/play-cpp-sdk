@@ -214,7 +214,7 @@ void test_wallet_connect() {
     Box<WalletconnectClient> client = make_new_client(filename);
     WalletConnectCallback *usercallbackraw = new UserWalletConnectCallback();
     std::unique_ptr<WalletConnectCallback> usercallback(usercallbackraw);
-    client->setup_callback(std::move(usercallback));
+    client->setup_callback_blocking(std::move(usercallback));
     String uri = client->print_uri();
     WalletConnectEnsureSessionResult result = client->ensure_session_blocking();
 

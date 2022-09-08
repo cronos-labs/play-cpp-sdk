@@ -105,20 +105,25 @@ impl Client {
 
     /// automatic polling for session
     ///  receive client state messages through callback
-    pub fn run_callback(&mut self, mycallback: Box<dyn Fn(ClientChannelMessage) + Send + Sync>) {
+    pub async fn run_callback(
+        &mut self,
+        mycallback: Box<dyn Fn(ClientChannelMessage) -> eyre::Result<()> + Send + Sync>,
+    ) -> eyre::Result<tokio::task::JoinHandle<eyre::Result<()>>> {
         let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel::<ClientChannelMessage>();
 
         self.set_callback(sender);
 
-        tokio::spawn(async move {
+        let join_handle = tokio::spawn(async move {
             loop {
                 let message = receiver.recv().await;
 
                 if let Some(message) = message {
-                    mycallback(message.clone());
+                    return mycallback(message.clone());
                 }
             }
         });
+
+        Ok(join_handle)
     }
     /// Creates a new client from the provided options
     /// (and will connect to the bridge server according to the URI in metadata)
@@ -164,7 +169,7 @@ impl Client {
 }
 
 /// Error thrown when sending an HTTP request
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ClientError {
     #[error("{0}")]
     Eyre(#[from] eyre::Report),

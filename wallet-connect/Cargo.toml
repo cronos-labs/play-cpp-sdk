@@ -6,6 +6,7 @@ license = "Apache-2.0"
 
 [dependencies]
 aes = "0.8"
+anyhow = "1"
 async-trait = { version = "0.1", default-features = false }
 cbc = { version = "0.1", features = ["alloc"] }
 dashmap = "5"

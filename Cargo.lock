@@ -988,6 +988,7 @@ name = "defi-wallet-connect"
 version = "0.1.0"
 dependencies = [
  "aes 0.8.1",
+ "anyhow",
  "async-trait",
  "cbc",
  "dashmap",
@@ -1580,6 +1581,7 @@ dependencies = [
  "cxx-build",
  "defi-wallet-connect",
  "ethers",
+ "eyre",
  "hex",
  "hex-literal",
  "qrcodegen",

@@ -174,7 +174,7 @@ mod ffi {
         ) -> Result<Box<WalletconnectClient>>;
 
         /// setup callback
-        pub fn setup_callback(
+        pub fn setup_callback_blocking(
             &mut self,
             usercallback: UniquePtr<WalletConnectCallback>,
         ) -> Result<()>;
