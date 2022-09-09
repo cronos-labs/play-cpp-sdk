@@ -282,8 +282,8 @@ impl WalletconnectClient {
     ) -> Result<()> {
         if let Some(client) = self.client.as_mut() {
             self.rt.block_on(async move {
-                // TODO handle the join_handle, or pass to c++ side
-                let join_handle = setup_callback(client, usercallback).await?;
+                // FIXME handle the join_handle, or pass to c++ side
+                let _join_handle = setup_callback(client, usercallback).await?;
                 Ok(())
             })
         } else {
