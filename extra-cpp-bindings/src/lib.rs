@@ -782,7 +782,7 @@ mod test {
         let result = hasher.finalize();
         assert!(
             result[..]
-                == hex!("1f58cd5bd78e427d4f6459937110eec31dada129bb4466a171cd741e81af266e")[..]
+                == hex!("8C64C3C66FD5C11DDD7926664D311056F6C6F08CE7371AADE166D5E5B0A6754C")[..]
         );
     }
     #[test]
