@@ -1,7 +1,10 @@
 # Changelog
 ## [Unreleased]
+- Add missing licenses
+- Fix QR code can not be detected error
+- Rename `setup_callback` as `setup_callback_blocking`
 
-## [v0.0.6-alpha] - 2020-08-24
+## [v0.0.7-alpha] - 2020-08-24
 - Add android builds
 
 ## [v0.0.6-alpha] - 2020-08-17
