@@ -1,10 +1,11 @@
 use std::error::Error;
 
 use defi_wallet_connect::session::SessionInfo;
-use defi_wallet_connect::ClientChannelMessageType;
 use defi_wallet_connect::{Client, Metadata, WCMiddleware};
+use defi_wallet_connect::{ClientChannelMessage, ClientChannelMessageType};
 use ethers::prelude::Middleware;
 use ethers::types::H160;
+use eyre::eyre;
 use std::fs::File;
 use std::io::prelude::*;
 /// remove session.json to start new session
@@ -33,7 +34,7 @@ async fn make_client() -> Result<Client, Box<dyn Error>> {
     }
 }
 
-fn write_session_to_file(info: &SessionInfo, filename: &str) -> Result<(), Box<dyn Error>> {
+fn write_session_to_file(info: &SessionInfo, filename: &str) -> eyre::Result<()> {
     let mut file = std::fs::File::create(filename)?;
     let buffer = serde_json::to_string(&info)?;
     // write buffer to file
@@ -61,34 +62,49 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut client = make_client().await?;
 
-    client.run_callback(Box::new(move |message| match message.state {
-        ClientChannelMessageType::Connected => {
-            println!("Connected");
-            if let Some(info) = message.session {
-                println!("session info: {:?}", info);
-                write_session_to_file(&info, filename).expect("write session to file");
-            }
-        }
-        ClientChannelMessageType::Disconnected => {
-            println!("Disconnected");
-            if let Some(info) = message.session {
-                println!("session info: {:?}", info);
-            }
-        }
-        ClientChannelMessageType::Connecting => {
-            println!("Connecting");
-            if let Some(info) = &message.session {
-                info.uri().print_qr_uri();
-                write_session_to_file(info, filename).expect("write session to file");
-            }
-        }
-        ClientChannelMessageType::Updated => {
-            println!("Updated");
-            if let Some(info) = &message.session {
-                write_session_to_file(info, filename).expect("write session to file");
-            }
-        }
-    }));
+    client
+        .run_callback(Box::new(
+            move |message: ClientChannelMessage| -> eyre::Result<()> {
+                match message.state {
+                    ClientChannelMessageType::Connected => {
+                        println!("Connected");
+                        if let Some(info) = message.session {
+                            println!("session info: {:?}", info);
+                            write_session_to_file(&info, filename)
+                        } else {
+                            Err(eyre!("no session info"))
+                        }
+                    }
+                    ClientChannelMessageType::Disconnected => {
+                        println!("Disconnected");
+                        if let Some(info) = message.session {
+                            println!("session info: {:?}", info);
+                            Ok(())
+                        } else {
+                            Err(eyre!("no session info"))
+                        }
+                    }
+                    ClientChannelMessageType::Connecting => {
+                        println!("Connecting");
+                        if let Some(info) = &message.session {
+                            info.uri().print_qr_uri();
+                            write_session_to_file(info, filename)
+                        } else {
+                            Err(eyre!("no session info"))
+                        }
+                    }
+                    ClientChannelMessageType::Updated => {
+                        println!("Updated");
+                        if let Some(info) = &message.session {
+                            write_session_to_file(info, filename)
+                        } else {
+                            Err(eyre!("no session info"))
+                        }
+                    }
+                }
+            },
+        ))
+        .await?;
 
     // qrcode display
     println!(
