@@ -118,7 +118,7 @@ impl Client {
                 let message = receiver.recv().await;
 
                 if let Some(message) = message {
-                    return mycallback(message.clone());
+                    return mycallback(message);
                 }
             }
         });
