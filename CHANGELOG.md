@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+
+## [v0.0.8-alpha] - 2020-09-13
 - Add missing licenses
 - Fix QR code can not be detected error
 - Rename `setup_callback` as `setup_callback_blocking`
