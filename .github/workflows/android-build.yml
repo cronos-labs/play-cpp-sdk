@@ -12,90 +12,19 @@ on:
     paths-ignore:
       - README.md
 jobs:
-  armv7-linux-androideabi:
+  build-android:
     runs-on: macos-11
+    strategy:
+      matrix:
+        # 21.4.7075529 is needed for Unreal Engine 4.26
+        ndk_version: [25.1.8937393, 21.4.7075529]
+        # TODO: is x86_64-linux-android necessary to test on CI?
+        target: [armv7-linux-androideabi, aarch64-linux-android, x86_64-linux-android]
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
       - uses: ./.github/actions/android
         with:
-          ndk_version: 25.1.8937393
-          target: armv7-linux-androideabi
-
-  aarch64-linux-android:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/android
-        with:
-          ndk_version: 25.1.8937393
-          target: aarch64-linux-android
-
-  i686-linux-android:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/android
-        with:
-          ndk_version: 25.1.8937393
-          target: i686-linux-android
-
-  x86_64-linux-android:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/android
-        with:
-          ndk_version: 25.1.8937393
-          target: x86_64-linux-android
-
-  armv7-linux-androideabi-unreal:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/android
-        with:
-          ndk_version: 21.4.7075529
-          target: armv7-linux-androideabi
-
-  aarch64-linux-android-unreal:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/android
-        with:
-          ndk_version: 21.4.7075529
-          target: aarch64-linux-android
-
-  i686-linux-android-unreal:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/android
-        with:
-          ndk_version: 21.4.7075529
-          target: i686-linux-android
-
-  x86_64-linux-android-unreal:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/android
-        with:
-          ndk_version: 21.4.7075529
-          target: x86_64-linux-android
+          ndk_version: ${{ matrix.ndk_version }}
+          target: ${{ matrix.target }}
