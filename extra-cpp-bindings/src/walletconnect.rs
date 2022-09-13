@@ -1,8 +1,8 @@
 use crate::ffi::WalletConnectCallback;
 use anyhow::{anyhow, Result};
 use defi_wallet_connect::session::SessionInfo;
-use defi_wallet_connect::ClientChannelMessageType;
 use defi_wallet_connect::{Client, Metadata, WCMiddleware};
+use defi_wallet_connect::{ClientChannelMessage, ClientChannelMessageType};
 use ethers::core::types::transaction::eip2718::TypedTransaction;
 use url::Url;
 
@@ -10,6 +10,7 @@ use crate::ffi::WalletConnectSessionInfo;
 use cxx::UniquePtr;
 use ethers::prelude::{Address, NameOrAddress, TransactionRequest, U256};
 use ethers::prelude::{Middleware, Signature};
+use eyre::eyre;
 use std::str::FromStr;
 
 pub struct WalletconnectClient {
@@ -24,7 +25,6 @@ async fn restore_client(contents: String) -> Result<Client> {
 
     let session: SessionInfo = serde_json::from_str(&contents)?;
     let client = Client::restore(session).await?;
-    println!("restored client");
     Ok(client)
 }
 
@@ -89,7 +89,9 @@ pub fn walletconnect_new_client(
     Ok(res)
 }
 
-fn convert_session_info(sessioninfo: &SessionInfo) -> Result<UniquePtr<WalletConnectSessionInfo>> {
+fn convert_session_info(
+    sessioninfo: &SessionInfo,
+) -> eyre::Result<UniquePtr<WalletConnectSessionInfo>> {
     let mut cppsessioninfo = crate::ffi::new_walletconnect_sessioninfo();
     cppsessioninfo
         .pin_mut()
@@ -144,70 +146,71 @@ fn convert_session_info(sessioninfo: &SessionInfo) -> Result<UniquePtr<WalletCon
     Ok(cppsessioninfo)
 }
 
-async fn do_walletconnect_set_callback(
+async fn setup_callback(
     client: &mut Client,
-    cppcallback: cxx::UniquePtr<WalletConnectCallback>,
-) -> Result<()> {
-    client.run_callback(Box::new(move |message| {
-        match message.state {
-            ClientChannelMessageType::Connected => {
-                println!("Connected");
-                if let Some(info) = message.session {
-                    println!("session info: {:?}", info);
-
-                    if let Ok(sessioninfo) = convert_session_info(&info) {
-                        if let Some(myref) = sessioninfo.as_ref() {
-                            cppcallback.onConnected(myref);
+    cppcallback: UniquePtr<WalletConnectCallback>,
+) -> anyhow::Result<tokio::task::JoinHandle<eyre::Result<()>>> {
+    client
+        .run_callback(Box::new(
+            move |message: ClientChannelMessage| -> eyre::Result<()> {
+                match message.state {
+                    ClientChannelMessageType::Connected => {
+                        if let Some(info) = message.session {
+                            let sessioninfo = convert_session_info(&info)?;
+                            if let Some(myref) = sessioninfo.as_ref() {
+                                cppcallback.onConnected(myref);
+                                Ok(())
+                            } else {
+                                Err(eyre!("no session info"))
+                            }
+                        } else {
+                            Err(eyre!("no session info"))
                         }
-                    } else {
-                        println!("invalid session info");
                     }
-                }
-            }
-            ClientChannelMessageType::Disconnected => {
-                println!("Disconnected");
-                if let Some(info) = message.session {
-                    println!("session info: {:?}", info);
-                    if let Ok(sessioninfo) = convert_session_info(&info) {
-                        if let Some(myref) = sessioninfo.as_ref() {
-                            cppcallback.onDisconnected(myref);
+                    ClientChannelMessageType::Disconnected => {
+                        if let Some(info) = message.session {
+                            let sessioninfo = convert_session_info(&info)?;
+                            if let Some(myref) = sessioninfo.as_ref() {
+                                cppcallback.onDisconnected(myref);
+                                Ok(())
+                            } else {
+                                Err(eyre!("no session info"))
+                            }
+                        } else {
+                            Err(eyre!("no session info"))
                         }
-                    } else {
-                        println!("invalid session info");
                     }
-                }
-            }
-            ClientChannelMessageType::Connecting => {
-                println!("Connecting");
-                if let Some(info) = &message.session {
-                    println!("session info: {:?}", info);
-                    if let Ok(sessioninfo) = convert_session_info(info) {
-                        if let Some(myref) = sessioninfo.as_ref() {
-                            cppcallback.onConnecting(myref);
+                    ClientChannelMessageType::Connecting => {
+                        if let Some(info) = &message.session {
+                            let sessioninfo = convert_session_info(info)?;
+                            if let Some(myref) = sessioninfo.as_ref() {
+                                cppcallback.onConnecting(myref);
+                                Ok(())
+                            } else {
+                                Err(eyre!("no session info"))
+                            }
+                        } else {
+                            Err(eyre!("no session info"))
                         }
-                    } else {
-                        println!("invalid session info");
                     }
-                }
-            }
-            ClientChannelMessageType::Updated => {
-                println!("Updated");
-                if let Some(info) = &message.session {
-                    println!("session info: {:?}", info);
-
-                    if let Ok(sessioninfo) = convert_session_info(info) {
-                        if let Some(myref) = sessioninfo.as_ref() {
-                            cppcallback.onUpdated(myref);
+                    ClientChannelMessageType::Updated => {
+                        if let Some(info) = &message.session {
+                            let sessioninfo = convert_session_info(info)?;
+                            if let Some(myref) = sessioninfo.as_ref() {
+                                cppcallback.onUpdated(myref);
+                                Ok(())
+                            } else {
+                                Err(eyre!("no session info"))
+                            }
+                        } else {
+                            Err(eyre!("no session info"))
                         }
-                    } else {
-                        println!("invalid session info");
                     }
-                }
-            }
-        } // end of match
-    }));
-
-    Ok(())
+                } // end of match
+            },
+        ))
+        .await
+        .map_err(|e| anyhow!("{:?}", e))
 }
 
 async fn sign_typed_tx(
@@ -273,11 +276,16 @@ impl WalletconnectClient {
         Ok(result.to_vec())
     }
 
-    pub fn setup_callback(&mut self, usercallback: UniquePtr<WalletConnectCallback>) -> Result<()> {
-        let cppcallback = usercallback;
+    pub fn setup_callback_blocking(
+        &mut self,
+        usercallback: UniquePtr<WalletConnectCallback>,
+    ) -> Result<()> {
         if let Some(client) = self.client.as_mut() {
-            self.rt
-                .block_on(do_walletconnect_set_callback(client, cppcallback))
+            self.rt.block_on(async move {
+                // FIXME handle the join_handle, or pass to c++ side
+                let _join_handle = setup_callback(client, usercallback).await?;
+                Ok(())
+            })
         } else {
             anyhow::bail!("no client");
         }

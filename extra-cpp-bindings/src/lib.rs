@@ -174,7 +174,7 @@ mod ffi {
         ) -> Result<Box<WalletconnectClient>>;
 
         /// setup callback
-        pub fn setup_callback(
+        pub fn setup_callback_blocking(
             &mut self,
             usercallback: UniquePtr<WalletConnectCallback>,
         ) -> Result<()>;
@@ -648,15 +648,15 @@ unsafe impl Send for ffi::WalletConnectCallback {}
 unsafe impl Sync for ffi::WalletConnectCallback {}
 
 fn generate_qrcode(qrcodestring: String) -> Result<crate::ffi::WalletQrcode> {
-    let qr: QrCode = QrCode::encode_text(&qrcodestring, QrCodeEcc::Low)?;
-    let size = qr.size() as u32;
+    let qr: QrCode = QrCode::encode_text(&qrcodestring, QrCodeEcc::Medium)?;
+    let border: i32 = 2;
+    let size = (qr.size() + border * 2) as u32;
     let mut image: Vec<u8> = Vec::with_capacity((size * size) as usize);
-    for y in 0..qr.size() {
-        for x in 0..qr.size() {
-            image.push(if qr.get_module(x, y) { 1 } else { 0 });
+    for y in -border..qr.size() + border {
+        for x in -border..qr.size() + border {
+            image.push(if qr.get_module(x, y) { 0 } else { 1 });
         }
     }
-
     assert!(image.len() as u32 == size * size);
 
     let qrcode = crate::ffi::WalletQrcode {
@@ -782,7 +782,7 @@ mod test {
         let result = hasher.finalize();
         assert!(
             result[..]
-                == hex!("1f58cd5bd78e427d4f6459937110eec31dada129bb4466a171cd741e81af266e")[..]
+                == hex!("8C64C3C66FD5C11DDD7926664D311056F6C6F08CE7371AADE166D5E5B0A6754C")[..]
         );
     }
     #[test]

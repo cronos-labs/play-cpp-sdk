@@ -156,4 +156,4 @@ install:
 	. ./install.sh
 
 uninstall:
-	rm -rf build
+	rm -rf install
