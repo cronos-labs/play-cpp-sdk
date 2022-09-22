@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
   assert(erc721.name() == "GameItem");
   assert(erc721.symbol() == "ITM");
   assert(erc721.token_uri("1") == "https://game.example/item-id-8u5h2m.json");
-  // cout << "Total Supply of ERC721=" << erc721.total_supply() << endl; // the
-  // contract must support IERC721Enumerable
+  // cout << "Total Supply of ERC721=" << erc721.total_supply() << endl; //
+  // the contract must support IERC721Enumerable
   assert(erc721.owner_of("1") == signer1_address);
   assert(erc721.balance_of(signer1_address) == u256("1"));
 

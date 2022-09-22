@@ -208,7 +208,11 @@ void UserWalletConnectCallback::onUpdated(
 }
 
 void test_wallet_connect() {
-  bool test_personal = false;
+  std::string mycronosrpc = getenv("CRONOSRPC");
+  std::cout << "read mycronosrpc: " << mycronosrpc << std::endl;
+  bool test_personal = true;
+  bool test_basic = false;
+  bool test_nft = false;
   std::string filename = "sessioninfo.json";
   try {
     Box<WalletconnectClient> client = make_new_client(filename);
@@ -232,24 +236,66 @@ void test_wallet_connect() {
           client->sign_personal_blocking("hello", result.addresses[0].address);
       cout << "signature=" << bytes_to_hex_string(sig1).c_str() << std::endl;
       cout << "signature length=" << sig1.size() << endl;
-    } else {
-      /* legacy eth sign */
-      WalletConnectTxLegacy info;
-      info.to =
-          String(std::string("0x") +
-                 address_to_hex_string(result.addresses[0].address).c_str());
-      info.gas = "21000";             // gas limit
-      info.gas_price = "10000";       // gas price
-      info.value = "100000000000000"; // 0.0001 eth
-      info.data = Vec<uint8_t>();
-      info.nonce = "1";
-      Vec<uint8_t> sig1 = client->sign_legacy_transaction_blocking(
-          info, result.addresses[0].address);
-
-      cout << "signature=" << bytes_to_hex_string(sig1).c_str() << endl;
-      cout << "signature length=" << sig1.size() << endl;
     }
 
+    if (test_basic) {
+      std::string fromaddress = getenv("MYFROMADDRESS");
+      cout << "mycronosrpc=" << mycronosrpc << endl;
+      cout << "fromaddress=" << fromaddress << endl;
+      std::string toaddress = getenv("MYTOADDRESS");
+      cout << "toaddress=" << toaddress << endl;
+      std::string mynonce =
+          org::defi_wallet_core::get_eth_nonce(fromaddress.c_str(), mycronosrpc)
+              .c_str();
+      cout << "nonce=" << mynonce << endl;
+      WalletConnectTxEip155 info;
+      info.to = toaddress;
+      info.common.gas_limit = "21000"; // gas limit
+      info.common.gas_price = "10000"; // gas price
+      info.value = "100000000000000";  // 0.0001 eth
+      info.data = Vec<uint8_t>();
+      info.common.nonce = mynonce;
+      info.common.chainid = 1;
+
+      Vec<uint8_t> rawtx = client->sign_eip155_transaction_blocking(
+          info, result.addresses[0].address);
+
+      auto receipt = org::defi_wallet_core::broadcast_eth_signed_raw_tx(
+          rawtx, mycronosrpc, 3000);
+      cout << "transaction_hash="
+           << bytes_to_hex_string(receipt.transaction_hash).c_str() << endl;
+    }
+
+    if (test_nft) {
+      std::string contractaddress = getenv("MYCONTRACTADDRESS");
+      std::string fromaddress = getenv("MYFROMADDRESS");
+      cout << "mycronosrpc=" << mycronosrpc << endl;
+      cout << "fromaddress=" << fromaddress << endl;
+      std::string toaddress = getenv("MYTOADDRESS");
+      cout << "toaddress=" << toaddress << endl;
+      std::string mynonce =
+          org::defi_wallet_core::get_eth_nonce(fromaddress.c_str(), mycronosrpc)
+              .c_str();
+      cout << "nonce=" << mynonce << endl;
+      WalletConnectErc1155Transfer info;
+      info.contract_address = contractaddress;
+      info.from_address = fromaddress;
+      info.to_address = toaddress;
+      info.token_id = "0";
+      info.amount = "1";
+      info.common.nonce = mynonce;
+      info.common.gas_price = "21000";
+      info.common.gas_limit = "100000";
+      info.common.chainid = 1;
+      info.common.web3api_url = mycronosrpc.c_str();
+
+      Vec<uint8_t> rawtx = client->erc1155_transfer(info);
+
+      auto receipt = org::defi_wallet_core::broadcast_eth_signed_raw_tx(
+          rawtx, mycronosrpc, 3000);
+      cout << "transaction_hash="
+           << bytes_to_hex_string(receipt.transaction_hash).c_str() << endl;
+    }
   } catch (const cxxbridge1::Error e) {
     cout << "wallet connect error=" << e.what() << std::endl;
   }

@@ -20,6 +20,24 @@ use walletconnect::WalletconnectClient;
 
 #[cxx::bridge(namespace = "com::crypto::game_sdk")]
 mod ffi {
+    #[derive(Debug, Default)]
+    pub struct WalletConnectTransactionReceiptRaw {
+        pub transaction_hash: Vec<u8>,
+        pub transaction_index: String,
+        pub block_hash: Vec<u8>,
+        pub block_number: String,
+        pub cumulative_gas_used: String,
+        pub gas_used: String,
+        pub contract_address: String,
+        pub logs: Vec<String>,
+        /// Status: either 1 (success) or 0 (failure)
+        pub status: String,
+        pub root: Vec<u8>,
+        pub logs_bloom: Vec<u8>,
+        pub transaction_type: String,
+        pub effective_gas_price: String,
+    }
+
     unsafe extern "C++" {
         include!("extra-cpp-bindings/include/walletconnectcallback.h");
 
@@ -49,20 +67,101 @@ mod ffi {
         fn set_handshaketopic(self: Pin<&mut WalletConnectSessionInfo>, handshaketopic: String);
     }
 
+    #[derive(Debug, Default)]
     pub struct WalletQrcode {
         pub qrcode: String,
         pub image: Vec<u8>, /* size* size*/
         pub size: u32,
     }
+    #[derive(Debug, Default)]
+    pub struct WalletConnectTxCommon {
+        pub gas_limit: String,   // decimal string, "1"
+        pub gas_price: String,   // decimal string
+        pub nonce: String,       // decimal string
+        pub chainid: u64,        // integer u64
+        pub web3api_url: String, // string
+    }
 
-    /// wallet connect cronos(eth) legacy-tx signing info
-    pub struct WalletConnectTxLegacy {
-        pub to: String,        // hexstring, "0x..."
-        pub gas: String,       // decimal string, "1"
-        pub gas_price: String, // decimal string
-        pub value: String,     // decimal string, in wei units
-        pub data: Vec<u8>,     // data, as bytes
-        pub nonce: String,     // decimal string
+    /// wallet connect cronos(eth) eip155-tx signing info
+    #[derive(Debug, Default)]
+    pub struct WalletConnectTxEip155 {
+        pub to: String,    // hexstring, "0x..."
+        pub value: String, // decimal string, in wei units
+        pub data: Vec<u8>, // data, as bytes
+
+        pub common: WalletConnectTxCommon,
+    }
+
+    /// wallet connect cronos(eth) erc20-tx signing info
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc20Transfer {
+        pub contract_address: String, // hexstring, "0x..."
+        pub from_address: String,     // hexstring, "0x..."
+        pub to_address: String,       // hexstring, "0x..."
+        pub amount: String,           // decimal string, "1"
+
+        pub common: WalletConnectTxCommon,
+    }
+
+    /// wallet connect cronos(eth) erc721-tx signing info
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc721Transfer {
+        pub contract_address: String, // hexstring, "0x..."
+        pub from_address: String,     // hexstring, "0x..."
+        pub to_address: String,       // hexstring, "0x..."
+        pub token_id: String,         // decimal string, "1"
+
+        pub common: WalletConnectTxCommon,
+    }
+
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc1155Transfer {
+        pub contract_address: String,
+        pub from_address: String,
+        pub to_address: String,
+        pub token_id: String,
+        pub amount: String,
+        pub additional_data: Vec<u8>,
+
+        pub common: WalletConnectTxCommon,
+    }
+
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc1155Batch {
+        pub contract_address: String,
+        pub from_address: String,
+        pub to_address: String,
+        pub token_ids: Vec<String>,
+        pub amounts: Vec<String>,
+        pub additional_data: Vec<u8>,
+        pub common: WalletConnectTxCommon,
+    }
+
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc20Approve {
+        pub contract_address: String,
+        pub from_address: String,
+        pub approved_address: String,
+        pub amount: String,
+        pub common: WalletConnectTxCommon,
+    }
+
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc721Approve {
+        pub contract_address: String,
+        pub from_address: String,
+        pub approved_address: String,
+        pub token_id: String,
+        pub common: WalletConnectTxCommon,
+    }
+
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc1155Approve {
+        pub contract_address: String,
+        pub from_address: String,
+        pub approved_address: String,
+        pub approved: bool,
+        pub common: WalletConnectTxCommon,
     }
 
     /// cronos address info
@@ -195,12 +294,31 @@ mod ffi {
             message: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
-        /// sign cronos(eth) legacy transaction
-        pub fn sign_legacy_transaction_blocking(
+
+        pub fn erc20_transfer(&mut self, info: &WalletConnectErc20Transfer) -> Result<Vec<u8>>;
+
+        pub fn erc721_transfer(&mut self, info: &WalletConnectErc721Transfer) -> Result<Vec<u8>>;
+
+        pub fn erc1155_transfer(&mut self, info: &WalletConnectErc1155Transfer) -> Result<Vec<u8>>;
+
+        pub fn erc1155_transfer_batch(
             &mut self,
-            info: &WalletConnectTxLegacy,
+            info: &WalletConnectErc1155Batch,
+        ) -> Result<Vec<u8>>;
+
+        pub fn erc20_approve(&mut self, info: &WalletConnectErc20Approve) -> Result<Vec<u8>>;
+
+        pub fn erc721_approve(&mut self, info: &WalletConnectErc721Approve) -> Result<Vec<u8>>;
+
+        pub fn erc1155_approve(&mut self, info: &WalletConnectErc1155Approve) -> Result<Vec<u8>>;
+
+        /// build cronos(eth) eip155 transaction
+        pub fn sign_eip155_transaction_blocking(
+            &mut self,
+            info: &WalletConnectTxEip155,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
+
         /// returns the transactions of a given address.
         /// The API key can be obtained from https://cronoscan.com
         pub fn get_transaction_history_blocking(
@@ -665,6 +783,28 @@ fn generate_qrcode(qrcodestring: String) -> Result<crate::ffi::WalletQrcode> {
         size: size as u32,
     };
     Ok(qrcode)
+}
+
+use defi_wallet_core_common::TransactionReceipt;
+use ffi::WalletConnectTransactionReceiptRaw;
+impl From<TransactionReceipt> for WalletConnectTransactionReceiptRaw {
+    fn from(src: TransactionReceipt) -> Self {
+        ffi::WalletConnectTransactionReceiptRaw {
+            transaction_hash: src.transaction_hash,
+            transaction_index: src.transaction_index,
+            block_hash: src.block_hash,
+            block_number: src.block_number,
+            cumulative_gas_used: src.cumulative_gas_used,
+            gas_used: src.gas_used,
+            contract_address: src.contract_address,
+            status: src.status,
+            root: src.root,
+            logs_bloom: src.logs_bloom,
+            transaction_type: src.transaction_type,
+            effective_gas_price: src.effective_gas_price,
+            logs: src.logs,
+        }
+    }
 }
 
 #[cfg(test)]

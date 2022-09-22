@@ -5,6 +5,8 @@
 #include <iostream>
 #include <rust/cxx.h>
 #include <sstream>
+#include <chrono>
+#include <thread>
 using namespace com::crypto::game_sdk;
 
 // convert byte array to hex string
@@ -130,17 +132,17 @@ int main(int argc, char *argv[]) {
                 << std::endl;
       std::cout << "signature length=" << sig1.size() << std::endl;
     } else {
-      /* legacy eth sign */
-      WalletConnectTxLegacy info;
+      WalletConnectTxEip155 info;
       info.to = rust::String(
           std::string("0x") +
           address_to_hex_string(result.addresses[0].address).c_str());
-      info.gas = "21000";             // gas limit
-      info.gas_price = "10000";       // gas price
-      info.value = "100000000000000"; // 0.0001 eth
+      info.common.gas_limit = "21000"; // gas limit
+      info.common.gas_price = "10000"; // gas price
+      info.value = "100000000000000";  // 0.0001 eth
       info.data = rust::Vec<uint8_t>();
-      info.nonce = "1";
-      rust::Vec<uint8_t> sig1 = client->sign_legacy_transaction_blocking(
+      info.common.nonce = "1";
+      info.common.chainid = 777;
+      rust::Vec<uint8_t> sig1 = client->sign_eip155_transaction_blocking(
           info, result.addresses[0].address);
 
       std::cout << "signature=" << bytes_to_hex_string(sig1).c_str()
@@ -150,6 +152,8 @@ int main(int argc, char *argv[]) {
 
     // waiting update or disconnect
     while (true) {
+      // sleep 1 second
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
   } catch (const rust::Error e) {

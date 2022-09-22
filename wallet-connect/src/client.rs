@@ -28,9 +28,10 @@ use ethers::{
 use eyre::eyre;
 use eyre::Context;
 use serde::{de::DeserializeOwned, Serialize};
+use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::mpsc::UnboundedSender;
-
+use tokio::sync::Mutex;
 #[derive(Debug, Clone)]
 pub enum ClientChannelMessageType {
     Connecting,
@@ -58,9 +59,9 @@ impl Default for ClientChannelMessage {
 /// (holds the middleware trait implementations for ethers)
 /// FIXME: a way for persisting and recovering the client state
 /// (a callback function or a path which the client can control?)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Client {
-    connection: Connector,
+    connection: Arc<Mutex<Connector>>,
     // to make receive channel valid, sender channel should be open
     callback_channel: Option<UnboundedSender<ClientChannelMessage>>,
 }
@@ -76,24 +77,20 @@ impl Client {
     pub async fn restore(session_info: SessionInfo) -> Result<Self, ConnectorError> {
         Ok(Client {
             callback_channel: None,
-            connection: Connector::restore(session_info).await?,
+            connection: Arc::new(Mutex::new(Connector::restore(session_info).await?)),
         })
     }
 
     /// get current session info, can be saved , and later, restored
     pub async fn get_session_info(&self) -> Result<SessionInfo, ConnectorError> {
-        self.connection.get_session_info().await
+        let connection = self.connection.lock().await;
+        connection.get_session_info().await
     }
 
     /// create qrcode from this string
     pub async fn get_connection_string(&self) -> Result<String, ConnectorError> {
-        Ok(self
-            .connection
-            .get_uri()
-            .await?
-            .as_url()
-            .as_str()
-            .to_string())
+        let connection = self.connection.lock().await;
+        Ok(connection.get_uri().await?.as_url().as_str().to_string())
     }
 
     /// manual polling for session
@@ -130,7 +127,7 @@ impl Client {
     pub async fn with_options(options: Options) -> Result<Self, ConnectorError> {
         Ok(Client {
             callback_channel: options.callback_channel.clone(),
-            connection: Connector::new(options).await?,
+            connection: Arc::new(Mutex::new(Connector::new(options).await?)),
         })
     }
 
@@ -138,11 +135,12 @@ impl Client {
     /// If successful, the returned value is the wallet's addresses and the chain ID.
     /// TODO: more specific error types than eyre
     pub async fn ensure_session(&mut self) -> Result<(Vec<Address>, u64), eyre::Error> {
+        let mut connection = self.connection.lock().await;
         if let Some(v) = &self.callback_channel {
-            self.connection.set_callback(v.clone()).await;
+            connection.set_callback(v.clone()).await;
         }
 
-        self.connection.ensure_session().await
+        connection.ensure_session().await
     }
 
     /// Send a request to sign a message as per https://eips.ethereum.org/EIPS/eip-1271
@@ -199,7 +197,8 @@ impl JsonRpcClient for Client {
         method: &str,
         params: T,
     ) -> Result<R, ClientError> {
-        self.connection.request(method, params).await
+        let connection = self.connection.lock().await;
+        connection.request(method, params).await
     }
 }
 
@@ -273,15 +272,16 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         if let Some(nonce) = tx.nonce() {
             tx_obj.insert("nonce", format!("0x{:x}", nonce));
         }
+        if let Some(c) = tx.chain_id() {
+            tx_obj.insert("chainId", format!("0x{:x}", c));
+        }
         // TODO: put those error cases to WCError instead of wrapping in eyre
         let tx_bytes: Bytes = self
             .0
             .request("eth_signTransaction", vec![tx_obj])
             .await
             .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))?;
-
         let tx_rlp = rlp::Rlp::new(tx_bytes.as_ref());
-
         if tx_rlp.as_raw().is_empty() {
             return Err(WCError::ClientError(ClientError::Eyre(eyre!(
                 "failed to decode transaction , empty rlp"
