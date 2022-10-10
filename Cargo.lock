@@ -1009,7 +1009,7 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "url",
- "uuid",
+ "uuid 1.2.1",
  "ws_stream_wasm",
  "zeroize",
 ]
@@ -1282,7 +1282,7 @@ dependencies = [
  "sha2 0.10.6",
  "sha3 0.10.4",
  "thiserror",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -4123,7 +4123,7 @@ dependencies = [
  "thiserror",
  "time",
  "url",
- "uuid",
+ "uuid 0.8.2",
  "walkdir",
 ]
 
@@ -4573,6 +4573,17 @@ checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 dependencies = [
  "getrandom 0.2.7",
  "serde",
+]
+
+[[package]]
+name = "uuid"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "feb41e78f93363bb2df8b0e86a2ca30eed7806ea16ea0c790d757cf93f79be83"
+dependencies = [
+ "getrandom 0.2.7",
+ "serde",
+ "wasm-bindgen",
 ]
 
 [[package]]
