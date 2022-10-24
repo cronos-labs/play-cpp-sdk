@@ -52,9 +52,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.65"
+version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98161a4e3e2184da77bb14f02184cdd111e83bbbcc9979dfee3c44b9a85f5602"
+checksum = "216261ddc8289130e551ddcd5ce8a064710c0d064a4d2895c67151c92b5443f6"
 
 [[package]]
 name = "arrayvec"
@@ -1009,6 +1009,7 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "url",
+ "uuid 0.8.2",
  "uuid 1.2.1",
  "ws_stream_wasm",
  "zeroize",
@@ -4582,7 +4583,6 @@ checksum = "feb41e78f93363bb2df8b0e86a2ca30eed7806ea16ea0c790d757cf93f79be83"
 dependencies = [
  "getrandom 0.2.7",
  "serde",
- "wasm-bindgen",
 ]
 
 [[package]]
