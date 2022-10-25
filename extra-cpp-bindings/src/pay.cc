@@ -16,7 +16,7 @@ rust::Str OptionalArguments::get_order_id() const { return order_id; }
 rust::Str OptionalArguments::get_return_url() const { return return_url; }
 rust::Str OptionalArguments::get_cancel_url() const { return cancel_url; }
 rust::Str OptionalArguments::get_sub_merchant_id() const {
-  return sub_merchant_id;
+    return sub_merchant_id;
 }
 bool OptionalArguments::get_onchain_allowed() const { return onchain_allowed; }
 uint64_t OptionalArguments::get_expired_at() const { return expired_at; }
