@@ -1583,6 +1583,8 @@ dependencies = [
  "cxx",
  "cxx-build",
  "defi-wallet-connect",
+ "defi-wallet-core-common",
+ "defi-wallet-core-cpp",
  "ethers",
  "eyre",
  "hex",

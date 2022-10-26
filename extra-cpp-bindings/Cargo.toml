@@ -22,7 +22,8 @@ defi-wallet-connect= { path="../wallet-connect" }
 url = { version = "2", features = ["serde"] }
 hex="0.4.3"
 qrcodegen= "1.8"
-
+defi-wallet-core-cpp= { path="../defi-wallet-core-rs/bindings/cpp"}
+defi-wallet-core-common= { path="../defi-wallet-core-rs/common"}
 
 [build-dependencies]
 # Wait until https://github.com/dtolnay/cxx/pull/1048 is merged or similar solution is found

@@ -9,8 +9,15 @@ target/
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+*.swp
+demo/bin/
+demo/*.h
+demo/*.cc
+demo/*.txt
 demo/include/
 demo/lib
+demo/build/
+demo/sdk/
 demo/cppexample
 demo/cppexamplestatic
 demo/sessioninfo.json

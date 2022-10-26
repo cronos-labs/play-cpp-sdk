@@ -18,7 +18,8 @@ int main(int argc, char *argv[]) {
       "Nonce: 32891756\n"
       "Issued At: 2021-09-30T16:25:24Z\n"
       "Resources:\n"
-      "- ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/\n"
+      "- "
+      "ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/\n"
       "- https://example.com/my-web2-claim.json";
   rust::Box<CppLoginInfo> logininfo = new_logininfo(info);
 

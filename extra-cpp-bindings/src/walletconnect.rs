@@ -1,18 +1,23 @@
-use crate::ffi::WalletConnectCallback;
+use crate::ffi::{
+    WalletConnectCallback, WalletConnectErc1155Approve, WalletConnectErc1155Batch,
+    WalletConnectErc1155Transfer, WalletConnectErc20Approve, WalletConnectErc20Transfer,
+    WalletConnectErc721Approve, WalletConnectErc721Transfer, WalletConnectTxCommon,
+};
 use anyhow::{anyhow, Result};
 use defi_wallet_connect::session::SessionInfo;
 use defi_wallet_connect::{Client, Metadata, WCMiddleware};
 use defi_wallet_connect::{ClientChannelMessage, ClientChannelMessageType};
+
 use ethers::core::types::transaction::eip2718::TypedTransaction;
 use url::Url;
 
 use crate::ffi::WalletConnectSessionInfo;
 use cxx::UniquePtr;
-use ethers::prelude::{Address, NameOrAddress, TransactionRequest, U256};
+use ethers::prelude::{Address, Eip1559TransactionRequest, NameOrAddress, U256};
 use ethers::prelude::{Middleware, Signature};
+use ethers::types::H160;
 use eyre::eyre;
 use std::str::FromStr;
-
 pub struct WalletconnectClient {
     pub client: Option<defi_wallet_connect::Client>,
     pub rt: tokio::runtime::Runtime, // need to use the same runtime, otherwise c++ side crash
@@ -244,38 +249,6 @@ impl WalletconnectClient {
         }
     }
 
-    /// sign cronos(eth) legacy transaction
-    pub fn sign_legacy_transaction_blocking(
-        &mut self,
-        userinfo: &crate::ffi::WalletConnectTxLegacy,
-        address: [u8; 20],
-    ) -> Result<Vec<u8>> {
-        if self.client.is_none() {
-            anyhow::bail!("no client");
-        }
-
-        let client = self.client.take().expect("get client");
-        let signeraddress = Address::from_slice(&address);
-
-        let tx = TransactionRequest::new()
-            .to(NameOrAddress::Address(Address::from_str(&userinfo.to)?))
-            .data(userinfo.data.as_slice().to_vec())
-            .gas(U256::from_dec_str(&userinfo.gas)?)
-            .gas_price(U256::from_dec_str(&userinfo.gas_price)?)
-            .nonce(U256::from_dec_str(&userinfo.nonce)?)
-            .value(U256::from_dec_str(&userinfo.value)?);
-        let sessioninfo = walletconnect_save_client(&mut self.rt, &client)?;
-        let newclient = walletconnect_restore_client(&mut self.rt, sessioninfo)?;
-        let typedtx = TypedTransaction::Legacy(tx);
-
-        let result = self
-            .rt
-            .block_on(sign_typed_tx(newclient, &typedtx, signeraddress))
-            .map_err(|e| anyhow!("sign_typed_transaction error {}", e.to_string()))?;
-
-        Ok(result.to_vec())
-    }
-
     pub fn setup_callback_blocking(
         &mut self,
         usercallback: UniquePtr<WalletConnectCallback>,
@@ -354,5 +327,292 @@ impl WalletconnectClient {
         } else {
             anyhow::bail!("no client");
         }
+    }
+
+    /// build cronos(eth) eip155 transaction
+    pub fn sign_eip155_transaction_blocking(
+        &mut self,
+        userinfo: &crate::ffi::WalletConnectTxEip155,
+        address: [u8; 20],
+    ) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let signeraddress = Address::from_slice(&address);
+
+        let tx = Eip1559TransactionRequest::new()
+            .to(NameOrAddress::Address(Address::from_str(&userinfo.to)?))
+            .data(userinfo.data.as_slice().to_vec())
+            .gas(U256::from_dec_str(&userinfo.common.gas_limit)?)
+            .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
+            .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
+            .nonce(U256::from_dec_str(&userinfo.common.nonce)?)
+            .chain_id(userinfo.common.chainid)
+            .value(U256::from_dec_str(&userinfo.value)?);
+        let newclient = client.clone();
+        let typedtx = TypedTransaction::Eip1559(tx);
+
+        let sig = self
+            .rt
+            .block_on(sign_typed_tx(newclient, &typedtx, signeraddress))
+            .map_err(|e| anyhow!("sign_typed_transaction error {}", e.to_string()))?;
+
+        let signed_tx = &typedtx.rlp_signed(&sig);
+        Ok(signed_tx.to_vec())
+    }
+
+    fn get_signed_tx_raw_bytes(
+        &self,
+        newclient: Client,
+        signeraddress: H160,
+        typedtx: &mut TypedTransaction,
+        common: &WalletConnectTxCommon,
+    ) -> Result<Vec<u8>> {
+        let mynonce = U256::from_dec_str(&common.nonce)?;
+        typedtx.set_nonce(mynonce);
+        typedtx.set_from(signeraddress);
+        typedtx.set_chain_id(common.chainid);
+        typedtx.set_gas(U256::from_dec_str(&common.gas_limit)?);
+        typedtx.set_gas_price(U256::from_dec_str(&common.gas_price)?);
+
+        let sig = self
+            .rt
+            .block_on(sign_typed_tx(newclient, typedtx, signeraddress))
+            .map_err(|e| anyhow!("sign_typed_transaction error {}", e.to_string()))?;
+
+        let signed_tx = &typedtx.rlp_signed(&sig);
+        Ok(signed_tx.to_vec())
+    }
+    pub fn erc20_transfer(&mut self, info: &WalletConnectErc20Transfer) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+        let mut typedtx =
+            self.rt
+                .block_on(defi_wallet_core_common::construct_contract_transfer_tx(
+                    defi_wallet_core_common::ContractTransfer::Erc20TransferFrom {
+                        contract_address: info.contract_address.clone(),
+                        from_address: info.from_address.clone(),
+                        to_address: info.to_address.clone(),
+                        amount: info.amount.clone(),
+                    },
+                    defi_wallet_core_common::EthNetwork::Custom {
+                        chain_id: info.common.chainid,
+                        legacy: true,
+                    },
+                    info.common.web3api_url.as_str(),
+                ))?;
+
+        let signed_tx =
+            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
+        Ok(signed_tx.to_vec())
+    }
+
+    pub fn erc721_transfer(&mut self, info: &WalletConnectErc721Transfer) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+        let mut typedtx =
+            self.rt
+                .block_on(defi_wallet_core_common::construct_contract_transfer_tx(
+                    defi_wallet_core_common::ContractTransfer::Erc721TransferFrom {
+                        contract_address: info.contract_address.clone(),
+                        from_address: info.from_address.clone(),
+                        to_address: info.to_address.clone(),
+                        token_id: info.token_id.clone(),
+                    },
+                    defi_wallet_core_common::EthNetwork::Custom {
+                        chain_id: info.common.chainid,
+                        legacy: true,
+                    },
+                    info.common.web3api_url.as_str(),
+                ))?;
+
+        let signed_tx =
+            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
+        Ok(signed_tx.to_vec())
+    }
+
+    pub fn erc1155_transfer(&mut self, info: &WalletConnectErc1155Transfer) -> Result<Vec<u8>> {
+        println!("erc1155_transfer");
+        println!("erc1155 info {:?}", info);
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+        let mut typedtx =
+            self.rt
+                .block_on(defi_wallet_core_common::construct_contract_transfer_tx(
+                    defi_wallet_core_common::ContractTransfer::Erc1155SafeTransferFrom {
+                        contract_address: info.contract_address.clone(),
+                        from_address: info.from_address.clone(),
+                        to_address: info.to_address.clone(),
+                        token_id: info.token_id.clone(),
+                        amount: info.amount.clone(),
+                        additional_data: info.additional_data.clone(),
+                    },
+                    defi_wallet_core_common::EthNetwork::Custom {
+                        chain_id: info.common.chainid,
+                        legacy: false,
+                    },
+                    info.common.web3api_url.as_str(),
+                ))?;
+        // print typedtx
+
+        println!("typedtx {:?}", typedtx);
+
+        println!("before   get_signed_tx_raw_bytes");
+        let signed_tx =
+            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
+        Ok(signed_tx.to_vec())
+    }
+
+    pub fn erc20_approve(&mut self, info: &WalletConnectErc20Approve) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+
+        let mut typedtx =
+            self.rt
+                .block_on(defi_wallet_core_common::construct_contract_approval_tx(
+                    defi_wallet_core_common::ContractApproval::Erc20 {
+                        contract_address: info.contract_address.clone(),
+                        approved_address: info.approved_address.clone(),
+                        amount: info.amount.clone(),
+                    },
+                    defi_wallet_core_common::EthNetwork::Custom {
+                        chain_id: info.common.chainid,
+                        legacy: true,
+                    },
+                    info.common.web3api_url.as_str(),
+                ))?;
+
+        let signed_tx =
+            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
+        Ok(signed_tx.to_vec())
+    }
+
+    pub fn erc721_approve(&mut self, info: &WalletConnectErc721Approve) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+
+        let mut typedtx =
+            self.rt
+                .block_on(defi_wallet_core_common::construct_contract_approval_tx(
+                    defi_wallet_core_common::ContractApproval::Erc721Approve {
+                        contract_address: info.contract_address.clone(),
+                        approved_address: info.approved_address.clone(),
+                        token_id: info.token_id.clone(),
+                    },
+                    defi_wallet_core_common::EthNetwork::Custom {
+                        chain_id: info.common.chainid,
+                        legacy: true,
+                    },
+                    info.common.web3api_url.as_str(),
+                ))?;
+
+        let signed_tx =
+            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
+        Ok(signed_tx.to_vec())
+    }
+
+    pub fn erc1155_approve(&mut self, info: &WalletConnectErc1155Approve) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+        let mut typedtx =
+            self.rt
+                .block_on(defi_wallet_core_common::construct_contract_approval_tx(
+                    defi_wallet_core_common::ContractApproval::Erc1155 {
+                        contract_address: info.contract_address.clone(),
+                        approved_address: info.approved_address.clone(),
+                        approved: info.approved,
+                    },
+                    defi_wallet_core_common::EthNetwork::Custom {
+                        chain_id: info.common.chainid,
+                        legacy: true,
+                    },
+                    info.common.web3api_url.as_str(),
+                ))?;
+
+        let signed_tx =
+            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
+
+        Ok(signed_tx.to_vec())
+    }
+
+    pub fn erc1155_transfer_batch(&mut self, info: &WalletConnectErc1155Batch) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+        let mut typedtx = self.rt.block_on(
+            defi_wallet_core_common::construct_contract_batch_transfer_tx(
+                defi_wallet_core_common::ContractBatchTransfer::Erc1155 {
+                    contract_address: info.contract_address.clone(),
+                    from_address: info.from_address.clone(),
+                    to_address: info.to_address.clone(),
+                    token_ids: info.token_ids.clone(),
+                    amounts: info.amounts.clone(),
+                    additional_data: info.additional_data.clone(),
+                },
+                defi_wallet_core_common::EthNetwork::Custom {
+                    chain_id: info.common.chainid,
+                    legacy: true,
+                },
+                info.common.web3api_url.as_str(),
+            ),
+        )?;
+
+        let signed_tx =
+            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
+
+        Ok(signed_tx.to_vec())
     }
 }
