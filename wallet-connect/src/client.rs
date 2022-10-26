@@ -57,12 +57,17 @@ impl Default for ClientChannelMessage {
 
 /// The WalletConnect 1.0 client
 /// (holds the middleware trait implementations for ethers)
-/// FIXME: a way for persisting and recovering the client state
-/// (a callback function or a path which the client can control?)
+/// this is persistent and can be recovered from session-info-string.
+/// session-info-string can be saved to the disk
+///
+/// for callback channel, if Client is cloned, it can recieve multiple events
+/// this channel is mpsc pattern
+/// so make sure that only one thread calls ensure_session
 #[derive(Debug, Clone)]
 pub struct Client {
-    connection: Arc<Mutex<Connector>>,
+    connection: Arc<Mutex<Connector>>, // Client is cloneable
     // to make receive channel valid, sender channel should be open
+    // if cloned, multiple events can be received by mpsc pattern
     callback_channel: Option<UnboundedSender<ClientChannelMessage>>,
 }
 
