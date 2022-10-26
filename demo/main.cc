@@ -17,21 +17,21 @@
 #include <thread>
 
 int main(int argc, char *argv[]) {
-  try {
-    chainmain_process();   // chain-main
-    test_chainmain_nft();  // chainmain nft tests
-    test_login();          // decentralized login
-    cronos_process();      // cronos
-    test_cronos_testnet(); // cronos testnet
-  } catch (const rust::cxxbridge1::Error &e) {
-    // Use `Assertion failed`, the same as `assert` function
-    std::cout << "Assertion failed: " << e.what() << std::endl;
-  }
+    try {
+        chainmain_process();   // chain-main
+        test_chainmain_nft();  // chainmain nft tests
+        test_login();          // decentralized login
+        cronos_process();      // cronos
+        test_cronos_testnet(); // cronos testnet
+    } catch (const rust::cxxbridge1::Error &e) {
+        // Use `Assertion failed`, the same as `assert` function
+        std::cout << "Assertion failed: " << e.what() << std::endl;
+    }
 
-  test_interval();
+    test_interval();
 
-  test_blackscout_cronoscan();
-  test_wallet_connect();
+    test_blackscout_cronoscan();
+    test_wallet_connect();
 
-  return 0;
+    return 0;
 }
