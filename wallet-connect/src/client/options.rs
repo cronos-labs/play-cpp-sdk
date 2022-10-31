@@ -31,20 +31,19 @@ pub struct Options {
     pub meta: Metadata,
     /// the provided connection information
     pub connection: Connection,
-    /// the chain id (otherwise the chain id is retrieved from the wallet)
-    /// TODO: right now, it seems this is not checked against the wallet's chain id
+    /// the chain id (if None, retrived and decided by wallet, if Some, decided by the client)
     pub chain_id: Option<u64>,
     /// callback sender
     pub callback_channel: Option<UnboundedSender<ClientChannelMessage>>,
 }
 
 impl Options {
-    /// creates a new configuration with a default bridge server URL
-    pub fn new(meta: Metadata) -> Self {
+    /// creates a new configuration with a default bridge server URL and chain id
+    pub fn new(meta: Metadata, chain_id: Option<u64>) -> Self {
         Options {
             meta,
             connection: Connection::default(),
-            chain_id: None,
+            chain_id,
             callback_channel: None,
         }
     }

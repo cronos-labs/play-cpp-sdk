@@ -72,10 +72,13 @@ pub struct Client {
 }
 
 impl Client {
-    /// Creates a new client from the provided metadata
+    /// Creates a new client from the provided metadata and chain id
     /// (and will connect to the bridge server according to the URI in metadata)
-    pub async fn new(meta: impl Into<Metadata>) -> Result<Self, ConnectorError> {
-        Client::with_options(Options::new(meta.into())).await
+    pub async fn new(
+        meta: impl Into<Metadata>,
+        chain_id: Option<u64>,
+    ) -> Result<Self, ConnectorError> {
+        Client::with_options(Options::new(meta.into(), chain_id)).await
     }
 
     /// Restore a new client from the provided options

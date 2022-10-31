@@ -42,23 +42,32 @@ async fn save_client(client: &Client) -> Result<String> {
 // description: "Defi WalletConnect example."
 // url: "http://localhost:8080/"
 // name: "Defi WalletConnect Web3 Example"
+// chain_id: 25
 async fn new_client(
     description: String,
     url: String,
     icon_urls: &[String],
     name: String,
+    chain_id: u64,
 ) -> Result<Client> {
     // convert string array to url array
     let mut icons: Vec<Url> = Vec::new();
     for icon in icon_urls {
         icons.push(icon.parse().expect("url"));
     }
-    let client = Client::new(Metadata {
-        description,
-        url: url.parse().expect("url"),
-        icons,
-        name,
-    })
+    let chain_id = match chain_id {
+        0 => None,
+        _ => Some(chain_id),
+    };
+    let client = Client::new(
+        Metadata {
+            description,
+            url: url.parse().expect("url"),
+            icons,
+            name,
+        },
+        chain_id,
+    )
     .await?;
     Ok(client)
 }
@@ -89,8 +98,9 @@ pub fn walletconnect_new_client(
     url: String,
     icon_urls: &[String],
     name: String,
+    chain_id: u64,
 ) -> Result<Client> {
-    let res = rt.block_on(new_client(description, url, icon_urls, name))?;
+    let res = rt.block_on(new_client(description, url, icon_urls, name, chain_id))?;
     Ok(res)
 }
 

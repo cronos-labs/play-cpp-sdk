@@ -22,12 +22,16 @@ async fn make_client() -> Result<Client, Box<dyn Error>> {
         println!("restored client");
         Ok(client)
     } else {
-        let client = Client::new(Metadata {
-            description: "Defi WalletConnect example.".into(),
-            url: "http://localhost:8080/".parse().expect("url"),
-            icons: vec![],
-            name: "Defi WalletConnect Web3 Example".into(),
-        })
+        let client = Client::new(
+            Metadata {
+                description: "Defi WalletConnect example.".into(),
+                url: "http://localhost:8080/".parse().expect("url"),
+                icons: vec![],
+                name: "Defi WalletConnect Web3 Example".into(),
+            },
+            // Some(25), // cronos mainnet
+            None, // up to wallet
+        )
         .await?;
         println!("created client");
         Ok(client)
