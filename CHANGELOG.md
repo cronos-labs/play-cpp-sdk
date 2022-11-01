@@ -1,26 +1,29 @@
 # Changelog
 ## [Unreleased]
+## [v0.0.9-alpha] - 2022-11-01
+- Add optional field chain_id for walletconnect (In C++, 0 = None)
+- Add wallet connect with contract calls (modified client to be cloneable)
 
-## [v0.0.8-alpha] - 2020-09-13
+## [v0.0.8-alpha] - 2022-09-13
 - Add missing licenses
 - Fix QR code can not be detected error
 - Rename `setup_callback` as `setup_callback_blocking`
 
-## [v0.0.7-alpha] - 2020-08-24
+## [v0.0.7-alpha] - 2022-08-24
 - Add android builds
 
-## [v0.0.6-alpha] - 2020-08-17
+## [v0.0.6-alpha] - 2022-08-17
 - Add checksum for linux libc++ release
 - Add qrcode api
 
-## [v0.0.5-alpha] - 2020-08-12
+## [v0.0.5-alpha] - 2022-08-12
 - Support both g++ and clang
 - Add libc++ build for linux Unreal plugin
 
-## [v0.0.4-alpha] - 2020-08-10
+## [v0.0.4-alpha] - 2022-08-10
 Add get-backup-mnemonics, generate-mnemonics
 
-## [v0.0.3-alpha] - 2020-08-01
+## [v0.0.3-alpha] - 2022-08-01
 Mac release to support 10.15
 Fix unicode decode error on windows 11
 Update ethers and cxx-build
