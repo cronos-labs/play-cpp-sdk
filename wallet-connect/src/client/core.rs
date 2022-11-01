@@ -135,7 +135,7 @@ impl Connector {
     }
 
     pub async fn restore(session_info: SessionInfo) -> Result<Self, ConnectorError> {
-        // invalidate old topic, because  it's pending
+        // invalidate old topic, because it's pending
         let handshake_topic = Some(session_info.handshake_topic.clone());
 
         let session = Session {

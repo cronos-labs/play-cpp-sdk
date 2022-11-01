@@ -23,3 +23,14 @@ demo/cppexamplestatic
 demo/sessioninfo.json
 wallet-connect/sessioninfo.json
 demo/easywsclient.o
+
+docs
+demo/bin/
+demo/build/
+demo/chainmain.cc
+demo/chainmain.h
+demo/cronos.cc
+demo/cronos.h
+demo/sdk
+
+install

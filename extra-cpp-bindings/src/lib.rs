@@ -265,11 +265,13 @@ mod ffi {
             session_info: String,
         ) -> Result<Box<WalletconnectClient>>;
         /// create walletconnect-session
+        /// the chain id (if 0, retrived and decided by wallet, if > 0, decided by the client)
         pub fn walletconnect_new_client(
             description: String,
             url: String,
             icon_urls: Vec<String>,
             name: String,
+            chain_id: u64,
         ) -> Result<Box<WalletconnectClient>>;
 
         /// setup callback
@@ -752,10 +754,17 @@ fn walletconnect_new_client(
     url: String,
     icon_urls: Vec<String>,
     name: String,
+    chain_id: u64,
 ) -> Result<Box<WalletconnectClient>> {
     let mut rt = tokio::runtime::Runtime::new()?;
-    let client =
-        walletconnect::walletconnect_new_client(&mut rt, description, url, &icon_urls, name)?;
+    let client = walletconnect::walletconnect_new_client(
+        &mut rt,
+        description,
+        url,
+        &icon_urls,
+        name,
+        chain_id,
+    )?;
 
     Ok(Box::new(WalletconnectClient {
         client: Some(client),

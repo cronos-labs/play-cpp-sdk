@@ -156,7 +156,7 @@ Box<WalletconnectClient> make_new_client(std::string filename) {
     } else {
         Box<WalletconnectClient> client = walletconnect_new_client(
             "Defi WalletConnect example.", "http://localhost:8080/",
-            Vec<rust::String>(), "Defi WalletConnect Web3 Example");
+            Vec<rust::String>(), "Defi WalletConnect Web3 Example", 25);
         cout << "qrcode= " << client->get_connection_string() << endl;
 
         return client;
