@@ -19,3 +19,13 @@ pub fn decode_mut(
 pub fn decode(bytes: impl AsRef<[u8]>) -> Result<Vec<u8>, FromHexError> {
     hex::decode(bytes.as_ref())
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_hex_encode() {
+        let hex = format!("0x{}", hex::encode("Hello World"));
+        assert_eq!(hex, "0x48656c6c6f20576f726c64");
+    }
+}

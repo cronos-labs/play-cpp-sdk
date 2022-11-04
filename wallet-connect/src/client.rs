@@ -161,9 +161,9 @@ impl Client {
             .request(
                 "personal_sign",
                 vec![
-                    message.to_string(),
+                    format!("0x{}", hex::encode(message)),
                     format!("{:?}", address),
-                    "".to_string(),
+                    // "".to_string(), // TODO is password needed?
                 ],
             )
             .await?;
