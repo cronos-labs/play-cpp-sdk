@@ -99,6 +99,14 @@ x86_64-linux-android: TARGET=x86_64-linux-android
 x86_64-linux-android: android_x86_64
 	cd demo && TARGET=$(TARGET) make android_build
 
+x86_64-apple-ios: TARGET=x86_64-apple-ios
+x86_64-apple-ios: ios_x86_64
+	cd demo && TARGET=$(TARGET) make ios_build
+
+aarch64-apple-ios: TARGET=aarch64-apple-ios
+aarch64-apple-ios: ios_aarch64
+	cd demo && TARGET=$(TARGET) make ios_build
+
 android_armv7:
 	rustup target add $(TARGET)
 	TARGET_CC=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang \
@@ -130,6 +138,14 @@ android_x86_64:
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
 	RUSTFLAGS=$(RUSTFLAGS) cargo build --target=$(TARGET) --package play-cpp-sdk --release
+
+ios_x86_64:
+	rustup target add $(TARGET)
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
+
+ios_aarch64:
+	rustup target add $(TARGET)
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 cpp: build_cpp
 # 1. In order to use crypto pay api, you need to Generate Keys in

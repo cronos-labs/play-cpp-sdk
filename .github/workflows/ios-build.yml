@@ -1,0 +1,49 @@
+name: IOS Build CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+    tags:
+      - "v*.*.*"
+  pull_request:
+    paths-ignore:
+      - README.md
+jobs:
+  build-ios:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build play-cpp-sdk library
+        shell: bash
+        env:
+          TARGET: aarch64-apple-ios
+        run: make ${{ inputs.target }}
+      - name: Pack binaries and bindings
+        shell: bash
+        run: |
+          PLATFORM="${{ inputs.target }}-${{ inputs.ndk_version }}"
+          BUILD_TYPE="tarball"
+          mkdir -p install
+          cp -r demo/sdk install
+          cp ./LICENSE install/sdk
+          cp ./CHANGELOG.md install/sdk
+          cd install
+          tar zcvf ../play_cpp_sdk_${PLATFORM}.tar.gz *
+          cd ..
+          shasum -a 256 *.tar.gz > "checksums-$PLATFORM.txt"
+          echo "release_file=play_cpp_sdk_$PLATFORM.tar.gz" >> $GITHUB_ENV
+          echo "checksum_file=checksums-$PLATFORM.txt" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+      - name: Upload binaries and bindings to Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: |
+            ${{ env.release_file }}
+            ${{ env.checksum_file }}
