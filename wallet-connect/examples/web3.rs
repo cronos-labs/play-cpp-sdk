@@ -8,6 +8,8 @@ use ethers::types::H160;
 use eyre::eyre;
 use std::fs::File;
 use std::io::prelude::*;
+use url::form_urlencoded;
+
 /// remove session.json to start new session
 const G_FILENAME: &str = "sessioninfo.json";
 
@@ -111,17 +113,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .await?;
 
     // qrcode display
-    println!(
-        "connection string = {}",
-        client.get_connection_string().await?
-    );
+    let uri = client.get_connection_string().await?;
+    println!("connection string = {}", uri);
+
+    let encoded: String = form_urlencoded::Serializer::new(String::new())
+        .append_pair("uri", &uri)
+        .finish();
+
+    println!("Crypto.com Wallet: cryptowallet://wc?{}", encoded);
 
     let (address, chain_id) = client.ensure_session().await?;
     println!("address: {:?}", address);
     println!("chain_id: {}", chain_id);
 
     // personal_sign is signing with document
-    let sig1 = client.personal_sign("hello", &address[0]).await?;
+    let sig1 = client.personal_sign("Hello World", &address[0]).await?;
     println!("sig1: {:?}", sig1);
 
     // eth_sign  is signing directly with hash of message
