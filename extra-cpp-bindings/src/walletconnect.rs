@@ -419,7 +419,7 @@ impl WalletconnectClient {
                     },
                     defi_wallet_core_common::EthNetwork::Custom {
                         chain_id: info.common.chainid,
-                        legacy: true,
+                        legacy: false,
                     },
                     info.common.web3api_url.as_str(),
                 ))?;
@@ -450,7 +450,7 @@ impl WalletconnectClient {
                     },
                     defi_wallet_core_common::EthNetwork::Custom {
                         chain_id: info.common.chainid,
-                        legacy: true,
+                        legacy: false,
                     },
                     info.common.web3api_url.as_str(),
                 ))?;
@@ -520,7 +520,7 @@ impl WalletconnectClient {
                     },
                     defi_wallet_core_common::EthNetwork::Custom {
                         chain_id: info.common.chainid,
-                        legacy: true,
+                        legacy: false,
                     },
                     info.common.web3api_url.as_str(),
                 ))?;
@@ -551,7 +551,7 @@ impl WalletconnectClient {
                     },
                     defi_wallet_core_common::EthNetwork::Custom {
                         chain_id: info.common.chainid,
-                        legacy: true,
+                        legacy: false,
                     },
                     info.common.web3api_url.as_str(),
                 ))?;
@@ -581,7 +581,7 @@ impl WalletconnectClient {
                     },
                     defi_wallet_core_common::EthNetwork::Custom {
                         chain_id: info.common.chainid,
-                        legacy: true,
+                        legacy: false,
                     },
                     info.common.web3api_url.as_str(),
                 ))?;
@@ -614,7 +614,7 @@ impl WalletconnectClient {
                 },
                 defi_wallet_core_common::EthNetwork::Custom {
                     chain_id: info.common.chainid,
-                    legacy: true,
+                    legacy: false,
                 },
                 info.common.web3api_url.as_str(),
             ),
