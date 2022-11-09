@@ -461,8 +461,6 @@ impl WalletconnectClient {
     }
 
     pub fn erc1155_transfer(&mut self, info: &WalletConnectErc1155Transfer) -> Result<Vec<u8>> {
-        println!("erc1155_transfer");
-        println!("erc1155 info {:?}", info);
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -489,11 +487,6 @@ impl WalletconnectClient {
                     },
                     info.common.web3api_url.as_str(),
                 ))?;
-        // print typedtx
-
-        println!("typedtx {:?}", typedtx);
-
-        println!("before   get_signed_tx_raw_bytes");
         let signed_tx =
             self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
         Ok(signed_tx.to_vec())

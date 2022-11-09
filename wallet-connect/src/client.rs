@@ -253,7 +253,6 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         tx: &TypedTransaction,
         from: Address,
     ) -> Result<Signature, Self::Error> {
-        println!("sign_transaction");
         let mut tx_obj = HashMap::new();
         tx_obj.insert("from", format!("{:?}", from));
         if let Some(to) = tx.to() {
