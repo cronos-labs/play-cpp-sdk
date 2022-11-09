@@ -1,6 +1,10 @@
 # Changelog
 ## [Unreleased]
+
+## [v0.0.10-alpha] - 2022-11-09
 - Change erc-20,erc-721,erc-1155 tx to eip-155
+- Convert message to hex before being sent for walletconnect personal_sign function
+- Added cpp-lint, semgrep and codeql analysis for C++
 
 ## [v0.0.9-alpha] - 2022-11-01
 - Add optional field chain_id for walletconnect (In C++, 0 = None)
