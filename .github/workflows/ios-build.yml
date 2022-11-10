@@ -20,13 +20,11 @@ jobs:
           submodules: recursive
       - name: Build play-cpp-sdk library
         shell: bash
-        env:
-          TARGET: aarch64-apple-ios
-        run: make ${{ inputs.target }}
+        run: make aarch64-apple-ios
       - name: Pack binaries and bindings
         shell: bash
         run: |
-          PLATFORM="${{ inputs.target }}-${{ inputs.ndk_version }}"
+          PLATFORM="aarch64-apple-ios"
           BUILD_TYPE="tarball"
           mkdir -p install
           cp -r demo/sdk install
