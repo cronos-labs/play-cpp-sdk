@@ -45,6 +45,9 @@ run: run_static run_dynamic run_examples
 android_build: TARGET_DIR=../target/$(TARGET)/release
 android_build: prepare
 
+ios_build: TARGET_DIR=../target/$(TARGET)/release
+ios_build: prepare
+
 clone:
 	git submodule update --init --recursive
 
