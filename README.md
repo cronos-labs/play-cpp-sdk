@@ -141,5 +141,9 @@ bindings on your own.
     ```
 3. Run `make install`, libraries and bindings will be copied into a new created folder: `install`
 
+### IOS
+1. Run `make aarch64-apple-ios`
+2. Run `make install`, libraries and bindings will be copied into a new created folder: `install`
+
 ### More information for Cronos Play
 If you are a game developer, please visit [Cronos Play](https://cronos.org/play) or fill this [Contact Form](https://airtable.com/shrFiQnLrcpeBp2lS) for more information.

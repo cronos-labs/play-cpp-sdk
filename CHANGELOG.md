@@ -1,5 +1,8 @@
 # Changelog
 ## [Unreleased]
+## [v0.0.11-alpha] - 2022-11-14
+- Add IOS build
+- Update defi-wallet-core-cpp to v0.3.0
 
 ## [v0.0.10-alpha] - 2022-11-09
 - Change erc-20,erc-721,erc-1155 tx to eip-155
