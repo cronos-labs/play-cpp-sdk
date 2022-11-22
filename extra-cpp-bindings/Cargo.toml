@@ -26,8 +26,7 @@ defi-wallet-core-cpp= { path="../defi-wallet-core-rs/bindings/cpp"}
 defi-wallet-core-common= { path="../defi-wallet-core-rs/common"}
 
 [build-dependencies]
-# Wait until https://github.com/dtolnay/cxx/pull/1048 is merged or similar solution is found
-cxx-build = { git = "https://github.com/crypto-com/cxx.git", rev = "0cbae78a33dadbc601448c3b9cb955df568793ef", features=["doxygen"] }
+cxx-build = "1"
 
 
 [dev-dependencies]

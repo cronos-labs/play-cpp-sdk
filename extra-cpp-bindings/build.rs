@@ -1,6 +1,9 @@
+use cxx_build::CFG;
+
 const BRIDGES: &[&str] = &["src/lib.rs"];
 
 fn main() {
+    CFG.doxygen = true;
     cxx_build::bridges(BRIDGES)
         .file("src/pay.cc")
         .flag_if_supported("-std=c++14")

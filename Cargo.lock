@@ -902,8 +902,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-build"
-version = "1.0.72"
-source = "git+https://github.com/crypto-com/cxx.git?rev=0cbae78a33dadbc601448c3b9cb955df568793ef#0cbae78a33dadbc601448c3b9cb955df568793ef"
+version = "1.0.82"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06416d667ff3e3ad2df1cd8cd8afae5da26cf9cec4d0825040f88b5ca659a2f0"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -1003,6 +1004,7 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "url",
+ "uuid 0.8.2",
  "uuid 1.2.2",
  "ws_stream_wasm",
  "zeroize",
@@ -4528,7 +4530,6 @@ checksum = "422ee0de9031b5b948b97a8fc04e3aa35230001a722ddd27943e0be31564ce4c"
 dependencies = [
  "getrandom 0.2.7",
  "serde",
- "wasm-bindgen",
 ]
 
 [[package]]
