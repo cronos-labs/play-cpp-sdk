@@ -1,7 +1,8 @@
 mod error;
 /// Crypto.com Pay basic support
 mod pay;
-
+/// Wallect Connect registry of wallets/apps support
+mod wallectconnectregistry;
 mod walletconnect;
 use anyhow::Result;
 
@@ -12,7 +13,10 @@ use ethers::etherscan::{
     },
     Client,
 };
-use ffi::{CryptoComPaymentResponse, QueryOption, RawTokenResult, RawTxDetail, TokenHolderDetail};
+use ffi::{
+    CryptoComPaymentResponse, ImageUrl, Platform, QueryOption, RawTokenResult, RawTxDetail,
+    TokenHolderDetail, WalletEntry,
+};
 use qrcodegen::QrCode;
 use qrcodegen::QrCodeEcc;
 use serde::{Deserialize, Serialize};
@@ -65,6 +69,39 @@ mod ffi {
         fn set_peerid(self: Pin<&mut WalletConnectSessionInfo>, peerid: String);
         fn set_peermeta(self: Pin<&mut WalletConnectSessionInfo>, peermeta: String);
         fn set_handshaketopic(self: Pin<&mut WalletConnectSessionInfo>, handshaketopic: String);
+    }
+
+    /// The wallet registry entry
+    pub struct WalletEntry {
+        /// its name
+        pub name: String,
+        /// icon URLs
+        pub image_url: ImageUrl,
+        /// native link (Android/Desktop), empty if none
+        pub native_link: String,
+        /// universal link (iOS), empty if none
+        pub universal_link: String,
+    }
+
+    /// The target platform
+    pub enum Platform {
+        Android,
+        Ios,
+        Linux,
+        Mac,
+        Windows,
+        Browser,
+    }
+
+    /// The icon URLs
+    #[derive(Serialize, Deserialize, Clone)]
+    pub struct ImageUrl {
+        /// small
+        pub sm: String,
+        /// medium
+        pub md: String,
+        /// large
+        pub lg: String,
     }
 
     #[derive(Debug, Default)]
@@ -257,6 +294,10 @@ mod ffi {
     }
 
     extern "Rust" {
+        /// filter wallets by platform
+        pub fn filter_wallets(cached: bool, platform: Platform) -> Result<Vec<WalletEntry>>;
+        /// get all possible wallets
+        pub fn get_all_wallets(cached: bool) -> Result<Vec<WalletEntry>>;
         pub fn generate_qrcode(qrcodestring: String) -> Result<WalletQrcode>;
         /// WallnetConnect API
         type WalletconnectClient;
@@ -773,6 +814,29 @@ fn walletconnect_new_client(
 }
 unsafe impl Send for ffi::WalletConnectCallback {}
 unsafe impl Sync for ffi::WalletConnectCallback {}
+
+fn get_all_wallets(cached: bool) -> Result<Vec<crate::ffi::WalletEntry>> {
+    let reg = if cached {
+        wallectconnectregistry::Registry::default()
+    } else {
+        wallectconnectregistry::Registry::fetch_new()?
+    };
+
+    Ok(reg.filter_wallets(None))
+}
+
+fn filter_wallets(
+    cached: bool,
+    platform: crate::ffi::Platform,
+) -> Result<Vec<crate::ffi::WalletEntry>> {
+    let reg = if cached {
+        wallectconnectregistry::Registry::default()
+    } else {
+        wallectconnectregistry::Registry::fetch_new()?
+    };
+
+    Ok(reg.filter_wallets(Some(platform)))
+}
 
 fn generate_qrcode(qrcodestring: String) -> Result<crate::ffi::WalletQrcode> {
     let qr: QrCode = QrCode::encode_text(&qrcodestring, QrCodeEcc::Medium)?;
