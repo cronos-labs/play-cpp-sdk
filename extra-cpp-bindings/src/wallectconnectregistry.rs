@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use crate::error::GameSdkError;
 use crate::{ImageUrl, Platform, WalletEntry};
@@ -12,11 +13,24 @@ pub(crate) struct Registry {
 }
 
 impl Registry {
-    pub(crate) fn fetch_new() -> Result<Self, GameSdkError> {
+    pub(crate) fn fetch_new(cache: Option<PathBuf>) -> Result<Self, GameSdkError> {
         const URL: &str = "https://registry.walletconnect.com/api/v2/wallets";
         let client = reqwest::blocking::Client::new();
         let resp: Registry = client.get(URL).send()?.json()?;
+        if let Some(cache) = cache {
+            let _ = std::fs::write(cache, serde_json::to_string(&resp)?);
+        }
         Ok(resp)
+    }
+    pub(crate) fn load_cached(cache: Option<PathBuf>) -> Self {
+        if let Some(cache) = cache {
+            if let Ok(data) = std::fs::read_to_string(cache) {
+                if let Ok(registry) = serde_json::from_str(&data) {
+                    return registry;
+                }
+            }
+        }
+        Self::default()
     }
 }
 

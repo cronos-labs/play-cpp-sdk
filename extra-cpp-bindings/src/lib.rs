@@ -4,6 +4,8 @@ mod pay;
 /// Wallect Connect registry of wallets/apps support
 mod wallectconnectregistry;
 mod walletconnect;
+use std::path::PathBuf;
+
 use anyhow::Result;
 
 use ethers::core::types::{BlockNumber, Chain};
@@ -295,9 +297,18 @@ mod ffi {
 
     extern "Rust" {
         /// filter wallets by platform
-        pub fn filter_wallets(cached: bool, platform: Platform) -> Result<Vec<WalletEntry>>;
+        /// (registry_local_path can be empty string if it is not needed to store the cached registry result)
+        pub fn filter_wallets(
+            cached: bool,
+            registry_local_path: String,
+            platform: Platform,
+        ) -> Result<Vec<WalletEntry>>;
         /// get all possible wallets
-        pub fn get_all_wallets(cached: bool) -> Result<Vec<WalletEntry>>;
+        /// (registry_local_path can be empty string if it is not needed to store the cached registry result)
+        pub fn get_all_wallets(
+            cached: bool,
+            registry_local_path: String,
+        ) -> Result<Vec<WalletEntry>>;
         pub fn generate_qrcode(qrcodestring: String) -> Result<WalletQrcode>;
         /// WallnetConnect API
         type WalletconnectClient;
@@ -815,11 +826,19 @@ fn walletconnect_new_client(
 unsafe impl Send for ffi::WalletConnectCallback {}
 unsafe impl Sync for ffi::WalletConnectCallback {}
 
-fn get_all_wallets(cached: bool) -> Result<Vec<crate::ffi::WalletEntry>> {
-    let reg = if cached {
-        wallectconnectregistry::Registry::default()
+fn get_all_wallets(
+    cached: bool,
+    registry_local_path: String,
+) -> Result<Vec<crate::ffi::WalletEntry>> {
+    let path = if registry_local_path.is_empty() {
+        None
     } else {
-        wallectconnectregistry::Registry::fetch_new()?
+        Some(PathBuf::from(registry_local_path))
+    };
+    let reg = if cached {
+        wallectconnectregistry::Registry::load_cached(path)
+    } else {
+        wallectconnectregistry::Registry::fetch_new(path)?
     };
 
     Ok(reg.filter_wallets(None))
@@ -827,12 +846,18 @@ fn get_all_wallets(cached: bool) -> Result<Vec<crate::ffi::WalletEntry>> {
 
 fn filter_wallets(
     cached: bool,
+    registry_local_path: String,
     platform: crate::ffi::Platform,
 ) -> Result<Vec<crate::ffi::WalletEntry>> {
-    let reg = if cached {
-        wallectconnectregistry::Registry::default()
+    let path = if registry_local_path.is_empty() {
+        None
     } else {
-        wallectconnectregistry::Registry::fetch_new()?
+        Some(PathBuf::from(registry_local_path))
+    };
+    let reg = if cached {
+        wallectconnectregistry::Registry::load_cached(path)
+    } else {
+        wallectconnectregistry::Registry::fetch_new(path)?
     };
 
     Ok(reg.filter_wallets(Some(platform)))
