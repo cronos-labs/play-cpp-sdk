@@ -26,7 +26,7 @@ url = { version = "2", features = ["serde"] }
 zeroize = "1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio-tungstenite = { version = "0.17", features = ["rustls-tls-native-roots"] }
+tokio-tungstenite = { version = "0.18", features = ["rustls-tls-native-roots"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 uuid = { version = "1.2", features = ["serde", "v4"] }
 
