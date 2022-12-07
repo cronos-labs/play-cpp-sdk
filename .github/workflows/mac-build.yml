@@ -15,8 +15,8 @@ on:
 jobs:
   mac-build:
     runs-on: macos-11
-    env: 
-          MACOSX_DEPLOYMENT_TARGET: 10.15        
+    env:
+          MACOSX_DEPLOYMENT_TARGET: 10.15
     steps:
       - uses: actions/checkout@v3
         with:

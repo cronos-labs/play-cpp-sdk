@@ -166,6 +166,7 @@ call $(SolutionDir)pre_build.bat</Command>
     <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\nft.rs.cc" />
     <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\contract.rs.cc" />
     <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\uint.rs.cc" />
+    <ClCompile Include="..\sdk\include\defi-wallet-core-cpp\src\ethereum.rs.cc" />
     <ClCompile Include="..\third_party\easywsclient\easywsclient.cpp" />
     <ClCompile Include="..\third_party\json\single_include\nlohmann\json.hpp" />
   </ItemGroup>
