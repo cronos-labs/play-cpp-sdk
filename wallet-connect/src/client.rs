@@ -31,7 +31,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::mpsc::UnboundedSender;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 #[derive(Debug, Clone)]
 pub enum ClientChannelMessageType {
     Connecting,
@@ -65,7 +65,7 @@ impl Default for ClientChannelMessage {
 /// so make sure that only one thread calls ensure_session
 #[derive(Debug, Clone)]
 pub struct Client {
-    connection: Arc<Mutex<Connector>>, // Client is cloneable
+    connection: Arc<RwLock<Connector>>, // Client is cloneable
     // to make receive channel valid, sender channel should be open
     // if cloned, multiple events can be received by mpsc pattern
     callback_channel: Option<UnboundedSender<ClientChannelMessage>>,
@@ -85,19 +85,19 @@ impl Client {
     pub async fn restore(session_info: SessionInfo) -> Result<Self, ConnectorError> {
         Ok(Client {
             callback_channel: None,
-            connection: Arc::new(Mutex::new(Connector::restore(session_info).await?)),
+            connection: Arc::new(RwLock::new(Connector::restore(session_info).await?)),
         })
     }
 
     /// get current session info, can be saved , and later, restored
     pub async fn get_session_info(&self) -> Result<SessionInfo, ConnectorError> {
-        let connection = self.connection.lock().await;
+        let connection = self.connection.read().await;
         connection.get_session_info().await
     }
 
     /// create qrcode from this string
     pub async fn get_connection_string(&self) -> Result<String, ConnectorError> {
-        let connection = self.connection.lock().await;
+        let connection = self.connection.read().await;
         Ok(connection.get_uri().await?.as_url().as_str().to_string())
     }
 
@@ -135,7 +135,7 @@ impl Client {
     pub async fn with_options(options: Options) -> Result<Self, ConnectorError> {
         Ok(Client {
             callback_channel: options.callback_channel.clone(),
-            connection: Arc::new(Mutex::new(Connector::new(options).await?)),
+            connection: Arc::new(RwLock::new(Connector::new(options).await?)),
         })
     }
 
@@ -143,7 +143,7 @@ impl Client {
     /// If successful, the returned value is the wallet's addresses and the chain ID.
     /// TODO: more specific error types than eyre
     pub async fn ensure_session(&mut self) -> Result<(Vec<Address>, u64), eyre::Error> {
-        let mut connection = self.connection.lock().await;
+        let mut connection = self.connection.write().await;
         if let Some(v) = &self.callback_channel {
             connection.set_callback(v.clone()).await;
         }
@@ -205,7 +205,7 @@ impl JsonRpcClient for Client {
         method: &str,
         params: T,
     ) -> Result<R, ClientError> {
-        let connection = self.connection.lock().await;
+        let connection = self.connection.read().await;
         connection.request(method, params).await
     }
 }

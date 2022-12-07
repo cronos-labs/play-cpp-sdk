@@ -85,7 +85,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         println!("Disconnected");
                         if let Some(info) = message.session {
                             println!("session info: {:?}", info);
-                            Ok(())
+                            std::fs::remove_file(filename)?;
+                            std::process::exit(0)
                         } else {
                             Err(eyre!("no session info"))
                         }
@@ -94,7 +95,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         println!("Connecting");
                         if let Some(info) = &message.session {
                             info.uri().print_qr_uri();
-                            write_session_to_file(info, filename)
+                            Ok(())
+                            // write_session_to_file(info, filename)
                         } else {
                             Err(eyre!("no session info"))
                         }
@@ -121,18 +123,45 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .finish();
 
     println!("Crypto.com Wallet: cryptowallet://wc?{}", encoded);
+    open::that(format!("cryptowallet://wc?{}", encoded))?;
 
     let (address, chain_id) = client.ensure_session().await?;
     println!("address: {:?}", address);
     println!("chain_id: {}", chain_id);
 
-    // personal_sign is signing with document
-    let sig1 = client.personal_sign("Hello World", &address[0]).await?;
-    println!("sig1: {:?}", sig1);
+    let mut client1 = client.clone();
+    let address1 = address[0].clone();
+    tokio::spawn(async move {
+        // personal_sign is signing with document
+        let sig1 = client1.personal_sign("Hello Crypto", &address1).await;
+        println!("sig1: {:?}", sig1);
+    });
+
+    let mut client2 = client.clone();
+    let address2 = address[0].clone();
+    tokio::spawn(async move {
+        // personal_sign is signing with document
+        let sig1 = client2.personal_sign("Hello Dot", &address2).await;
+        println!("sig1: {:?}", sig1);
+    });
+
+    let mut client3 = client.clone();
+    let address3 = address[0].clone();
+    tokio::spawn(async move {
+        // personal_sign is signing with document
+        let sig1 = client3.personal_sign("Hello Com", &address3).await;
+        println!("sig1: {:?}", sig1);
+    });
 
     // eth_sign  is signing directly with hash of message
     // because it's not secure and not recommended to use it
     // metamask and etc. will reject it, so that is not an error
-    eth_sign(client, address).await?;
-    Ok(())
+    let client4 = client.clone();
+    tokio::spawn(async move {
+        // personal_sign is signing with document
+        println!("Hello Crypto.com");
+        let sig1 = eth_sign(client4, address).await;
+        println!("sig1: {:?}", sig1);
+    });
+    loop {}
 }

@@ -14,6 +14,7 @@ ethers = { version = "0.17", features = ["rustls"] }
 eyre = "0.6"
 futures = "0.3"
 hmac = "0.12"
+open = "3"
 qrcodegen = "1"
 rand = "0.8"
 secrecy = "0.8"
