@@ -10,7 +10,7 @@ anyhow = "1"
 async-trait = { version = "0.1", default-features = false }
 cbc = { version = "0.1", features = ["alloc"] }
 dashmap = "5"
-ethers = { version = "0.17", features = ["rustls"] }
+ethers = { version = "1", features = ["rustls"] }
 eyre = "0.6"
 futures = "0.3"
 hmac = "0.12"

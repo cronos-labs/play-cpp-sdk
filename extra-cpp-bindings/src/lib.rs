@@ -700,11 +700,7 @@ impl From<&NormalTransaction> for RawTxDetail {
             value: tx.value.to_string(),
             block_no,
             timestamp: tx.time_stamp.clone(),
-            contract_address: tx
-                .contract_address
-                .value()
-                .map(|x| x.to_string())
-                .unwrap_or_default(),
+            contract_address: format!("{:?}", tx.contract_address.unwrap_or_default()),
         }
     }
 }
