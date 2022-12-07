@@ -1,5 +1,5 @@
 #include <cassert>
-#include <extra-cpp-bindings/src/lib.rs.h>
+#include <extra-cpp-bindings/src/lib.rs.h> // nolint is not effective, it's compiler error, ignore
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -145,12 +145,13 @@ int main(int argc, char *argv[]) {
             info.data = rust::Vec<uint8_t>();
             info.common.nonce = "1";
             info.common.chainid = 777;
-            rust::Vec<uint8_t> sig1 = client->sign_eip155_transaction_blocking(
-                info, result.addresses[0].address);
+            rust::Vec<uint8_t> signedtx =
+                client->sign_eip155_transaction_blocking(
+                    info, result.addresses[0].address);
 
-            std::cout << "signature=" << bytes_to_hex_string(sig1).c_str()
+            std::cout << "signedtx=" << bytes_to_hex_string(signedtx).c_str()
                       << std::endl;
-            std::cout << "signature length=" << sig1.size() << std::endl;
+            std::cout << "signedtx length=" << signedtx.size() << std::endl;
         }
 
         // waiting update or disconnect
