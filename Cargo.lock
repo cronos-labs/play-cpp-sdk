@@ -998,7 +998,7 @@ dependencies = [
 
 [[package]]
 name = "defi-wallet-core-common"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "base64 0.13.0",
@@ -1039,7 +1039,7 @@ dependencies = [
 
 [[package]]
 name = "defi-wallet-core-cpp"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "cosmos-sdk-proto",
@@ -2860,7 +2860,7 @@ checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 
 [[package]]
 name = "play-cpp-sdk"
-version = "0.0.11-alpha"
+version = "0.0.12-alpha"
 dependencies = [
  "defi-wallet-core-cpp",
  "extra-cpp-bindings",
