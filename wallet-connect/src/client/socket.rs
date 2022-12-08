@@ -260,7 +260,14 @@ impl Socket {
                         let _ = tokio::spawn(async move {
                             let context = context.clone();
                             sleep(Duration::from_millis(context.pending_requests_timeout)).await;
-                            if let Some((_id, _sender)) = context.pending_requests.remove(&id) {
+                            if let Some((_id, sender)) = context.pending_requests.remove(&id) {
+                                let _ = sender.send(serde_json::json!({
+                                    "code": -32000,
+                                    "payload": {
+                                        "reason": "Request is dropped because of timeout",
+                                        "timeout": context.pending_requests_timeout,
+                                    }
+                                }));
                                 // TODO Reject the request?
                             }
                         });
