@@ -7,10 +7,12 @@ use futures::{future, SinkExt, TryStreamExt};
 #[cfg(not(target_arch = "wasm32"))]
 pub use native::*;
 use serde::{de::DeserializeOwned, Serialize};
+use std::time::Duration;
 use thiserror::Error;
+use tokio::time::sleep;
 use tokio::{
     sync::{
-        mpsc::{unbounded_channel, UnboundedSender},
+        mpsc::{channel, Sender},
         oneshot,
     },
     task::JoinHandle,
@@ -31,8 +33,7 @@ use eyre::{eyre, Context};
 #[derive(Debug)]
 pub struct Socket {
     /// queue for messages to be sent to the bridge server
-    /// TODO: make it bounded?
-    sender: UnboundedSender<(Option<u64>, Vec<u8>)>,
+    sender: Sender<(Option<u64>, Vec<u8>)>,
     /// the handle of the task that writes on the websocket connection
     _write_handle: JoinHandle<()>,
     /// the handle of the task that reads on the websocket connection
@@ -89,13 +90,17 @@ fn check_socket_msg(mmsg: Vec<u8>, key: &Key) -> Option<(Topic, Vec<u8>)> {
 }
 
 impl Socket {
-    fn send_socket_msg(
+    async fn send_socket_msg(
         &self,
         context: &SharedContext,
         id: u64,
         msg: SocketMessage,
     ) -> eyre::Result<()> {
-        if let Err(_e) = self.sender.send((Some(id), serde_json::to_vec(&msg)?)) {
+        if let Err(_e) = self
+            .sender
+            .send((Some(id), serde_json::to_vec(&msg)?))
+            .await
+        {
             // not to let the requester to wait forever
             const ERROR_MSG: &str = "\"Failed to send message to the queue\"";
             if let Some((_id, sender)) = context.0.pending_requests.remove(&id) {
@@ -117,7 +122,12 @@ impl Socket {
         context: &SharedContext,
     ) -> eyre::Result<R> {
         let (tx, rx) = oneshot::channel();
-        context.0.pending_requests.insert(id, tx);
+        if context.0.pending_requests.len() >= context.0.pending_requests_limit {
+            return Err(eyre!("Reached the limit ({}) pending requests, please clear all pending requests before making new requests", context.0.pending_requests.len()));
+        } else {
+            context.0.pending_requests.insert(id, tx);
+        }
+
         let session = context.0.session.lock().await;
         let topic = session
             .info
@@ -132,7 +142,7 @@ impl Socket {
             silent: true,
         };
         drop(session);
-        self.send_socket_msg(context, id, message)?;
+        self.send_socket_msg(context, id, message).await?;
         let response = rx.await?;
         let code = response["code"].as_i64();
         if let Some(value) = code {
@@ -178,7 +188,7 @@ impl Socket {
             silent: true,
         };
         drop(session);
-        self.send_socket_msg(context, id, message)?;
+        self.send_socket_msg(context, id, message).await?;
         let response = rx.await?;
         let code = response["code"].as_i64();
         if let Some(value) = code {
@@ -205,7 +215,7 @@ impl Socket {
             silent: true,
         };
         let payload = serde_json::to_vec(&msg)?;
-        self.sender.send((None, payload))?;
+        self.sender.send((None, payload)).await?;
         Ok(())
     }
 
@@ -214,9 +224,10 @@ impl Socket {
     /// TODO: handle reconnections?
     pub async fn connect(url: Url, key: Key, handler: MessageHandler) -> eyre::Result<Self> {
         let (mut tx, rx) = connect(url).await?.split();
-        let (sender, mut receiver) = unbounded_channel::<(Option<u64>, Vec<u8>)>();
-        let sender_out = sender.clone();
         let context = handler.context.clone();
+        let (sender, mut receiver) =
+            channel::<(Option<u64>, Vec<u8>)>(context.0.pending_requests_limit);
+        let sender_out = sender.clone();
 
         // a task for reading from the websocket connection, decrypting the data
         // and sending them as responses to the previous requests by the message handler
@@ -234,12 +245,27 @@ impl Socket {
         // a task for sending the messages to the bridge server
         let writer = tokio::spawn(async move {
             while let Some((mid, x)) = receiver.recv().await {
-                if let (Err(_), Some(id)) = (tx.send(x).await, mid) {
-                    // not to let the requester to wait forever
-                    const ERROR_MSG: &str = "\"Failed to send message to the bridge server\"";
-                    if let Some((_id, sender)) = context.0.pending_requests.remove(&id) {
-                        let _ = sender.send(serde_json::json!(ERROR_MSG));
+                let context = context.0.clone();
+                match (tx.send(x).await, mid) {
+                    (Err(_), Some(id)) => {
+                        // not to let the requester to wait forever
+                        const ERROR_MSG: &str = "\"Failed to send message to the bridge server\"";
+                        let context = context.clone();
+                        if let Some((_id, sender)) = context.pending_requests.remove(&id) {
+                            let _ = sender.send(serde_json::json!(ERROR_MSG));
+                        }
                     }
+                    (Ok(_), Some(id)) => {
+                        // clean up pending request after timeout
+                        let _ = tokio::spawn(async move {
+                            let context = context.clone();
+                            sleep(Duration::from_millis(context.pending_requests_timeout)).await;
+                            if let Some((_id, _sender)) = context.pending_requests.remove(&id) {
+                                // TODO Reject the request?
+                            }
+                        });
+                    }
+                    _ => {}
                 }
             }
         });

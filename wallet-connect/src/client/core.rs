@@ -30,11 +30,14 @@ pub struct Context {
     pub session: Mutex<Session>,
     /// indicates whether the session is being established
     pub session_pending: AtomicBool,
+    /// record the time of the request and have a regular cleanup
+    pub pending_requests_timeout: u64,
+    /// limit pending requests size and channel buffer size
+    pub pending_requests_limit: usize,
     /// the map of the requests that were sent to the wallet
     /// and the client app is awaiting a response.
     /// When the response is received, the request is removed
     /// and the response is sent to the receiver via the one-shot channel.
-    /// TODO: limit size or record the time of the request and have a regular cleanup?
     pub pending_requests: DashMap<u64, oneshot::Sender<serde_json::Value>>,
 }
 
@@ -49,6 +52,8 @@ impl SharedContext {
         Self(Arc::new(Context {
             session: Mutex::new(session),
             session_pending: AtomicBool::new(false),
+            pending_requests_timeout: 60000,
+            pending_requests_limit: 2,
             pending_requests: DashMap::new(),
         }))
     }
