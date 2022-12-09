@@ -12,7 +12,7 @@ use thiserror::Error;
 use tokio::time::sleep;
 use tokio::{
     sync::{
-        mpsc::{channel, Sender},
+        mpsc::{unbounded_channel, UnboundedSender},
         oneshot,
     },
     task::JoinHandle,
@@ -33,7 +33,7 @@ use eyre::{eyre, Context};
 #[derive(Debug)]
 pub struct Socket {
     /// queue for messages to be sent to the bridge server
-    sender: Sender<(Option<u64>, Vec<u8>)>,
+    sender: UnboundedSender<(Option<u64>, Vec<u8>)>,
     /// the handle of the task that writes on the websocket connection
     _write_handle: JoinHandle<()>,
     /// the handle of the task that reads on the websocket connection
@@ -96,11 +96,7 @@ impl Socket {
         id: u64,
         msg: SocketMessage,
     ) -> eyre::Result<()> {
-        if let Err(_e) = self
-            .sender
-            .send((Some(id), serde_json::to_vec(&msg)?))
-            .await
-        {
+        if let Err(_e) = self.sender.send((Some(id), serde_json::to_vec(&msg)?)) {
             // not to let the requester to wait forever
             const ERROR_MSG: &str = "\"Failed to send message to the queue\"";
             if let Some((_id, sender)) = context.0.pending_requests.remove(&id) {
@@ -215,7 +211,7 @@ impl Socket {
             silent: true,
         };
         let payload = serde_json::to_vec(&msg)?;
-        self.sender.send((None, payload)).await?;
+        self.sender.send((None, payload))?;
         Ok(())
     }
 
@@ -225,8 +221,7 @@ impl Socket {
     pub async fn connect(url: Url, key: Key, handler: MessageHandler) -> eyre::Result<Self> {
         let (mut tx, rx) = connect(url).await?.split();
         let context = handler.context.clone();
-        let (sender, mut receiver) =
-            channel::<(Option<u64>, Vec<u8>)>(context.0.pending_requests_limit);
+        let (sender, mut receiver) = unbounded_channel::<(Option<u64>, Vec<u8>)>();
         let sender_out = sender.clone();
 
         // a task for reading from the websocket connection, decrypting the data
