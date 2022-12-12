@@ -14,7 +14,7 @@ on:
 
 jobs:
   integration_tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     env:
       WASM_BINDGEN_TEST_TIMEOUT: 60
     steps:
@@ -38,9 +38,6 @@ jobs:
           name: debug-files
           path: debug_files.tar.gz
           if-no-files-found: ignore
-
-      - name: Install clang-10
-        run: sudo apt-get install -y clang-10 libc++-10-dev libc++abi-10-dev
 
       - name: Build play-cpp-sdk library
         run: CXX=clang++-10 CXXFLAGS=-stdlib=libc++ cargo build --package play-cpp-sdk --release
