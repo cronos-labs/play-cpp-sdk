@@ -32,7 +32,7 @@ pub struct Context {
     pub session_pending: AtomicBool,
     /// record the time of the request and have a regular cleanup
     pub pending_requests_timeout: u64,
-    /// limit pending requests size and channel buffer size
+    /// limit pending requests size
     pub pending_requests_limit: usize,
     /// the map of the requests that were sent to the wallet
     /// and the client app is awaiting a response.
