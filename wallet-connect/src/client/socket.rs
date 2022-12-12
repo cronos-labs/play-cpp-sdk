@@ -9,7 +9,7 @@ pub use native::*;
 use serde::{de::DeserializeOwned, Serialize};
 use std::time::Duration;
 use thiserror::Error;
-use tokio::time::sleep;
+use tokio::time::timeout;
 use tokio::{
     sync::{
         mpsc::{unbounded_channel, UnboundedSender},
@@ -139,14 +139,49 @@ impl Socket {
         };
         drop(session);
         self.send_socket_msg(context, id, message).await?;
-        let response = rx.await?;
-        let code = response["code"].as_i64();
-        if let Some(value) = code {
-            if -32000 == value {
-                return Err(eyre!("{}", serde_json::to_string(&response)?));
+        // Wrap the future with a `Timeout` set to expire in `pending_requests_timeout` milliseconds.
+        match timeout(
+            Duration::from_millis(context.0.pending_requests_timeout),
+            rx,
+        )
+        .await
+        {
+            Ok(v) => {
+                let response = v?;
+                let code = response["code"].as_i64();
+                if let Some(value) = code {
+                    if -32000 == value {
+                        return Err(eyre!("{}", serde_json::to_string(&response)?));
+                    }
+                }
+                serde_json::from_value(response).wrap_err("failed to parse response")
+            }
+            Err(_) => {
+                if let Some((_id, _sender)) = context.0.pending_requests.remove(&id) {
+                    Err(eyre!(
+                        "{}",
+                        serde_json::json!({
+                            "code": -32000,
+                            "payload": {
+                                "reason": "Request is dropped because of timeout",
+                                "timeout": context.0.pending_requests_timeout,
+                            }
+                        })
+                    ))
+                    // TODO Reject the request?
+                } else {
+                    Err(eyre!(
+                        "{}",
+                        serde_json::json!({
+                            "code": -32000,
+                            "payload": {
+                                "reason": "Request is dropped because of not exists",
+                            }
+                        })
+                    ))
+                }
             }
         }
-        serde_json::from_value(response).wrap_err("failed to parse response")
     }
 
     /// attempts to create a session with the external wallet,
@@ -240,34 +275,12 @@ impl Socket {
         // a task for sending the messages to the bridge server
         let writer = tokio::spawn(async move {
             while let Some((mid, x)) = receiver.recv().await {
-                let context = context.0.clone();
-                match (tx.send(x).await, mid) {
-                    (Err(_), Some(id)) => {
-                        // not to let the requester to wait forever
-                        const ERROR_MSG: &str = "\"Failed to send message to the bridge server\"";
-                        let context = context.clone();
-                        if let Some((_id, sender)) = context.pending_requests.remove(&id) {
-                            let _ = sender.send(serde_json::json!(ERROR_MSG));
-                        }
+                if let (Err(_), Some(id)) = (tx.send(x).await, mid) {
+                    // not to let the requester to wait forever
+                    const ERROR_MSG: &str = "\"Failed to send message to the bridge server\"";
+                    if let Some((_id, sender)) = context.0.pending_requests.remove(&id) {
+                        let _ = sender.send(serde_json::json!(ERROR_MSG));
                     }
-                    (Ok(_), Some(id)) => {
-                        // clean up pending request after timeout
-                        let _ = tokio::spawn(async move {
-                            let context = context.clone();
-                            sleep(Duration::from_millis(context.pending_requests_timeout)).await;
-                            if let Some((_id, sender)) = context.pending_requests.remove(&id) {
-                                let _ = sender.send(serde_json::json!({
-                                    "code": -32000,
-                                    "payload": {
-                                        "reason": "Request is dropped because of timeout",
-                                        "timeout": context.pending_requests_timeout,
-                                    }
-                                }));
-                                // TODO Reject the request?
-                            }
-                        });
-                    }
-                    _ => {}
                 }
             }
         });
