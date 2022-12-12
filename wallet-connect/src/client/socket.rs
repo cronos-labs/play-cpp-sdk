@@ -8,6 +8,7 @@ use futures::{future, SinkExt, TryStreamExt};
 pub use native::*;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
+use tokio::time::timeout;
 use tokio::{
     sync::{
         mpsc::{unbounded_channel, UnboundedSender},
@@ -31,7 +32,6 @@ use eyre::{eyre, Context};
 #[derive(Debug)]
 pub struct Socket {
     /// queue for messages to be sent to the bridge server
-    /// TODO: make it bounded?
     sender: UnboundedSender<(Option<u64>, Vec<u8>)>,
     /// the handle of the task that writes on the websocket connection
     _write_handle: JoinHandle<()>,
@@ -117,7 +117,12 @@ impl Socket {
         context: &SharedContext,
     ) -> eyre::Result<R> {
         let (tx, rx) = oneshot::channel();
-        context.0.pending_requests.insert(id, tx);
+        if context.0.pending_requests.len() >= context.0.pending_requests_limit {
+            return Err(eyre!("Reached the limit ({}) pending requests, please clear all pending requests before making new requests", context.0.pending_requests.len()));
+        } else {
+            context.0.pending_requests.insert(id, tx);
+        }
+
         let session = context.0.session.lock().await;
         let topic = session
             .info
@@ -133,14 +138,44 @@ impl Socket {
         };
         drop(session);
         self.send_socket_msg(context, id, message)?;
-        let response = rx.await?;
-        let code = response["code"].as_i64();
-        if let Some(value) = code {
-            if -32000 == value {
-                return Err(eyre!("{}", serde_json::to_string(&response)?));
+        // Wrap the future with a `Timeout` set to expire in `pending_requests_timeout` Duration.
+        match timeout(context.0.pending_requests_timeout, rx).await {
+            Ok(resp) => {
+                let response = resp?;
+                let code = response["code"].as_i64();
+                if let Some(value) = code {
+                    if -32000 == value {
+                        return Err(eyre!("{}", serde_json::to_string(&response)?));
+                    }
+                }
+                serde_json::from_value(response).wrap_err("failed to parse response")
+            }
+            Err(_) => {
+                if let Some((_id, _sender)) = context.0.pending_requests.remove(&id) {
+                    Err(eyre!(
+                        "{}",
+                        serde_json::json!({
+                            "code": -32000,
+                            "payload": {
+                                "reason": "Request is dropped because of timeout",
+                                "timeout": context.0.pending_requests_timeout.as_millis() as u64,
+                            }
+                        })
+                    ))
+                    // TODO Reject the request?
+                } else {
+                    Err(eyre!(
+                        "{}",
+                        serde_json::json!({
+                            "code": -32000,
+                            "payload": {
+                                "reason": "Request is dropped because of not exists",
+                            }
+                        })
+                    ))
+                }
             }
         }
-        serde_json::from_value(response).wrap_err("failed to parse response")
     }
 
     /// attempts to create a session with the external wallet,
