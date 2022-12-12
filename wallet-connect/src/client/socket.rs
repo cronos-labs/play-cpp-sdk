@@ -138,7 +138,7 @@ impl Socket {
         };
         drop(session);
         self.send_socket_msg(context, id, message)?;
-        // Wrap the future with a `Timeout` set to expire in `pending_requests_timeout` milliseconds.
+        // Wrap the future with a `Timeout` set to expire in `pending_requests_timeout` Duration.
         match timeout(context.0.pending_requests_timeout, rx).await {
             Ok(resp) => {
                 let response = resp?;
@@ -158,7 +158,7 @@ impl Socket {
                             "code": -32000,
                             "payload": {
                                 "reason": "Request is dropped because of timeout",
-                                "timeout": context.0.pending_requests_timeout.as_millis(),
+                                "timeout": context.0.pending_requests_timeout.as_millis() as u64,
                             }
                         })
                     ))
