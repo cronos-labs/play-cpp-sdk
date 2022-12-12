@@ -90,7 +90,7 @@ fn check_socket_msg(mmsg: Vec<u8>, key: &Key) -> Option<(Topic, Vec<u8>)> {
 }
 
 impl Socket {
-    async fn send_socket_msg(
+    fn send_socket_msg(
         &self,
         context: &SharedContext,
         id: u64,
@@ -138,7 +138,7 @@ impl Socket {
             silent: true,
         };
         drop(session);
-        self.send_socket_msg(context, id, message).await?;
+        self.send_socket_msg(context, id, message)?;
         // Wrap the future with a `Timeout` set to expire in `pending_requests_timeout` milliseconds.
         match timeout(
             Duration::from_millis(context.0.pending_requests_timeout),
@@ -219,7 +219,7 @@ impl Socket {
             silent: true,
         };
         drop(session);
-        self.send_socket_msg(context, id, message).await?;
+        self.send_socket_msg(context, id, message)?;
         let response = rx.await?;
         let code = response["code"].as_i64();
         if let Some(value) = code {
@@ -255,9 +255,9 @@ impl Socket {
     /// TODO: handle reconnections?
     pub async fn connect(url: Url, key: Key, handler: MessageHandler) -> eyre::Result<Self> {
         let (mut tx, rx) = connect(url).await?.split();
-        let context = handler.context.clone();
         let (sender, mut receiver) = unbounded_channel::<(Option<u64>, Vec<u8>)>();
         let sender_out = sender.clone();
+        let context = handler.context.clone();
 
         // a task for reading from the websocket connection, decrypting the data
         // and sending them as responses to the previous requests by the message handler
