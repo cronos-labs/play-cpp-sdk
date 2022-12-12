@@ -7,7 +7,6 @@ use futures::{future, SinkExt, TryStreamExt};
 #[cfg(not(target_arch = "wasm32"))]
 pub use native::*;
 use serde::{de::DeserializeOwned, Serialize};
-use std::time::Duration;
 use thiserror::Error;
 use tokio::time::timeout;
 use tokio::{
@@ -140,14 +139,9 @@ impl Socket {
         drop(session);
         self.send_socket_msg(context, id, message)?;
         // Wrap the future with a `Timeout` set to expire in `pending_requests_timeout` milliseconds.
-        match timeout(
-            Duration::from_millis(context.0.pending_requests_timeout),
-            rx,
-        )
-        .await
-        {
-            Ok(v) => {
-                let response = v?;
+        match timeout(context.0.pending_requests_timeout, rx).await {
+            Ok(resp) => {
+                let response = resp?;
                 let code = response["code"].as_i64();
                 if let Some(value) = code {
                     if -32000 == value {
@@ -164,7 +158,7 @@ impl Socket {
                             "code": -32000,
                             "payload": {
                                 "reason": "Request is dropped because of timeout",
-                                "timeout": context.0.pending_requests_timeout,
+                                "timeout": context.0.pending_requests_timeout.as_millis(),
                             }
                         })
                     ))

@@ -16,6 +16,7 @@ use ethers::prelude::{Address, JsonRpcClient};
 use rand::Rng;
 use serde::{de::DeserializeOwned, Serialize};
 use std::sync::{atomic::AtomicBool, Arc};
+use std::time::Duration;
 use thiserror::Error;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::{oneshot, Mutex};
@@ -31,7 +32,7 @@ pub struct Context {
     /// indicates whether the session is being established
     pub session_pending: AtomicBool,
     /// record the time of the request and have a regular cleanup
-    pub pending_requests_timeout: u64,
+    pub pending_requests_timeout: Duration,
     /// limit pending requests size
     pub pending_requests_limit: usize,
     /// the map of the requests that were sent to the wallet
@@ -52,7 +53,7 @@ impl SharedContext {
         Self(Arc::new(Context {
             session: Mutex::new(session),
             session_pending: AtomicBool::new(false),
-            pending_requests_timeout: 60000,
+            pending_requests_timeout: Duration::from_millis(60000),
             pending_requests_limit: 2,
             pending_requests: DashMap::new(),
         }))
