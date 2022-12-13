@@ -2,7 +2,7 @@
 ## [Unreleased]
 ## [v0.0.13-alpha] - 2022-12-13
 - Limit walletconnect json rpc pending requests to 2 and timeout to 60 seconds
-- Back to clang 10 for linux build
+- Revert to clang 10 for linux builds
 
 ## [v0.0.12-alpha] - 2022-12-7
 - Dynamic Contract C++ Bindings : Encode,Call,Send
