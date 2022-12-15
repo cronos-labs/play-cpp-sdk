@@ -1,5 +1,9 @@
 # Changelog
 ## [Unreleased]
+
+## [v0.0.14-alpha] - 2022-12-15
+- Add chain-id for DynamicContract send
+
 ## [v0.0.13-alpha] - 2022-12-13
 - Limit walletconnect json rpc pending requests to 2 and timeout to 60 seconds
 - Revert to clang 10 for linux builds
