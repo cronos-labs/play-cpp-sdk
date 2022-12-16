@@ -2867,7 +2867,7 @@ checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
 name = "play-cpp-sdk"
-version = "0.0.13-alpha"
+version = "0.0.14-alpha"
 dependencies = [
  "defi-wallet-core-cpp",
  "extra-cpp-bindings",
