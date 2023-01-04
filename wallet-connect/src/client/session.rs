@@ -43,7 +43,7 @@ pub struct SessionInfo {
 
 impl SessionInfo {
     pub fn uri(&self) -> Uri {
-        Uri::parse(&format!(
+        Uri::parse(format!(
             "wc:{}@1?{}",
             self.handshake_topic,
             Serializer::new(String::new())
