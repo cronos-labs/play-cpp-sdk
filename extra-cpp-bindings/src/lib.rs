@@ -525,7 +525,7 @@ pub fn get_tokens_blocking(
 ) -> Result<Vec<RawTokenResult>> {
     let blockscout_url =
         format!("{blockscout_base_url}?module=account&action=tokenlist&address={account_address}");
-    let resp = reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<RawTokenResult>>()?;
+    let resp = reqwest::blocking::get(blockscout_url)?.json::<RawResponse<RawTokenResult>>()?;
     Ok(resp.result)
 }
 
@@ -555,7 +555,7 @@ pub fn get_token_transfers_blocking(
         }
     };
     let resp =
-        reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<RawBlockScoutTransfer>>()?;
+        reqwest::blocking::get(blockscout_url)?.json::<RawResponse<RawBlockScoutTransfer>>()?;
 
     Ok(resp.result.iter().flat_map(TryInto::try_into).collect())
 }
@@ -583,7 +583,7 @@ pub fn get_token_holders<S: AsRef<str> + std::fmt::Display>(
 ) -> Result<Vec<TokenHolderDetail>> {
     let blockscout_url =
         format!("{blockscout_base_url}?module=token&action=getTokenHolders&contractaddress={contract_address}&page={page}&offset={offset}");
-    let resp = reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<TokenHolderDetail>>()?;
+    let resp = reqwest::blocking::get(blockscout_url)?.json::<RawResponse<TokenHolderDetail>>()?;
     Ok(resp.result)
 }
 
@@ -866,7 +866,7 @@ fn generate_qrcode(qrcodestring: String) -> Result<crate::ffi::WalletQrcode> {
     let mut image: Vec<u8> = Vec::with_capacity((size * size) as usize);
     for y in -border..qr.size() + border {
         for x in -border..qr.size() + border {
-            image.push(if qr.get_module(x, y) { 0 } else { 1 });
+            image.push(u8::from(!qr.get_module(x, y)));
         }
     }
     assert!(image.len() as u32 == size * size);
@@ -874,7 +874,7 @@ fn generate_qrcode(qrcodestring: String) -> Result<crate::ffi::WalletQrcode> {
     let qrcode = crate::ffi::WalletQrcode {
         qrcode: qrcodestring,
         image,
-        size: size as u32,
+        size,
     };
     Ok(qrcode)
 }
