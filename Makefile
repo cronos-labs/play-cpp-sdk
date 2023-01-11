@@ -60,10 +60,6 @@ API=21
 
 all: build_cpp
 
-=======
-UNAME := $(shell uname)
-
->>>>>>> d6186d7 (Problem: Missing support of uploading cpp documents to gitbook platform #82)
 clone:
 	git submodule update --init --recursive
 
