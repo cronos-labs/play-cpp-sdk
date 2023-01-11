@@ -30,6 +30,7 @@ https://github.com/cronos-labs/play-cpp-sdk/releases
 - macOS 10.15 or newer: `play_cpp_sdk_Darwin_x86_64.tar.gz`
 - Ubuntu 20.04 or newer: `play_cpp_sdk_libstdc++_Linux_x86_64.tar.gz` or `play_cpp_sdk_libc++_Linux_x86_64.tar.gz`
 - Android: `play_cpp_sdk_$(TARGET)-$(NDK_VERSION).tar.gz`
+- IOS: `play_cpp_sdk_aarch64-apple-ios.tar.gz`
 
 ## Setup a demo project
 ### Windows
