@@ -97,6 +97,7 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
     #include "sdk/include/defi-wallet-core-cpp/src/lib.rs.h" // wallet, EIP4361, query, signing, broadcast etc, on crypto.org and cronos
     #include "sdk/include/defi-wallet-core-cpp/src/nft.rs.h" // crypto.org chain nft support
     #include "sdk/include/defi-wallet-core-cpp/src/uint.rs.h" // uint256 type support
+    #include "sdk/include/defi-wallet-core-cpp/src/ethereum.rs.h" // dynamic contract support
     #include "sdk/include/extra-cpp-bindings/src/lib.rs.h" // etherscan/cronoscan, crypto.com pay, wallet connect support
     #include "sdk/include/rust/cxx.h" // the important data types, e.g., rust::String, rust::str, etc
 
