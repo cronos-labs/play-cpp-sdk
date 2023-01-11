@@ -874,10 +874,10 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../demo/include/rust \
-                         ../demo/include/defi-wallet-core-cpp/src \
-                         ../demo/include/extra-cpp-bindings/src \
-                         ../demo/include/ \
+INPUT                  = ../demo/sdk/include/rust \
+                         ../demo/sdk/include/defi-wallet-core-cpp/src \
+                         ../demo/sdk/include/extra-cpp-bindings/src \
+                         ../demo/sdk/include/ \
                          ./docs_pages/ \
 
 # This tag can be used to specify the character encoding of the source files
