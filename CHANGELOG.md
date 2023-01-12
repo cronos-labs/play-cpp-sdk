@@ -1,5 +1,6 @@
 # Changelog
 ## [Unreleased]
+- Add secure secret storage option
 
 ## [v0.0.14-alpha] - 2022-12-15
 - Add chain-id for DynamicContract send

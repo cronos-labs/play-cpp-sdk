@@ -29,7 +29,7 @@ if (APPLE)
   target_link_libraries(demostatic PUBLIC ${PLAY_CPP_SDK_LIB})
 endif()
 if (UNIX AND NOT APPLE)
-  target_link_libraries(demostatic PUBLIC ${PLAY_CPP_SDK_LIB} pthread dl)
+  target_link_libraries(demostatic PUBLIC ${PLAY_CPP_SDK_LIB} pthread dl rt)
 endif()
 
 # add dynamic demo
@@ -48,7 +48,7 @@ if (APPLE)
 endif()
 if (UNIX AND NOT APPLE)
   # link library play_cpp_sdk built from subdirectory
-  target_link_libraries(demo PUBLIC play_cpp_sdk)
+  target_link_libraries(demo PUBLIC play_cpp_sdk rt)
 endif()
 
 add_subdirectory(examples)
