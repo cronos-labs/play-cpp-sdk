@@ -30,6 +30,7 @@ https://github.com/cronos-labs/play-cpp-sdk/releases
 - macOS 10.15 or newer: `play_cpp_sdk_Darwin_x86_64.tar.gz`
 - Ubuntu 20.04 or newer: `play_cpp_sdk_libstdc++_Linux_x86_64.tar.gz` or `play_cpp_sdk_libc++_Linux_x86_64.tar.gz`
 - Android: `play_cpp_sdk_$(TARGET)-$(NDK_VERSION).tar.gz`
+- IOS: `play_cpp_sdk_aarch64-apple-ios.tar.gz`
 
 ## Setup a demo project
 ### Windows
@@ -96,6 +97,7 @@ Build modern, cross-platform C++ apps that don't depend on `.sln` or `.vcxproj` 
     #include "sdk/include/defi-wallet-core-cpp/src/lib.rs.h" // wallet, EIP4361, query, signing, broadcast etc, on crypto.org and cronos
     #include "sdk/include/defi-wallet-core-cpp/src/nft.rs.h" // crypto.org chain nft support
     #include "sdk/include/defi-wallet-core-cpp/src/uint.rs.h" // uint256 type support
+    #include "sdk/include/defi-wallet-core-cpp/src/ethereum.rs.h" // dynamic contract support
     #include "sdk/include/extra-cpp-bindings/src/lib.rs.h" // etherscan/cronoscan, crypto.com pay, wallet connect support
     #include "sdk/include/rust/cxx.h" // the important data types, e.g., rust::String, rust::str, etc
 
