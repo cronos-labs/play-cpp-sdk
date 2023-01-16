@@ -8,4 +8,6 @@ pub(crate) enum GameSdkError {
     Serde(#[from] serde_json::Error),
     #[error("Crypto Pay Error: {0:?}")]
     CryptoPayError(CryptoPayErrorObject),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
 }
