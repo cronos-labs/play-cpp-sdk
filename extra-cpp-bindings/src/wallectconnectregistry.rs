@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use crate::error::GameSdkError;
 use crate::{ImageUrl, Platform, WalletEntry};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Registry {
     listings: BTreeMap<String, Listing>,
     count: i64,
@@ -18,19 +18,17 @@ impl Registry {
         let client = reqwest::blocking::Client::new();
         let resp: Registry = client.get(URL).send()?.json()?;
         if let Some(cache) = cache {
-            let _ = std::fs::write(cache, serde_json::to_string(&resp)?);
+            std::fs::write(cache, serde_json::to_string(&resp)?)?;
         }
         Ok(resp)
     }
-    pub(crate) fn load_cached(cache: Option<PathBuf>) -> Self {
+    pub(crate) fn load_cached(cache: Option<PathBuf>) -> Result<Self, GameSdkError> {
         if let Some(cache) = cache {
-            if let Ok(data) = std::fs::read_to_string(cache) {
-                if let Ok(registry) = serde_json::from_str(&data) {
-                    return registry;
-                }
-            }
+            let data = std::fs::read_to_string(cache)?;
+            let registry: Registry = serde_json::from_str(&data)?;
+            return Ok(registry);
         }
-        Self::default()
+        Ok(Self::default())
     }
 }
 
@@ -71,7 +69,7 @@ impl Registry {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Listing {
     id: String,
     name: String,
@@ -103,7 +101,7 @@ impl Listing {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct App {
     browser: Option<String>,
     ios: Option<String>,
@@ -113,26 +111,26 @@ pub(crate) struct App {
     linux: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Desktop {
     native: Option<String>,
     universal: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Metadata {
     #[serde(rename = "shortName")]
     short_name: Option<String>,
     colors: Colors,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Colors {
     primary: Option<String>,
     secondary: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) enum AppType {
     #[serde(rename = "hybrid")]
     Hybrid,
@@ -140,12 +138,14 @@ pub(crate) enum AppType {
     Wallet,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) enum Sdk {
     #[serde(rename = "sign_v1")]
     SignV1,
     #[serde(rename = "sign_v2")]
     SignV2,
+    #[serde(rename = "auth_v1")]
+    AuthV1,
 }
 
 #[cfg(test)]
@@ -156,27 +156,56 @@ mod test {
     pub fn parse_registry() {
         let reg: Registry = Registry::default();
         const DEFI_WALLET_NAME: &str = "Crypto.com | DeFi Wallet";
-        assert_eq!(reg.count, 238);
+        assert_eq!(reg.count, 246);
         let wallets = reg.filter_wallets(None);
-        assert_eq!(wallets.len(), 238);
+        assert_eq!(wallets.len(), 246);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Android));
-        assert_eq!(wallets.len(), 213);
+        assert_eq!(wallets.len(), 217);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Ios));
-        assert_eq!(wallets.len(), 220);
+        assert_eq!(wallets.len(), 226);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Linux));
-        assert_eq!(wallets.len(), 97);
+        assert_eq!(wallets.len(), 93);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Windows));
-        assert_eq!(wallets.len(), 103);
+        assert_eq!(wallets.len(), 99);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Mac));
-        assert_eq!(wallets.len(), 105);
+        assert_eq!(wallets.len(), 101);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Browser));
-        assert_eq!(wallets.len(), 179);
+        assert_eq!(wallets.len(), 182);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
+    }
+
+    #[test]
+    fn test_fetch_new_no_cache() {
+        let reg = Registry::fetch_new(None);
+        assert!(reg.is_ok());
+    }
+
+    #[test]
+    fn test_fetch_new_with_cache() {
+        let mut dir = std::env::temp_dir();
+        let tmpfile = format!("{}.json", uuid::Uuid::new_v4());
+        dir.push(tmpfile);
+        println!("{:?}", dir);
+
+        let reg = Registry::fetch_new(Some(dir.clone()));
+        assert!(reg.is_ok());
+
+        let reg = Registry::load_cached(Some(dir));
+        assert!(reg.is_ok());
+    }
+
+    #[test]
+    fn test_load_cached() {
+        let reg = Registry::load_cached(Some(PathBuf::from("./not_exists.json")));
+        assert!(reg.is_err());
+
+        let reg = Registry::load_cached(None);
+        assert!(reg.is_ok());
     }
 }

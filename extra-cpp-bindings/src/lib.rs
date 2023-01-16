@@ -96,7 +96,7 @@ mod ffi {
     }
 
     /// The icon URLs
-    #[derive(Serialize, Deserialize, Clone)]
+    #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct ImageUrl {
         /// small
         pub sm: String,
@@ -832,7 +832,7 @@ fn get_all_wallets(
         Some(PathBuf::from(registry_local_path))
     };
     let reg = if cached {
-        wallectconnectregistry::Registry::load_cached(path)
+        wallectconnectregistry::Registry::load_cached(path)?
     } else {
         wallectconnectregistry::Registry::fetch_new(path)?
     };
@@ -851,7 +851,7 @@ fn filter_wallets(
         Some(PathBuf::from(registry_local_path))
     };
     let reg = if cached {
-        wallectconnectregistry::Registry::load_cached(path)
+        wallectconnectregistry::Registry::load_cached(path)?
     } else {
         wallectconnectregistry::Registry::fetch_new(path)?
     };
