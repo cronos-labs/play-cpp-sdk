@@ -156,27 +156,27 @@ mod test {
     pub fn parse_registry() {
         let reg: Registry = Registry::default();
         const DEFI_WALLET_NAME: &str = "Crypto.com | DeFi Wallet";
-        assert_eq!(reg.count, 238);
+        assert_eq!(reg.count, 246);
         let wallets = reg.filter_wallets(None);
-        assert_eq!(wallets.len(), 238);
+        assert_eq!(wallets.len(), 246);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Android));
-        assert_eq!(wallets.len(), 213);
+        assert_eq!(wallets.len(), 217);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Ios));
-        assert_eq!(wallets.len(), 220);
+        assert_eq!(wallets.len(), 226);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Linux));
-        assert_eq!(wallets.len(), 97);
+        assert_eq!(wallets.len(), 93);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Windows));
-        assert_eq!(wallets.len(), 103);
+        assert_eq!(wallets.len(), 99);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Mac));
-        assert_eq!(wallets.len(), 105);
+        assert_eq!(wallets.len(), 101);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Browser));
-        assert_eq!(wallets.len(), 179);
+        assert_eq!(wallets.len(), 182);
         assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
     }
 
