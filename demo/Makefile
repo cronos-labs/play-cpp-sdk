@@ -32,7 +32,7 @@ ifeq ($(UNAME), Darwin)
 endif
 
 ifeq ($(UNAME), Linux)
-	FLAGS=$(CXXFLAGS) -lpthread -ldl
+	FLAGS=$(CXXFLAGS) -lpthread -ldl -lrt
 endif
 
 all: clean clone build
