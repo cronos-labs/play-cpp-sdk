@@ -34,5 +34,5 @@ if (UNIX AND NOT APPLE)
   find_library(PLAY_CPP_SDK_LIB libplay_cpp_sdk.a PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
   # Add dynamic library play_cpp_sdk built from bindings source files
   add_library(play_cpp_sdk SHARED ${DEFI_WALLET_CORE_CPP_BINDINGS} ${EXTRA_CPP_BINDINGS} ${PLAY_CPP_SDK_SROUCES})
-  target_link_libraries(play_cpp_sdk ${PLAY_CPP_SDK_LIB} pthread dl)
+  target_link_libraries(play_cpp_sdk ${PLAY_CPP_SDK_LIB} pthread dl rt)
 endif()
