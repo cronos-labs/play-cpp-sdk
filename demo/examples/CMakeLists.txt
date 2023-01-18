@@ -52,3 +52,6 @@ target_link_libraries(wallet_connect PUBLIC play_cpp_sdk)
 
 add_executable(get_token_holders src/get_token_holders.cc)
 target_link_libraries(get_token_holders PUBLIC play_cpp_sdk)
+
+add_executable(get_wallet src/get_wallet.cc)
+target_link_libraries(get_wallet PUBLIC play_cpp_sdk)

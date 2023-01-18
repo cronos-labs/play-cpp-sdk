@@ -40,6 +40,21 @@ impl Default for Registry {
 }
 
 impl Registry {
+    pub(crate) fn get_wallet(&self, id: String) -> Result<WalletEntry, GameSdkError> {
+        match self.listings.iter().filter(|x| x.1.id == id).next() {
+            Some((_, listing)) => Ok(WalletEntry {
+                id: listing.id.clone(),
+                name: listing.name.clone(),
+                image_url: listing.image_url.clone(),
+                mobile_native_link: listing.mobile.native.clone().unwrap_or_default(),
+                mobile_universal_link: listing.mobile.universal.clone().unwrap_or_default(),
+                desktop_native_link: listing.desktop.native.clone().unwrap_or_default(),
+                desktop_universal_link: listing.desktop.universal.clone().unwrap_or_default(),
+            }),
+            None => Err(GameSdkError::InvalidWalletId),
+        }
+    }
+
     pub(crate) fn filter_wallets(&self, platform: Option<Platform>) -> Vec<WalletEntry> {
         let mut filtered = Vec::new();
         for (_, listing) in self.listings.iter() {
@@ -48,21 +63,14 @@ impl Registry {
                     continue;
                 }
             }
-            let native_link = if listing.mobile.native.is_some() {
-                listing.mobile.native.clone()
-            } else {
-                listing.desktop.native.clone()
-            };
-            let universal_link = if listing.mobile.universal.is_some() {
-                listing.mobile.universal.clone()
-            } else {
-                listing.desktop.universal.clone()
-            };
             filtered.push(WalletEntry {
+                id: listing.id.clone(),
                 name: listing.name.clone(),
                 image_url: listing.image_url.clone(),
-                native_link: native_link.unwrap_or_default(),
-                universal_link: universal_link.unwrap_or_default(),
+                mobile_native_link: listing.mobile.native.clone().unwrap_or_default(),
+                mobile_universal_link: listing.mobile.universal.clone().unwrap_or_default(),
+                desktop_native_link: listing.desktop.native.clone().unwrap_or_default(),
+                desktop_universal_link: listing.desktop.universal.clone().unwrap_or_default(),
             });
         }
         filtered
@@ -90,12 +98,8 @@ pub(crate) struct Listing {
 impl Listing {
     fn supports_platform(&self, platform: &Platform) -> bool {
         match *platform {
-            Platform::Android => self.app.android.is_some(),
-            Platform::Ios => self.app.ios.is_some(),
-            Platform::Linux => self.app.linux.is_some(),
-            Platform::Mac => self.app.mac.is_some(),
-            Platform::Windows => self.app.windows.is_some(),
-            Platform::Browser => self.app.browser.is_some(),
+            Platform::Mobile => self.mobile.native.is_some() || self.mobile.universal.is_some(),
+            Platform::Desktop => self.desktop.native.is_some() || self.desktop.universal.is_some(),
             _ => false,
         }
     }
@@ -160,24 +164,11 @@ mod test {
         let wallets = reg.filter_wallets(None);
         assert_eq!(wallets.len(), 246);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
-        let wallets = reg.filter_wallets(Some(Platform::Android));
-        assert_eq!(wallets.len(), 217);
+        let wallets = reg.filter_wallets(Some(Platform::Mobile));
+        assert_eq!(wallets.len(), 212);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
-        let wallets = reg.filter_wallets(Some(Platform::Ios));
-        assert_eq!(wallets.len(), 226);
-        assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
-        let wallets = reg.filter_wallets(Some(Platform::Linux));
-        assert_eq!(wallets.len(), 93);
-        assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
-        let wallets = reg.filter_wallets(Some(Platform::Windows));
-        assert_eq!(wallets.len(), 99);
-        assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
-        let wallets = reg.filter_wallets(Some(Platform::Mac));
-        assert_eq!(wallets.len(), 101);
-        assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
-        let wallets = reg.filter_wallets(Some(Platform::Browser));
-        assert_eq!(wallets.len(), 182);
-        assert!(!wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
+        let wallets = reg.filter_wallets(Some(Platform::Desktop));
+        assert_eq!(wallets.len(), 120);
     }
 
     #[test]
@@ -207,5 +198,51 @@ mod test {
 
         let reg = Registry::load_cached(None);
         assert!(reg.is_ok());
+    }
+
+    #[test]
+    fn test_get_wallet() {
+        let reg: Registry = Registry::default();
+        let wallet = reg
+            .get_wallet(
+                "f2436c67184f158d1beda5df53298ee84abfc367581e4505134b5bcf5f46697d".to_string(),
+            )
+            .unwrap();
+        assert_eq!(wallet.name, "Crypto.com | DeFi Wallet".to_string());
+        assert_eq!(wallet.mobile_native_link, "cryptowallet:".to_string());
+        assert_eq!(
+            wallet.mobile_universal_link,
+            "https://wallet.crypto.com".to_string()
+        );
+        assert_eq!(wallet.desktop_native_link, "cryptowallet:".to_string());
+        assert_eq!(wallet.desktop_universal_link, "".to_string());
+
+        let wallet = reg
+            .get_wallet(
+                "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96".to_string(),
+            )
+            .unwrap();
+        assert_eq!(wallet.name, "MetaMask".to_string());
+        assert_eq!(wallet.mobile_native_link, "metamask:".to_string());
+        assert_eq!(
+            wallet.mobile_universal_link,
+            "https://metamask.app.link".to_string()
+        );
+        assert_eq!(wallet.desktop_native_link, "".to_string());
+        assert_eq!(wallet.desktop_universal_link, "".to_string());
+
+        let wallet = reg
+            .get_wallet(
+                "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0".to_string(),
+            )
+            .unwrap();
+        assert_eq!(wallet.name, "Trust Wallet".to_string());
+        assert_eq!(wallet.mobile_native_link, "trust:".to_string());
+        assert_eq!(
+            wallet.mobile_universal_link,
+            "https://link.trustwallet.com".to_string()
+        );
+        assert_eq!(wallet.desktop_native_link, "".to_string());
+        assert_eq!(wallet.desktop_universal_link, "".to_string());
     }
 }

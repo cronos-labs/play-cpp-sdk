@@ -10,4 +10,6 @@ pub(crate) enum GameSdkError {
     CryptoPayError(CryptoPayErrorObject),
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    #[error("Invalid wallet id")]
+    InvalidWalletId,
 }

@@ -75,24 +75,26 @@ mod ffi {
 
     /// The wallet registry entry
     pub struct WalletEntry {
+        /// wallet id
+        pub id: String,
         /// its name
         pub name: String,
         /// icon URLs
         pub image_url: ImageUrl,
-        /// native link (Android/Desktop), empty if none
-        pub native_link: String,
-        /// universal link (iOS), empty if none
-        pub universal_link: String,
+        /// mobile native link, empty if none
+        pub mobile_native_link: String,
+        /// mobile universal link, empty if none
+        pub mobile_universal_link: String,
+        /// desktop native link, empty if none
+        pub desktop_native_link: String,
+        /// desktop universal link, empty if none
+        pub desktop_universal_link: String,
     }
 
     /// The target platform
     pub enum Platform {
-        Android,
-        Ios,
-        Linux,
-        Mac,
-        Windows,
-        Browser,
+        Mobile,
+        Desktop,
     }
 
     /// The icon URLs
@@ -297,18 +299,26 @@ mod ffi {
 
     extern "Rust" {
         /// filter wallets by platform
-        /// (registry_local_path can be empty string if it is not needed to store the cached registry result)
+        /// (`registry_local_path` can be empty string if it is not needed to store the `cached` registry result)
         pub fn filter_wallets(
             cached: bool,
             registry_local_path: String,
             platform: Platform,
         ) -> Result<Vec<WalletEntry>>;
         /// get all possible wallets
-        /// (registry_local_path can be empty string if it is not needed to store the cached registry result)
+        /// (`registry_local_path` can be empty string if it is not needed to store the `cached` registry result)
         pub fn get_all_wallets(
             cached: bool,
             registry_local_path: String,
         ) -> Result<Vec<WalletEntry>>;
+        /// get a wallet by `id`
+        /// Check wallet id at https://explorer.walletconnect.com/
+        /// (`registry_local_path` can be empty string if it is not needed to store the `cached` registry result)
+        pub fn get_wallet(
+            cached: bool,
+            registry_local_path: String,
+            id: String,
+        ) -> Result<WalletEntry>;
         pub fn generate_qrcode(qrcodestring: String) -> Result<WalletQrcode>;
         /// WallnetConnect API
         type WalletconnectClient;
@@ -821,6 +831,25 @@ fn walletconnect_new_client(
 }
 unsafe impl Send for ffi::WalletConnectCallback {}
 unsafe impl Sync for ffi::WalletConnectCallback {}
+
+fn get_wallet(
+    cached: bool,
+    registry_local_path: String,
+    id: String,
+) -> Result<crate::ffi::WalletEntry> {
+    let path = if registry_local_path.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(registry_local_path))
+    };
+    let reg = if cached {
+        wallectconnectregistry::Registry::load_cached(path)?
+    } else {
+        wallectconnectregistry::Registry::fetch_new(path)?
+    };
+
+    Ok(reg.get_wallet(id)?)
+}
 
 fn get_all_wallets(
     cached: bool,
