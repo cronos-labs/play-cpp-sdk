@@ -1,7 +1,7 @@
 # Code of Conduct
 
 ## Conduct
-### Contact: https://airtable.com/shrFiQnLrcpeBp2lS
+### Contact: https://airtable.com/shrCt6wWy87WrEXr8
 
 * We are committed to providing a friendly, safe and welcoming environment for all, regardless of level of experience, gender, gender identity and expression, sexual orientation, disability, personal appearance, body size, race, ethnicity, age, religion, nationality, or other similar characteristic.
 
