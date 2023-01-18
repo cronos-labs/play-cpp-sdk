@@ -41,7 +41,7 @@ impl Default for Registry {
 
 impl Registry {
     pub(crate) fn get_wallet(&self, id: String) -> Result<WalletEntry, GameSdkError> {
-        match self.listings.iter().filter(|x| x.1.id == id).next() {
+        match self.listings.iter().find(|x| x.1.id == id) {
             Some((_, listing)) => Ok(WalletEntry {
                 id: listing.id.clone(),
                 name: listing.name.clone(),
