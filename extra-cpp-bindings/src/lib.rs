@@ -92,6 +92,7 @@ mod ffi {
     }
 
     /// The target platform
+    #[derive(Serialize, Deserialize, Clone, Debug)]
     pub enum Platform {
         Mobile,
         Desktop,
@@ -311,6 +312,15 @@ mod ffi {
             cached: bool,
             registry_local_path: String,
         ) -> Result<Vec<WalletEntry>>;
+        /// check wallet by `id` for supported `platform` listing or not
+        /// Check wallet id at https://explorer.walletconnect.com/
+        /// (`registry_local_path` can be empty string if it is not needed to store the `cached` registry result)
+        pub fn check_wallet(
+            cached: bool,
+            registry_local_path: String,
+            id: String,
+            platform: Platform,
+        ) -> Result<bool>;
         /// get a wallet by `id`
         /// Check wallet id at https://explorer.walletconnect.com/
         /// (`registry_local_path` can be empty string if it is not needed to store the `cached` registry result)
@@ -831,6 +841,26 @@ fn walletconnect_new_client(
 }
 unsafe impl Send for ffi::WalletConnectCallback {}
 unsafe impl Sync for ffi::WalletConnectCallback {}
+
+fn check_wallet(
+    cached: bool,
+    registry_local_path: String,
+    id: String,
+    platform: crate::ffi::Platform,
+) -> Result<bool> {
+    let path = if registry_local_path.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(registry_local_path))
+    };
+    let reg = if cached {
+        wallectconnectregistry::Registry::load_cached(path)?
+    } else {
+        wallectconnectregistry::Registry::fetch_new(path)?
+    };
+
+    Ok(reg.check_wallet(id, platform)?)
+}
 
 fn get_wallet(
     cached: bool,

@@ -40,6 +40,22 @@ impl Default for Registry {
 }
 
 impl Registry {
+    pub fn get_listing(&self, id: String) -> Result<&Listing, GameSdkError> {
+        match self.listings.iter().find(|x| x.1.id == id) {
+            Some((_, listing)) => Ok(listing),
+            None => Err(GameSdkError::InvalidWalletId),
+        }
+    }
+
+    pub(crate) fn check_wallet(
+        &self,
+        id: String,
+        platform: Platform,
+    ) -> Result<bool, GameSdkError> {
+        let listing = self.get_listing(id)?;
+        Ok(listing.supports_platform(&platform))
+    }
+
     pub(crate) fn get_wallet(&self, id: String) -> Result<WalletEntry, GameSdkError> {
         match self.listings.iter().find(|x| x.1.id == id) {
             Some((_, listing)) => Ok(WalletEntry {
@@ -98,8 +114,19 @@ pub(crate) struct Listing {
 impl Listing {
     fn supports_platform(&self, platform: &Platform) -> bool {
         match *platform {
-            Platform::Mobile => self.mobile.native.is_some() || self.mobile.universal.is_some(),
-            Platform::Desktop => self.desktop.native.is_some() || self.desktop.universal.is_some(),
+            Platform::Mobile => {
+                !self.mobile.native.clone().unwrap_or_default().is_empty()
+                    || !self.mobile.universal.clone().unwrap_or_default().is_empty()
+            }
+            Platform::Desktop => {
+                !self.desktop.native.clone().unwrap_or_default().is_empty()
+                    || !self
+                        .desktop
+                        .universal
+                        .clone()
+                        .unwrap_or_default()
+                        .is_empty()
+            }
             _ => false,
         }
     }
@@ -165,10 +192,10 @@ mod test {
         assert_eq!(wallets.len(), 246);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Mobile));
-        assert_eq!(wallets.len(), 212);
+        assert_eq!(wallets.len(), 164);
         assert!(wallets.iter().any(|w| w.name == DEFI_WALLET_NAME));
         let wallets = reg.filter_wallets(Some(Platform::Desktop));
-        assert_eq!(wallets.len(), 120);
+        assert_eq!(wallets.len(), 20);
     }
 
     #[test]
@@ -244,5 +271,74 @@ mod test {
         );
         assert_eq!(wallet.desktop_native_link, "".to_string());
         assert_eq!(wallet.desktop_universal_link, "".to_string());
+    }
+
+    #[test]
+    fn test_check_wallet() {
+        let reg: Registry = Registry::default();
+
+        // both desktop native and desktop universal are empty string
+        let listing = reg
+            .get_listing(
+                "ffa139f74d1c8ebbb748cf0166f92d886e8c81b521c2193aa940e00626f4e215".to_string(),
+            )
+            .unwrap();
+        assert_eq!(listing.desktop.native, Some("".to_string()));
+        assert_eq!(listing.desktop.universal, Some("".to_string()));
+        let valid = reg
+            .check_wallet(
+                "ffa139f74d1c8ebbb748cf0166f92d886e8c81b521c2193aa940e00626f4e215".to_string(),
+                Platform::Desktop,
+            )
+            .unwrap();
+        assert_eq!(valid, false);
+
+        // both desktop native and desktop universal are null
+        let listing = reg
+            .get_listing(
+                "0b415a746fb9ee99cce155c2ceca0c6f6061b1dbca2d722b3ba16381d0562150".to_string(),
+            )
+            .unwrap();
+        assert_eq!(listing.desktop.native, None);
+        assert_eq!(listing.desktop.universal, None);
+        let valid = reg
+            .check_wallet(
+                "0b415a746fb9ee99cce155c2ceca0c6f6061b1dbca2d722b3ba16381d0562150".to_string(),
+                Platform::Desktop,
+            )
+            .unwrap();
+        assert_eq!(valid, false);
+
+        // desktop native is null but desktop universal is empty string
+        let listing = reg
+            .get_listing(
+                "107bb20463699c4e614d3a2fb7b961e66f48774cb8f6d6c1aee789853280972c".to_string(),
+            )
+            .unwrap();
+        assert_eq!(listing.desktop.native, None);
+        assert_eq!(listing.desktop.universal, Some("".to_string()));
+        let valid = reg
+            .check_wallet(
+                "107bb20463699c4e614d3a2fb7b961e66f48774cb8f6d6c1aee789853280972c".to_string(),
+                Platform::Desktop,
+            )
+            .unwrap();
+        assert_eq!(valid, false);
+
+        // mobile native is empty but mobile universal is null
+        let listing = reg
+            .get_listing(
+                "23db748bbf7ba1e737921bee04f54d53356e95533e0ed66c39113324873294e7".to_string(),
+            )
+            .unwrap();
+        assert_eq!(listing.mobile.native, Some("".to_string()));
+        assert_eq!(listing.mobile.universal, None);
+        let valid = reg
+            .check_wallet(
+                "23db748bbf7ba1e737921bee04f54d53356e95533e0ed66c39113324873294e7".to_string(),
+                Platform::Mobile,
+            )
+            .unwrap();
+        assert_eq!(valid, false);
     }
 }
