@@ -1,6 +1,9 @@
 # Changelog
 ## [Unreleased]
+
+## [v0.0.15-alpha] - 2022-1-19
 - Add secure secret storage option
+- Update Cronos Play Application Form link
 
 ## [v0.0.14-alpha] - 2022-12-15
 - Add chain-id for DynamicContract send
