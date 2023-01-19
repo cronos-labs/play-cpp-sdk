@@ -125,12 +125,16 @@ run_dynamic:
 	. ./.env && export LD_LIBRARY_PATH=$(PWD)/lib && ./bin/demo && ./build/demo
 
 run_examples:
-	./build/new_wallet
-	./build/restore_wallet
-	. .env && ./build/get_erc20_transfer_history_blocking
-	. .env && ./build/get_erc721_transfer_history_blocking
-	./build/get_tokens_blocking
-	./build/get_token_transfers_blocking
+	./build/examples/new_wallet
+	./build/examples/restore_wallet
+	# . .env && ./build/examples/get_erc20_transfer_history_blocking
+	# . .env && ./build/examples/get_erc721_transfer_history_blocking
+	./build/examples/get_tokens_blocking
+	./build/examples/get_token_transfers_blocking
+	./build/examples/get_token_transfers_blocking
+	./build/examples/wallet_connect
+	./build/examples/unit
+	./build/examples/get_wallet
 
 clean:
 	rm -rf easywsclient.o bin build
