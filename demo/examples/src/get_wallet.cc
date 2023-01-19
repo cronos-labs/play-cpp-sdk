@@ -54,20 +54,29 @@ int main(int argc, char *argv[]) {
     WalletEntry wallet = get_wallet(
         true, "",
         "f2436c67184f158d1beda5df53298ee84abfc367581e4505134b5bcf5f46697d");
-
     assert(wallet.name == "Crypto.com | DeFi Wallet");
+    assert(wallet.mobile_native_link == "cryptowallet:");
+    assert(wallet.mobile_universal_link == "https://wallet.crypto.com");
+    assert(wallet.desktop_native_link == "cryptowallet:");
+    assert(wallet.desktop_universal_link == "");
 
     wallet = get_wallet(
         true, "",
         "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96");
-
     assert(wallet.name == "MetaMask");
+    assert(wallet.mobile_native_link == "metamask:");
+    assert(wallet.mobile_universal_link == "https://metamask.app.link");
+    assert(wallet.desktop_native_link == "");
+    assert(wallet.desktop_universal_link == "");
 
     wallet = get_wallet(
         true, "",
         "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0");
-
     assert(wallet.name == "Trust Wallet");
+    assert(wallet.mobile_native_link == "trust:");
+    assert(wallet.mobile_universal_link == "https://link.trustwallet.com");
+    assert(wallet.desktop_native_link == "");
+    assert(wallet.desktop_universal_link == "");
 
     return 0;
 }
