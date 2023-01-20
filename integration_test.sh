@@ -40,3 +40,6 @@ $PWD/demo/build/examples/get_token_transfers_blocking
 $PWD/demo/build/examples/create_payment
 $PWD/demo/build/examples/wallet_connect
 $PWD/demo/build/examples/get_token_holders
+$PWD/demo/build/examples/new_wallet
+$PWD/demo/build/examples/restore_wallet
+$PWD/demo/build/examples/get_wallet
