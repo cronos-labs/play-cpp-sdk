@@ -733,7 +733,7 @@ impl From<&ERC20TokenTransferEvent> for RawTxDetail {
         };
         RawTxDetail {
             hash: format!("{:?}", tx.hash),
-            to_address: tx.to.map(|x| format!("{x}")).unwrap_or_default(),
+            to_address: tx.to.map(|x| format!("{x:?}")).unwrap_or_default(),
             from_address: format!("{:?}", tx.from),
             value: tx.value.to_string(),
             block_no,
