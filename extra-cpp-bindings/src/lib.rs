@@ -344,7 +344,7 @@ pub fn get_tokens_blocking(
 ) -> Result<Vec<RawTokenResult>> {
     let blockscout_url =
         format!("{blockscout_base_url}?module=account&action=tokenlist&address={account_address}");
-    let resp = reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<RawTokenResult>>()?;
+    let resp = reqwest::blocking::get(blockscout_url)?.json::<RawResponse<RawTokenResult>>()?;
     Ok(resp.result)
 }
 
@@ -374,7 +374,7 @@ pub fn get_token_transfers_blocking(
         }
     };
     let resp =
-        reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<RawBlockScoutTransfer>>()?;
+        reqwest::blocking::get(blockscout_url)?.json::<RawResponse<RawBlockScoutTransfer>>()?;
 
     Ok(resp.result.iter().flat_map(TryInto::try_into).collect())
 }
@@ -402,7 +402,7 @@ pub fn get_token_holders<S: AsRef<str> + std::fmt::Display>(
 ) -> Result<Vec<TokenHolderDetail>> {
     let blockscout_url =
         format!("{blockscout_base_url}?module=token&action=getTokenHolders&contractaddress={contract_address}&page={page}&offset={offset}");
-    let resp = reqwest::blocking::get(&blockscout_url)?.json::<RawResponse<TokenHolderDetail>>()?;
+    let resp = reqwest::blocking::get(blockscout_url)?.json::<RawResponse<TokenHolderDetail>>()?;
     Ok(resp.result)
 }
 
@@ -508,13 +508,13 @@ impl From<&NormalTransaction> for RawTxDetail {
             hash: tx
                 .hash
                 .value()
-                .map(|x| format!("{:?}", x))
+                .map(|x| format!("{x:?}"))
                 .unwrap_or_default(),
-            to_address: tx.to.map(|x| format!("{:?}", x)).unwrap_or_default(),
+            to_address: tx.to.map(|x| format!("{x:?}")).unwrap_or_default(),
             from_address: tx
                 .from
                 .value()
-                .map(|x| format!("{:?}", x))
+                .map(|x| format!("{x:?}"))
                 .unwrap_or_default(),
             value: tx.value.to_string(),
             block_no,
@@ -536,7 +536,7 @@ impl From<&ERC20TokenTransferEvent> for RawTxDetail {
         };
         RawTxDetail {
             hash: format!("{:?}", tx.hash),
-            to_address: tx.to.map(|x| format!("{:?}", x)).unwrap_or_default(),
+            to_address: tx.to.map(|x| format!("{x}")).unwrap_or_default(),
             from_address: format!("{:?}", tx.from),
             value: tx.value.to_string(),
             block_no,
@@ -554,7 +554,7 @@ impl From<&ERC721TokenTransferEvent> for RawTxDetail {
         };
         RawTxDetail {
             hash: format!("{:?}", tx.hash),
-            to_address: tx.to.map(|x| format!("{:?}", x)).unwrap_or_default(),
+            to_address: tx.to.map(|x| format!("{x:?}")).unwrap_or_default(),
             from_address: format!("{:?}", tx.from),
             value: tx.token_id.to_string(),
             block_no,

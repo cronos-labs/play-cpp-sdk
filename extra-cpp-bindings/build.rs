@@ -8,7 +8,7 @@ fn main() {
         .compile("game_sdk_bindings");
 
     for bridge in BRIDGES {
-        println!("cargo:rerun-if-changed={}", bridge);
+        println!("cargo:rerun-if-changed={bridge}");
     }
 
     println!("cargo:rerun-if-changed=src/pay.cc");

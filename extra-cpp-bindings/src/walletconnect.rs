@@ -153,7 +153,7 @@ async fn do_walletconnect_set_callback(
             ClientChannelMessageType::Connected => {
                 println!("Connected");
                 if let Some(info) = message.session {
-                    println!("session info: {:?}", info);
+                    println!("session info: {info:?}");
 
                     if let Ok(sessioninfo) = convert_session_info(&info) {
                         if let Some(myref) = sessioninfo.as_ref() {
@@ -167,7 +167,7 @@ async fn do_walletconnect_set_callback(
             ClientChannelMessageType::Disconnected => {
                 println!("Disconnected");
                 if let Some(info) = message.session {
-                    println!("session info: {:?}", info);
+                    println!("session info: {info:?}");
                     if let Ok(sessioninfo) = convert_session_info(&info) {
                         if let Some(myref) = sessioninfo.as_ref() {
                             cppcallback.onDisconnected(myref);
@@ -180,7 +180,7 @@ async fn do_walletconnect_set_callback(
             ClientChannelMessageType::Connecting => {
                 println!("Connecting");
                 if let Some(info) = &message.session {
-                    println!("session info: {:?}", info);
+                    println!("session info: {info:?}");
                     if let Ok(sessioninfo) = convert_session_info(info) {
                         if let Some(myref) = sessioninfo.as_ref() {
                             cppcallback.onConnecting(myref);
@@ -193,7 +193,7 @@ async fn do_walletconnect_set_callback(
             ClientChannelMessageType::Updated => {
                 println!("Updated");
                 if let Some(info) = &message.session {
-                    println!("session info: {:?}", info);
+                    println!("session info: {info:?}");
 
                     if let Ok(sessioninfo) = convert_session_info(info) {
                         if let Some(myref) = sessioninfo.as_ref() {
