@@ -162,7 +162,7 @@ impl Client {
                 "personal_sign",
                 vec![
                     format!("0x{}", hex::encode(message)),
-                    format!("{:?}", address),
+                    format!("{address:?}"),
                     // "".to_string(), // TODO is password needed?
                 ],
             )
@@ -254,13 +254,13 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         from: Address,
     ) -> Result<Signature, Self::Error> {
         let mut tx_obj = HashMap::new();
-        tx_obj.insert("from", format!("{:?}", from));
+        tx_obj.insert("from", format!("{from:?}"));
         if let Some(to) = tx.to() {
             let addr = match to {
                 NameOrAddress::Address(addr) => *addr,
                 NameOrAddress::Name(n) => self.resolve_name(n).await?,
             };
-            tx_obj.insert("to", format!("{:?}", addr));
+            tx_obj.insert("to", format!("{addr:?}"));
         }
         if let Some(data) = tx.data() {
             tx_obj.insert("data", format!("0x{}", hex::encode(data)));
@@ -268,19 +268,19 @@ impl Middleware for WCMiddleware<Provider<Client>> {
             tx_obj.insert("data", "".to_string());
         }
         if let Some(gas) = tx.gas() {
-            tx_obj.insert("gas", format!("0x{:x}", gas));
+            tx_obj.insert("gas", format!("0x{gas:x}"));
         }
         if let Some(gas_price) = tx.gas_price() {
-            tx_obj.insert("gasPrice", format!("0x{:x}", gas_price));
+            tx_obj.insert("gasPrice", format!("0x{gas_price:x}"));
         }
         if let Some(value) = tx.value() {
-            tx_obj.insert("value", format!("0x{:x}", value));
+            tx_obj.insert("value", format!("0x{value:x}"));
         }
         if let Some(nonce) = tx.nonce() {
-            tx_obj.insert("nonce", format!("0x{:x}", nonce));
+            tx_obj.insert("nonce", format!("0x{nonce:x}"));
         }
         if let Some(c) = tx.chain_id() {
-            tx_obj.insert("chainId", format!("0x{:x}", c));
+            tx_obj.insert("chainId", format!("0x{c:x}"));
         }
         // TODO: put those error cases to WCError instead of wrapping in eyre
         let tx_bytes: Bytes = self

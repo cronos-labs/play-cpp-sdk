@@ -29,7 +29,7 @@ fn print_qr(qr: &QrCode) {
             } else {
                 "\x1b[47m  \x1b[0m"
             };
-            print!("{0}", c);
+            print!("{c}");
         }
         println!();
     }
