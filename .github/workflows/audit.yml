@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - Cargo.lock
+  merge_group:
   push:
     branches:
       - main
