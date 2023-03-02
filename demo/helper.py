@@ -19,6 +19,8 @@ SOURCES = [
     "../extra-cpp-bindings/src/walletconnectcallback.cc",
     "../defi-wallet-core-rs/bindings/cpp/src/nft.cc",
     "../defi-wallet-core-rs/bindings/cpp/include/nft.h",
+    "../defi-wallet-core-rs/bindings/cpp/src/android.cc",
+    "../defi-wallet-core-rs/bindings/cpp/include/android.h",
 ]
 INCLUDE_PATH = "./sdk/include"
 LIB_PATH = "./sdk/lib"
@@ -44,11 +46,13 @@ INITIAL_SOURCES_INCLUDES = [
     '#include "extra-cpp-bindings/include/pay.h"',
     '#include "extra-cpp-bindings/include/walletconnectcallback.h"',
     '#include "defi-wallet-core-cpp/include/nft.h"',
+    '#include "defi-wallet-core-cpp/include/android.h"',
 ]
 FINAL_SOURCES_INCLUDES = [
     '#include "pay.h"',
     '#include "walletconnectcallback.h"',
     '#include "nft.h"',
+    '#include "android.h"',
 ]
 
 

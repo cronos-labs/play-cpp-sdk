@@ -1,6 +1,11 @@
 # Changelog
 ## [Unreleased]
 
+
+## [v0.0.16-alpha] - 2023-3-2
+- Update defi-wallet-core
+- Support android for secure secret storage option
+
 ## [v0.0.15-alpha] - 2022-1-19
 - Add secure secret storage option
 - Update Cronos Play Application Form link
