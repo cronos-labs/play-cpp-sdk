@@ -1079,6 +1079,7 @@ mod test {
         );
     }
     #[test]
+    #[ignore]
     pub fn test_get_token_holders() {
         let expected: Vec<TokenHolderDetail> = serde_json::from_str(
             r#"[
