@@ -8,22 +8,29 @@ license = "Apache-2.0"
 aes = "0.8"
 anyhow = "1"
 async-trait = { version = "0.1", default-features = false }
+base64 = "0.21"
+chacha20poly1305 = "0.10"
 cbc = { version = "0.1", features = ["alloc"] }
 dashmap = "5"
 ethers = { version = "1", features = ["rustls"] }
 eyre = "0.6"
 futures = "0.3"
+hkdf = "0.12"
 hmac = "0.12"
 open = "3"
 qrcodegen = "1"
 rand = "0.8"
+relay_client = { git = "https://github.com/crypto-com/WalletConnectRust", rev = "e104f0e0e95d5f2d14de63d8a627d1ccde100eb8"}
+relay_rpc = { git = "https://github.com/crypto-com/WalletConnectRust", rev = "e104f0e0e95d5f2d14de63d8a627d1ccde100eb8"}
 secrecy = "0.8"
 serde = "1"
 serde_json = "1"
+serde_with = "2"
 sha2 = "0.10"
 subtle = "2"
 thiserror = "1"
 url = { version = "2", features = ["serde"] }
+x25519-dalek = "1"
 zeroize = "1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -37,3 +44,6 @@ ws_stream_wasm = { version = "0.7" }
 
 [[example]]
 name = "web3"
+
+[[example]]
+name = "web3_v2"
