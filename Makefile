@@ -30,19 +30,7 @@ endif
 # The ndk requirement for unreal, please check
 # https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Mobile/Android/AndroidSDKRequirements/
 # https://docs.unrealengine.com/5.0/en-US/android-development-requirements-for-unreal-engine/
-#
-# NDK releases >= 23 beta3 no longer include libgcc which rust's pre-built
-# standard libraries depend on. As a workaround for newer NDKs we redirect
-# libgcc to libunwind.
-# See https://github.com/rust-lang/rust/pull/85806
-# TODO Here we only check 21 or non-21
-ifneq (,$(findstring 21,$(NDK_VERSION)))
-	RUSTFLAGS +=
-else
-	RUSTFLAGS +="-L$(shell pwd)/env/android"
-endif
 
-# RUSTFLAGS +=
 ifeq ($(UNAME), Darwin)
 # Please install NDK via Android Studio
 	NDK_HOME=$(HOME)/Library/Android/sdk/ndk/$(NDK_VERSION)
@@ -109,7 +97,7 @@ android_armv7:
 	CXX=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(TOOLCHAIN)/bin/armv7a-linux-androideabi$(API)-clang \
-	RUSTFLAGS=$(RUSTFLAGS) cargo build --target=$(TARGET) --package play-cpp-sdk --release
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_aarch64:
 	rustup target add $(TARGET)
@@ -117,7 +105,7 @@ android_aarch64:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	RUSTFLAGS=$(RUSTFLAGS) cargo build --target=$(TARGET) --package play-cpp-sdk --release
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_i686:
 	rustup target add $(TARGET)
@@ -125,7 +113,7 @@ android_i686:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_I686_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	RUSTFLAGS=$(RUSTFLAGS) cargo build --target=$(TARGET) --package play-cpp-sdk --release
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 android_x86_64:
 	rustup target add $(TARGET)
@@ -133,7 +121,7 @@ android_x86_64:
 	CXX=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang++ \
 	TARGET_AR=$(TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$(TOOLCHAIN)/bin/$(TARGET)$(API)-clang \
-	RUSTFLAGS=$(RUSTFLAGS) cargo build --target=$(TARGET) --package play-cpp-sdk --release
+	cargo build --target=$(TARGET) --package play-cpp-sdk --release
 
 ios_aarch64:
 	rustup target add $(TARGET)
