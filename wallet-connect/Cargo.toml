@@ -17,7 +17,7 @@ eyre = "0.6"
 futures = "0.3"
 hkdf = "0.12"
 hmac = "0.12"
-open = "3"
+open = "4"
 qrcodegen = "1"
 rand = "0.8"
 relay_client = { git = "https://github.com/crypto-com/WalletConnectRust", rev = "e104f0e0e95d5f2d14de63d8a627d1ccde100eb8"}
