@@ -33,6 +33,10 @@ url = { version = "2", features = ["serde"] }
 x25519-dalek = "1"
 zeroize = "1"
 
+[dev-dependencies]
+quickcheck = "1"
+quickcheck_macros = "1"
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio-tungstenite = { version = "0.18", features = ["rustls-tls-native-roots"] }
 tokio = { version = "1", features = ["rt", "macros"] }

@@ -15,7 +15,7 @@ use crate::{crypto::Key, hex};
 /// and derive a new topic and symmetric key for the pairing topic
 pub fn derive_symkey_topic(responder_public_key: &str, secret: &Key) -> Option<(Topic, Key)> {
     let mut secret_buf = [0u8; 32];
-    secret_buf.copy_from_slice(&secret.as_ref());
+    secret_buf.copy_from_slice(secret.as_ref());
     let mut client_secret = StaticSecret::from(secret_buf);
     match hex::decode(responder_public_key) {
         Ok(pk) if pk.len() == 32 => {
@@ -63,4 +63,33 @@ pub fn decode_decrypt(key: &Key, data: &str) -> Result<Vec<u8>, ()> {
     let cipher = ChaCha20Poly1305::new_from_slice(key.as_ref()).expect("correct key");
     let nonce = Nonce::clone_from_slice(&decoded[1..13]);
     cipher.decrypt(&nonce, &decoded[13..]).map_err(|_| ())
+}
+
+#[cfg(test)]
+mod test {
+    use quickcheck_macros::quickcheck;
+
+    use crate::crypto::Key;
+
+    use super::{decode_decrypt, derive_symkey_topic, encrypt_and_encode};
+
+    #[test]
+    pub fn test_derive_topic() {
+        let dapp_secret: [u8; 32] = [
+            200, 220, 234, 171, 234, 100, 13, 117, 72, 152, 79, 140, 112, 46, 98, 203, 46, 82, 181,
+            132, 149, 158, 189, 217, 78, 224, 11, 145, 159, 235, 198, 115,
+        ];
+        let key = Key::from_raw(dapp_secret);
+        let Some((topic, _)) = derive_symkey_topic("f22533e8a398c465569c04c14b853c86b63ad94ffa916861eb138819c8be475f", &key) else { panic!("can't derive topic") };
+        assert_eq!(
+            topic.as_ref(),
+            "1630ba5249b23659ee3d7e5f5561b784710bc50a0ef50869c774c831b68452d0"
+        );
+    }
+
+    #[quickcheck]
+    fn encode_decode_encrypt_decrypt(data: Vec<u8>) -> bool {
+        let key = Key::random();
+        data == decode_decrypt(&key, &encrypt_and_encode(&key, &data)).unwrap()
+    }
 }

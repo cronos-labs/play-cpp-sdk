@@ -136,7 +136,7 @@ impl ConnectionHandler for MessageHandler {
             // this case is for the session settlement and normal requests
             // (and events? TODO: check if session updates are sent here)
             (t1, Some((t2, key))) if t1 == t2 => {
-                if let Ok(plain) = decode_decrypt(&key, &message.message) {
+                if let Ok(plain) = decode_decrypt(key, &message.message) {
                     // the response to normal RPC requests (e.g. eth_sendTransaction)
                     if let Ok(response) =
                         serde_json::from_slice::<Response<serde_json::Value>>(&plain)
@@ -157,7 +157,7 @@ impl ConnectionHandler for MessageHandler {
                             let response = Response::new(request.id, true);
                             let response_str =
                                 serde_json::to_string(&response).expect("serialize response");
-                            let message = encrypt_and_encode(&key, response_str.as_bytes());
+                            let message = encrypt_and_encode(key, response_str.as_bytes());
                             // need to send a reply to the wallet
                             let _ = self
                                 .sender
