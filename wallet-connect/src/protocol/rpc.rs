@@ -90,11 +90,11 @@ fn is_zst<T>(_t: &T) -> bool {
 /// A JSON-RPC request
 /// (taken from ethers as it's not exported)
 pub struct Request<'a, T> {
-    id: u64,
+    pub id: u64,
     jsonrpc: &'a str,
     method: &'a str,
     #[serde(skip_serializing_if = "is_zst")]
-    params: T,
+    pub params: T,
 }
 
 impl<'a, T> Request<'a, T> {
@@ -154,6 +154,16 @@ pub struct Response<T> {
     /// the result of the request
     #[serde(flatten)]
     pub data: ResponseData<T>,
+}
+
+impl<T> Response<T> {
+    pub fn new(id: u64, result: T) -> Self {
+        Self {
+            id,
+            jsonrpc: "2.0".into(),
+            data: ResponseData::Success { result },
+        }
+    }
 }
 
 /// the result of the request

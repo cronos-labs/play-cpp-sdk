@@ -10,6 +10,6 @@ mod protocol;
 mod serialization;
 /// utilities for the connection URI: https://docs.walletconnect.com/tech-spec#requesting-connection
 mod uri;
-
+pub mod v2;
 pub use client::*;
 pub use protocol::*;
