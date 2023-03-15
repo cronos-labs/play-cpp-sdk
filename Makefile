@@ -16,16 +16,16 @@ else
 endif
 
 # Comment out to set your ndk version
-# r21e, for unreal 4.27 and 5
-# NDK_VERSION=21.4.7075529
-# the newest ndk version
+# r23, for unreal 4.27 and 5.0
+# NDK_VERSION=23.2.8568313
+# r25, for unreal 5.1
 # NDK_VERSION=25.1.8937393
 #
 # or set NDK_VERSION on command line
-# NDK_VERSION=21.4.7075529 make armv7-linux-androideabi
-# NDK_VERSION=21.4.7075529 make aarch64-linux-android
-# NDK_VERSION=21.4.7075529 make i686-linux-android
-# NDK_VERSION=21.4.7075529 make x86_64-linux-android
+# NDK_VERSION=23.2.8568313 make armv7-linux-androideabi
+# NDK_VERSION=23.2.8568313 make aarch64-linux-android
+# NDK_VERSION=23.2.8568313 make i686-linux-android
+# NDK_VERSION=23.2.8568313 make x86_64-linux-android
 
 # The ndk requirement for unreal, please check
 # https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Mobile/Android/AndroidSDKRequirements/
@@ -44,7 +44,7 @@ ifeq ($(UNAME), Linux)
 endif
 
 # Set this to your minSdkVersion.
-API=21
+API=26
 
 all: build_cpp
 
