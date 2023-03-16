@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         # 21.4.7075529 is needed for Unreal Engine 4.26
-        ndk_version: [25.1.8937393, 23.1.7779620]
+        ndk_version: [25.1.8937393, 23.0.7599858]
         # TODO: is x86_64-linux-android necessary to test on CI?
         target: [armv7-linux-androideabi, aarch64-linux-android, x86_64-linux-android]
     steps:

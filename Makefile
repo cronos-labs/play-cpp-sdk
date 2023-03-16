@@ -17,15 +17,15 @@ endif
 
 # Comment out to set your ndk version
 # r23, for unreal 4.27 and 5.0
-# NDK_VERSION=23.1.7779620
+# NDK_VERSION=23.0.7599858
 # r25, for unreal 5.1
 # NDK_VERSION=25.1.8937393
 #
 # or set NDK_VERSION on command line
-# NDK_VERSION=23.1.7779620 make armv7-linux-androideabi
-# NDK_VERSION=23.1.7779620 make aarch64-linux-android
-# NDK_VERSION=23.1.7779620 make i686-linux-android
-# NDK_VERSION=23.1.7779620 make x86_64-linux-android
+# NDK_VERSION=23.0.7599858 make armv7-linux-androideabi
+# NDK_VERSION=23.0.7599858 make aarch64-linux-android
+# NDK_VERSION=23.0.7599858 make i686-linux-android
+# NDK_VERSION=23.0.7599858 make x86_64-linux-android
 
 # The ndk requirement for unreal, please check
 # https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Mobile/Android/AndroidSDKRequirements/
