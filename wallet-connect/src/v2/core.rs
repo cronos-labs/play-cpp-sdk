@@ -105,6 +105,8 @@ impl ConnectionHandler for MessageHandler {
         let context = self.context.clone();
         let sender = self.sender.clone();
         // TODO: collect the JoinHandle and await them in a separate loop/task?
+        // or rewrite this whole thing, such that here it'll just push `message`
+        // onto a channel and the processing will be done in a separate task spawned elsewhere?
         tokio::spawn(async move {
             let mut session = context.session.lock().await;
             match (&message.topic, &session.pairing_topic_symkey) {
