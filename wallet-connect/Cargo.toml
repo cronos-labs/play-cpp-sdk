@@ -20,7 +20,7 @@ hmac = "0.12"
 open = "4"
 qrcodegen = "1"
 rand = "0.8"
-relay_client = { git = "https://github.com/WalletConnect/WalletConnectRust", rev = "v0.7.1", features = ["rustls"]}
+relay_client = { git = "https://github.com/WalletConnect/WalletConnectRust", rev = "v0.7.1", default-features = false, features = ["rustls"]}
 relay_rpc = { git = "https://github.com/WalletConnect/WalletConnectRust", rev = "v0.7.1"}
 secrecy = "0.8"
 serde = "1"
