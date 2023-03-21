@@ -92,101 +92,100 @@ impl MessageHandler {
     }
 }
 
-#[async_trait]
 impl ConnectionHandler for MessageHandler {
-    async fn connected(&mut self) {
+    fn connected(&mut self) {
         self.connected = true;
     }
 
-    async fn disconnected(&mut self, _frame: Option<CloseFrame<'static>>) {
+    fn disconnected(&mut self, _frame: Option<CloseFrame<'static>>) {
         self.connected = false;
     }
 
-    async fn message_received(&mut self, message: PublishedMessage) {
-        let mut session = self.context.session.lock().await;
-        match (&message.topic, &session.pairing_topic_symkey) {
-            // this case is for the session proposal
-            // so expecting the session proposal response there
-            (t, _) if t == &session.session_proposal_topic => {
-                if let Ok(plain) =
-                    decode_decrypt(&session.session_proposal_symkey, &message.message)
-                {
-                    if let Ok(response) =
-                        serde_json::from_slice::<Response<WcSessionProposeResponse>>(&plain)
+    fn message_received(&mut self, message: PublishedMessage) {
+        let context = self.context.clone();
+        let sender = self.sender.clone();
+        // TODO: collect the JoinHandle and await them in a separate loop/task?
+        tokio::spawn(async move {
+            let mut session = context.session.lock().await;
+            match (&message.topic, &session.pairing_topic_symkey) {
+                // this case is for the session proposal
+                // so expecting the session proposal response there
+                (t, _) if t == &session.session_proposal_topic => {
+                    if let Ok(plain) =
+                        decode_decrypt(&session.session_proposal_symkey, &message.message)
                     {
-                        if let Ok(r) = response.data.into_result() {
-                            // derive the new topic and symkey
-                            if let Some(t) = session.session_proposal_response(&r) {
-                                // subscribe to the new topic
-                                let _ = self
-                                    .sender
-                                    .send(ConnectorMessage::Subscribe(t.clone()))
+                        if let Ok(response) =
+                            serde_json::from_slice::<Response<WcSessionProposeResponse>>(&plain)
+                        {
+                            if let Ok(r) = response.data.into_result() {
+                                // derive the new topic and symkey
+                                if let Some(t) = session.session_proposal_response(&r) {
+                                    // subscribe to the new topic
+                                    let _ =
+                                        sender.send(ConnectorMessage::Subscribe(t.clone())).await;
+                                }
+                            }
+                            if let Some((_, sender)) = context.pending_requests.remove(&response.id)
+                            {
+                                // notify the client app that the session is being established
+                                let _ = sender.send(serde_json::Value::Null);
+                            }
+                        }
+                    }
+                }
+                // this case is for the session settlement and normal requests
+                // (and events? TODO: check if session updates are sent here)
+                (t1, Some((t2, key))) if t1 == t2 => {
+                    if let Ok(plain) = decode_decrypt(key, &message.message) {
+                        // the response to normal RPC requests (e.g. eth_sendTransaction)
+                        if let Ok(response) =
+                            serde_json::from_slice::<Response<serde_json::Value>>(&plain)
+                        {
+                            if let Some((_, sender)) = context.pending_requests.remove(&response.id)
+                            {
+                                if let Ok(value) = response.data.into_value() {
+                                    // notify the client dApp that the response is received
+                                    let _ = sender.send(value);
+                                }
+                            }
+                        } else {
+                            // the request for session settlement
+                            if let Ok(request) =
+                                serde_json::from_slice::<Request<WcSessionSettle>>(&plain)
+                            {
+                                let response = Response::new(request.id, true);
+                                let response_str =
+                                    serde_json::to_string(&response).expect("serialize response");
+                                let message = encrypt_and_encode(key, response_str.as_bytes());
+                                // need to send a reply to the wallet
+                                let _ = sender
+                                    .send(ConnectorMessage::Publish(
+                                        t1.clone(),
+                                        message,
+                                        WC_SESSION_SETTLE_RESPONSE_TAG,
+                                    ))
                                     .await;
+                                session.session_settle(request.params);
+                                session.connected = true;
+                                // notify the client dApp that the session is settled
+                                context.session_pending_notify.notify_waiters();
                             }
-                        }
-                        if let Some((_, sender)) =
-                            self.context.pending_requests.remove(&response.id)
-                        {
-                            // notify the client app that the session is being established
-                            let _ = sender.send(serde_json::Value::Null);
                         }
                     }
                 }
-            }
-            // this case is for the session settlement and normal requests
-            // (and events? TODO: check if session updates are sent here)
-            (t1, Some((t2, key))) if t1 == t2 => {
-                if let Ok(plain) = decode_decrypt(key, &message.message) {
-                    // the response to normal RPC requests (e.g. eth_sendTransaction)
-                    if let Ok(response) =
-                        serde_json::from_slice::<Response<serde_json::Value>>(&plain)
-                    {
-                        if let Some((_, sender)) =
-                            self.context.pending_requests.remove(&response.id)
-                        {
-                            if let Ok(value) = response.data.into_value() {
-                                // notify the client dApp that the response is received
-                                let _ = sender.send(value);
-                            }
-                        }
-                    } else {
-                        // the request for session settlement
-                        if let Ok(request) =
-                            serde_json::from_slice::<Request<WcSessionSettle>>(&plain)
-                        {
-                            let response = Response::new(request.id, true);
-                            let response_str =
-                                serde_json::to_string(&response).expect("serialize response");
-                            let message = encrypt_and_encode(key, response_str.as_bytes());
-                            // need to send a reply to the wallet
-                            let _ = self
-                                .sender
-                                .send(ConnectorMessage::Publish(
-                                    t1.clone(),
-                                    message,
-                                    WC_SESSION_SETTLE_RESPONSE_TAG,
-                                ))
-                                .await;
-                            session.session_settle(request.params);
-                            session.connected = true;
-                            // notify the client dApp that the session is settled
-                            self.context.session_pending_notify.notify_waiters();
-                        }
-                    }
+                _ => {
+                    // unknown topic
+                    // TODO: send back error?
                 }
             }
-            _ => {
-                // unknown topic
-                // TODO: send back error?
-            }
-        }
+        });
     }
 
-    async fn inbound_error(&mut self, error: Error) {
+    fn inbound_error(&mut self, error: Error) {
         self.last_connection_error = Some(error);
     }
 
-    async fn outbound_error(&mut self, error: Error) {
+    fn outbound_error(&mut self, error: Error) {
         self.last_connection_error = Some(error);
     }
 }
