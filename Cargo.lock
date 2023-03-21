@@ -2659,6 +2659,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonwebtoken"
+version = "8.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6971da4d9c3aa03c3d8f3ff0f4155b534aad021292003895a469716b2a230378"
+dependencies = [
+ "base64 0.21.0",
+ "pem",
+ "ring",
+ "serde",
+ "serde_json",
+ "simple_asn1",
+]
+
+[[package]]
 name = "k256"
 version = "0.11.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3000,9 +3014,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "open"
-version = "4.0.0"
+version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd61e3bf9d78956c72ee864bba52431f7f43994b21a17e9e72596a81bd61075b"
+checksum = "075c5203b3a2b698bc72c6c10b1f6263182135751d5013ea66e8a4b3d0562a43"
 dependencies = [
  "pathdiff",
 ]
@@ -3201,6 +3215,15 @@ name = "peg-runtime"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c719dcf55f09a3a7e764c6649ab594c18a177e3599c467983cdf644bfc0a4088"
+
+[[package]]
+name = "pem"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8835c273a76a90455d7344889b0964598e3316e2a79ede8e36f16bdcf2228b8"
+dependencies = [
+ "base64 0.13.1",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -3709,9 +3732,8 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 [[package]]
 name = "relay_client"
 version = "0.1.0"
-source = "git+https://github.com/crypto-com/WalletConnectRust?rev=e104f0e0e95d5f2d14de63d8a627d1ccde100eb8#e104f0e0e95d5f2d14de63d8a627d1ccde100eb8"
+source = "git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.7.1#7f08502440842308cde74bb7f4cddc4bbd7d6fbc"
 dependencies = [
- "async-trait",
  "chrono",
  "futures-channel",
  "futures-util",
@@ -3725,18 +3747,20 @@ dependencies = [
  "tokio-stream",
  "tokio-tungstenite 0.18.0",
  "tokio-util",
+ "url",
 ]
 
 [[package]]
 name = "relay_rpc"
 version = "0.1.0"
-source = "git+https://github.com/crypto-com/WalletConnectRust?rev=e104f0e0e95d5f2d14de63d8a627d1ccde100eb8#e104f0e0e95d5f2d14de63d8a627d1ccde100eb8"
+source = "git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.7.1#7f08502440842308cde74bb7f4cddc4bbd7d6fbc"
 dependencies = [
  "bs58",
  "chrono",
  "data-encoding",
  "derive_more",
  "ed25519-dalek",
+ "jsonwebtoken",
  "once_cell",
  "rand 0.7.3",
  "regex",
@@ -4325,6 +4349,18 @@ checksum = "74233d3b3b2f6d4b006dc19dee745e73e2a6bfb6f93607cd3b02bd5b00797d7c"
 dependencies = [
  "digest 0.10.6",
  "rand_core 0.6.4",
+]
+
+[[package]]
+name = "simple_asn1"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adc4e5204eb1910f40f9cfa375f6f05b68c3abac4b6fd879c8ff5e7ae8a0a085"
+dependencies = [
+ "num-bigint",
+ "num-traits",
+ "thiserror",
+ "time",
 ]
 
 [[package]]
