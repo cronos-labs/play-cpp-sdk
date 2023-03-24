@@ -1,6 +1,11 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.17-alpha] - 2023-3-24
+- Support WalletConnect 2.0 (implement)
+- Upgrade Rust to 1.68
+- Remove RUSTFLAGS and libgcc.a workaround for android r23+
+- Upgrade r21 with r23a (23.0.7599858), set minimal sdk to 26
 
 ## [v0.0.16-alpha] - 2023-3-2
 - Update defi-wallet-core

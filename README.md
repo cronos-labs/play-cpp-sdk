@@ -133,13 +133,13 @@ bindings on your own.
 2. Run `make install`, libraries and bindings will be copied into a new created folder: `install`
 
 ### Android
-1. Install android NDK (e.g. 21.4.7075529) via Android Studio
+1. Install android NDK (e.g. 23.0.7599858) via Android Studio
 2. Run make for one of the following android targets on Mac or Linux
     ``` sh
-    NDK_VERSION=21.4.7075529 make armv7-linux-androideabi
-    NDK_VERSION=21.4.7075529 make aarch64-linux-android
-    NDK_VERSION=21.4.7075529 make i686-linux-android
-    NDK_VERSION=21.4.7075529 make x86_64-linux-android
+    NDK_VERSION=23.0.7599858 make armv7-linux-androideabi
+    NDK_VERSION=23.0.7599858 make aarch64-linux-android
+    NDK_VERSION=23.0.7599858 make i686-linux-android
+    NDK_VERSION=23.0.7599858 make x86_64-linux-android
     ```
 3. Run `make install`, libraries and bindings will be copied into a new created folder: `install`
 
