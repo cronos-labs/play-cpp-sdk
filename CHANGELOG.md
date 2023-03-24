@@ -2,7 +2,7 @@
 ## [Unreleased]
 
 ## [v0.0.17-alpha] - 2023-3-24
-- Support WalletConnect 2.0 (implement)
+- Support WalletConnect 2.0 (incomplete)
 - Upgrade Rust to 1.68
 - Remove RUSTFLAGS and libgcc.a workaround for android r23+
 - Upgrade r21 with r23a (23.0.7599858), set minimal sdk to 26
