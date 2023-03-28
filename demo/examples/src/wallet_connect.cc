@@ -89,7 +89,7 @@ void UserWalletConnectCallback::onConnecting(
     print_session(sessioninfo);
     // !!! Important !!!
     // Comment out this line for actual test
-    // exit(0);
+    exit(0);
 }
 void UserWalletConnectCallback::onUpdated(
     const WalletConnectSessionInfo &sessioninfo) const {
