@@ -20,8 +20,8 @@ use async_trait::async_trait;
 use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers::{
     prelude::{
-        Address, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider, ProviderError,
-        Signature, TransactionRequest,
+        Address, BlockId, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider,
+        ProviderError, Signature, TransactionRequest,
     },
     utils::rlp,
 };
@@ -220,6 +220,54 @@ impl WCMiddleware<Provider<Client>> {
     /// Creates a new wrapper for `ethers` middleware
     pub fn new(client: Client) -> Self {
         WCMiddleware(Provider::new(client))
+    }
+    pub fn with_sender(self, address: impl Into<Address>) -> Self {
+        WCMiddleware(self.0.with_sender(address))
+    }
+
+    pub async fn wc_send_transaction(
+        &self,
+        tx: &TypedTransaction,
+        // block: Option<BlockId>,
+    ) -> Result<Bytes, WCError<Provider<Client>>> {
+        let mut tx_obj = HashMap::new();
+        if let Some(from) = self.0.default_sender() {
+            tx_obj.insert("from", format!("{from:?}"));
+        }
+        if let Some(to) = tx.to() {
+            let addr = match to {
+                NameOrAddress::Address(addr) => *addr,
+                NameOrAddress::Name(n) => self.resolve_name(n).await?,
+            };
+            tx_obj.insert("to", format!("{addr:?}"));
+        }
+        if let Some(data) = tx.data() {
+            tx_obj.insert("data", format!("0x{}", hex::encode(data)));
+        } else {
+            tx_obj.insert("data", "".to_string());
+        }
+        if let Some(gas) = tx.gas() {
+            tx_obj.insert("gas", format!("0x{gas:x}"));
+        }
+        if let Some(gas_price) = tx.gas_price() {
+            tx_obj.insert("gasPrice", format!("0x{gas_price:x}"));
+        }
+        if let Some(value) = tx.value() {
+            tx_obj.insert("value", format!("0x{value:x}"));
+        }
+        if let Some(nonce) = tx.nonce() {
+            tx_obj.insert("nonce", format!("0x{nonce:x}"));
+        }
+        if let Some(c) = tx.chain_id() {
+            tx_obj.insert("chainId", format!("0x{c:x}"));
+        }
+        // TODO: put those error cases to WCError instead of wrapping in eyre
+        let tx_bytes: Bytes = self
+            .0
+            .request("eth_sendTransaction", vec![tx_obj])
+            .await
+            .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))?;
+        Ok(tx_bytes)
     }
 }
 

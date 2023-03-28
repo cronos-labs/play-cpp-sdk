@@ -393,6 +393,13 @@ mod ffi {
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
+        /// send cronos(eth) eip155 transaction
+        pub fn send_eip155_transaction_blocking(
+            &mut self,
+            info: &WalletConnectTxEip155,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
         /// returns the transactions of a given address.
         /// The API key can be obtained from https://cronoscan.com
         pub fn get_transaction_history_blocking(
