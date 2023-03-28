@@ -1195,7 +1195,7 @@ dependencies = [
  "quickcheck_macros",
  "rand 0.8.5",
  "relay_client",
- "relay_rpc",
+ "relay_rpc 0.1.0 (git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.10.0)",
  "secrecy",
  "serde",
  "serde_json",
@@ -3738,7 +3738,7 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "pin-project",
- "relay_rpc",
+ "relay_rpc 0.1.0 (git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.7.1)",
  "serde",
  "serde_json",
  "serde_qs",
@@ -3748,6 +3748,26 @@ dependencies = [
  "tokio-tungstenite 0.18.0",
  "tokio-util",
  "url",
+]
+
+[[package]]
+name = "relay_rpc"
+version = "0.1.0"
+source = "git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.10.0#d27ecc20ec91c37fd357743646f52cf666df5391"
+dependencies = [
+ "bs58",
+ "chrono",
+ "data-encoding",
+ "derive_more",
+ "ed25519-dalek",
+ "jsonwebtoken",
+ "once_cell",
+ "rand 0.7.3",
+ "regex",
+ "serde",
+ "serde-aux",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
