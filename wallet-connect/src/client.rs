@@ -20,7 +20,7 @@ use async_trait::async_trait;
 use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers::{
     prelude::{
-        Address, BlockId, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider,
+        Address, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider,
         ProviderError, Signature, TransactionRequest,
     },
     utils::rlp,
@@ -228,7 +228,6 @@ impl WCMiddleware<Provider<Client>> {
     pub async fn wc_send_transaction(
         &self,
         tx: &TypedTransaction,
-        // block: Option<BlockId>,
     ) -> Result<Bytes, WCError<Provider<Client>>> {
         let mut tx_obj = HashMap::new();
         if let Some(from) = self.0.default_sender() {

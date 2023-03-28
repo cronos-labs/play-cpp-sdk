@@ -14,7 +14,7 @@ use url::Url;
 use crate::ffi::WalletConnectSessionInfo;
 use cxx::UniquePtr;
 use ethers::prelude::{Address, Eip1559TransactionRequest, NameOrAddress, U256};
-use ethers::prelude::{Bytes, Middleware, Signature, TransactionReceipt};
+use ethers::prelude::{Bytes, Middleware, Signature};
 use ethers::types::H160;
 use eyre::eyre;
 use std::str::FromStr;
