@@ -3732,7 +3732,7 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 [[package]]
 name = "relay_client"
 version = "0.1.0"
-source = "git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.7.1#7f08502440842308cde74bb7f4cddc4bbd7d6fbc"
+source = "git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.10.0#d27ecc20ec91c37fd357743646f52cf666df5391"
 dependencies = [
  "chrono",
  "futures-channel",
@@ -3753,7 +3753,7 @@ dependencies = [
 [[package]]
 name = "relay_rpc"
 version = "0.1.0"
-source = "git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.7.1#7f08502440842308cde74bb7f4cddc4bbd7d6fbc"
+source = "git+https://github.com/WalletConnect/WalletConnectRust?rev=v0.10.0#d27ecc20ec91c37fd357743646f52cf666df5391"
 dependencies = [
  "bs58",
  "chrono",
