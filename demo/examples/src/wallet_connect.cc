@@ -89,7 +89,7 @@ void UserWalletConnectCallback::onConnecting(
     print_session(sessioninfo);
     // !!! Important !!!
     // Comment out this line for actual test
-    exit(0);
+    // exit(0);
 }
 void UserWalletConnectCallback::onUpdated(
     const WalletConnectSessionInfo &sessioninfo) const {
@@ -137,11 +137,7 @@ int main(int argc, char *argv[]) {
         } else {
             WalletConnectTxEip155 info;
             info.to = "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7";
-            info.common.gas_limit = "50000"; // gas limit
-            info.common.gas_price = "20000000000"; // gas price
             info.value = "1000000000000000000";  // 0.0001 eth
-            // info.data = rust::Vec<uint8_t>();
-            info.common.nonce = "0"; // ignore
             info.common.chainid = result.chain_id;
             rust::Vec<uint8_t> receipt =
                 client->send_eip155_transaction_blocking(

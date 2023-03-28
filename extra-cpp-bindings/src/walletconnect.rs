@@ -361,15 +361,31 @@ impl WalletconnectClient {
             .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
         let signeraddress = Address::from_slice(&address);
 
-        let tx = Eip1559TransactionRequest::new()
-            .to(NameOrAddress::Address(Address::from_str(&userinfo.to)?))
-            .data(userinfo.data.as_slice().to_vec())
-            .gas(U256::from_dec_str(&userinfo.common.gas_limit)?)
-            .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
-            .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
-            .nonce(U256::from_dec_str(&userinfo.common.nonce)?)
-            .chain_id(userinfo.common.chainid)
-            .value(U256::from_dec_str(&userinfo.value)?);
+        let mut tx = Eip1559TransactionRequest::new();
+
+        if !userinfo.to.is_empty() {
+            tx = tx.to(NameOrAddress::Address(Address::from_str(&userinfo.to)?));
+        }
+        if !userinfo.data.is_empty() {
+            tx = tx.data(userinfo.data.as_slice().to_vec());
+        }
+        if !userinfo.common.gas_limit.is_empty() {
+            tx = tx.gas(U256::from_dec_str(&userinfo.common.gas_limit)?);
+        }
+        if !userinfo.common.gas_price.is_empty() {
+            tx = tx
+                .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
+                .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?);
+        }
+        if !userinfo.common.nonce.is_empty() {
+            tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
+        }
+        if !userinfo.common.chainid == 0 {
+            tx = tx.chain_id(userinfo.common.chainid);
+        }
+        if !userinfo.value.is_empty() {
+            tx = tx.value(U256::from_dec_str(&userinfo.value)?);
+        }
         let newclient = client.clone();
         let typedtx = TypedTransaction::Eip1559(tx);
 
@@ -398,15 +414,32 @@ impl WalletconnectClient {
             .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
         let signeraddress = Address::from_slice(&address);
 
-        let tx = Eip1559TransactionRequest::new()
-            .to(NameOrAddress::Address(Address::from_str(&userinfo.to)?))
-            .data(userinfo.data.as_slice().to_vec())
-            .gas(U256::from_dec_str(&userinfo.common.gas_limit)?)
-            .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
-            .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
-            .nonce(U256::from_dec_str(&userinfo.common.nonce)?)
-            .chain_id(userinfo.common.chainid)
-            .value(U256::from_dec_str(&userinfo.value)?);
+        let mut tx = Eip1559TransactionRequest::new();
+
+        if !userinfo.to.is_empty() {
+            tx = tx.to(NameOrAddress::Address(Address::from_str(&userinfo.to)?));
+        }
+        if !userinfo.data.is_empty() {
+            tx = tx.data(userinfo.data.as_slice().to_vec());
+        }
+        if !userinfo.common.gas_limit.is_empty() {
+            tx = tx.gas(U256::from_dec_str(&userinfo.common.gas_limit)?);
+        }
+        if !userinfo.common.gas_price.is_empty() {
+            tx = tx
+                .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
+                .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?);
+        }
+        if !userinfo.common.nonce.is_empty() {
+            tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
+        }
+        if !userinfo.common.chainid == 0 {
+            tx = tx.chain_id(userinfo.common.chainid);
+        }
+        if !userinfo.value.is_empty() {
+            tx = tx.value(U256::from_dec_str(&userinfo.value)?);
+        }
+
         let newclient = client.clone();
         let typedtx = TypedTransaction::Eip1559(tx);
 
