@@ -20,8 +20,8 @@ use async_trait::async_trait;
 use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers::{
     prelude::{
-        Address, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider,
-        ProviderError, Signature, TransactionRequest,
+        Address, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider, ProviderError,
+        Signature, TransactionRequest,
     },
     utils::rlp,
 };
