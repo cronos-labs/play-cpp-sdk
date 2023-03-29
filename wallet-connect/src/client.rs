@@ -225,7 +225,7 @@ impl WCMiddleware<Provider<Client>> {
         WCMiddleware(self.0.with_sender(address))
     }
 
-    pub async fn wc_send_transaction(
+    pub async fn send_transaction(
         &self,
         tx: &TypedTransaction,
     ) -> Result<Bytes, WCError<Provider<Client>>> {

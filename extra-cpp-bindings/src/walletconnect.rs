@@ -240,7 +240,7 @@ async fn sign_typed_tx(
 
 async fn send_typed_tx(client: Client, tx: &TypedTransaction, address: Address) -> Result<Bytes> {
     let middleware = WCMiddleware::new(client).with_sender(address);
-    let receipt = middleware.wc_send_transaction(tx).await?;
+    let receipt = middleware.send_transaction(tx).await?;
     Ok(receipt)
 }
 
