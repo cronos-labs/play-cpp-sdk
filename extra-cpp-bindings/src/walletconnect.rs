@@ -398,7 +398,7 @@ impl WalletconnectClient {
         Ok(signed_tx.to_vec())
     }
 
-    /// build cronos(eth) eip155 transaction
+    /// send cronos(eth) eip155 transaction
     pub fn send_eip155_transaction_blocking(
         &mut self,
         userinfo: &crate::ffi::WalletConnectTxEip155,
