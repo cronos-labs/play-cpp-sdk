@@ -41,7 +41,8 @@ rust::Box<WalletconnectClient> make_new_client(std::string filename) {
     } else {
         rust::Box<WalletconnectClient> client = walletconnect_new_client(
             "Defi WalletConnect example.", "http://localhost:8080/",
-            rust::Vec<rust::String>(), "Defi WalletConnect Web3 Example", 338);
+            rust::Vec<rust::String>(), "Defi WalletConnect Web3 Example",
+            338); // ChainId of Cronos Testnet
         std::cout << "qrcode= " << client->get_connection_string() << std::endl;
 
         return client;
@@ -89,7 +90,7 @@ void UserWalletConnectCallback::onConnecting(
     print_session(sessioninfo);
     // !!! Important !!!
     // Comment out this line for actual test
-    exit(0);
+    // exit(0);
 }
 void UserWalletConnectCallback::onUpdated(
     const WalletConnectSessionInfo &sessioninfo) const {
@@ -126,7 +127,7 @@ int main(int argc, char *argv[]) {
         outfile.close();
 
         // sign
-        bool test_personal = false;
+        bool test_personal = true;
         if (test_personal) {
             /* message signing */
             rust::Vec<uint8_t> sig1 = client->sign_personal_blocking(
@@ -136,15 +137,20 @@ int main(int argc, char *argv[]) {
             std::cout << "signature length=" << sig1.size() << std::endl;
         } else {
             WalletConnectTxEip155 info;
-            info.to = "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7";
-            info.value = "1000000000000000000";  // 0.0001 eth
+            // send to the connected wallet itself
+            // To send to other wallet address, simply
+            // info.to = "0x....";
+            info.to = rust::String(
+                std::string("0x") +
+                address_to_hex_string(result.addresses[0].address).c_str());
+            info.value = "1000000000000000000"; // 1 TCRO
             info.common.chainid = result.chain_id;
             rust::Vec<uint8_t> receipt =
                 client->send_eip155_transaction_blocking(
                     info, result.addresses[0].address);
 
-            std::cout << "transaction_hash=" << bytes_to_hex_string(receipt).c_str()
-                      << std::endl;
+            std::cout << "transaction_hash="
+                      << bytes_to_hex_string(receipt).c_str() << std::endl;
         }
 
         // waiting update or disconnect
