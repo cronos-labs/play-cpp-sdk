@@ -14,7 +14,7 @@ use url::Url;
 use crate::ffi::WalletConnectSessionInfo;
 use cxx::UniquePtr;
 use ethers::prelude::{Address, Eip1559TransactionRequest, NameOrAddress, U256};
-use ethers::prelude::{Middleware, Signature};
+use ethers::prelude::{Middleware, Signature, TxHash};
 use ethers::types::H160;
 use eyre::eyre;
 use std::str::FromStr;
@@ -238,6 +238,12 @@ async fn sign_typed_tx(
     Ok(signature)
 }
 
+async fn send_typed_tx(client: Client, tx: TypedTransaction, address: Address) -> Result<TxHash> {
+    let middleware = WCMiddleware::new(client).with_sender(address);
+    let receipt = middleware.send_transaction(tx, None).await?.tx_hash();
+    Ok(receipt)
+}
+
 impl WalletconnectClient {
     /// sign a message
     pub fn sign_personal_blocking(
@@ -355,15 +361,31 @@ impl WalletconnectClient {
             .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
         let signeraddress = Address::from_slice(&address);
 
-        let tx = Eip1559TransactionRequest::new()
-            .to(NameOrAddress::Address(Address::from_str(&userinfo.to)?))
-            .data(userinfo.data.as_slice().to_vec())
-            .gas(U256::from_dec_str(&userinfo.common.gas_limit)?)
-            .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
-            .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
-            .nonce(U256::from_dec_str(&userinfo.common.nonce)?)
-            .chain_id(userinfo.common.chainid)
-            .value(U256::from_dec_str(&userinfo.value)?);
+        let mut tx = Eip1559TransactionRequest::new();
+
+        if !userinfo.to.is_empty() {
+            tx = tx.to(NameOrAddress::Address(Address::from_str(&userinfo.to)?));
+        }
+        if !userinfo.data.is_empty() {
+            tx = tx.data(userinfo.data.as_slice().to_vec());
+        }
+        if !userinfo.common.gas_limit.is_empty() {
+            tx = tx.gas(U256::from_dec_str(&userinfo.common.gas_limit)?);
+        }
+        if !userinfo.common.gas_price.is_empty() {
+            tx = tx
+                .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
+                .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?);
+        }
+        if !userinfo.common.nonce.is_empty() {
+            tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
+        }
+        if !userinfo.common.chainid == 0 {
+            tx = tx.chain_id(userinfo.common.chainid);
+        }
+        if !userinfo.value.is_empty() {
+            tx = tx.value(U256::from_dec_str(&userinfo.value)?);
+        }
         let newclient = client.clone();
         let typedtx = TypedTransaction::Eip1559(tx);
 
@@ -374,6 +396,59 @@ impl WalletconnectClient {
 
         let signed_tx = &typedtx.rlp_signed(&sig);
         Ok(signed_tx.to_vec())
+    }
+
+    /// send cronos(eth) eip155 transaction
+    pub fn send_eip155_transaction_blocking(
+        &mut self,
+        userinfo: &crate::ffi::WalletConnectTxEip155,
+        address: [u8; 20],
+    ) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
+
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let signeraddress = Address::from_slice(&address);
+
+        let mut tx = Eip1559TransactionRequest::new();
+
+        if !userinfo.to.is_empty() {
+            tx = tx.to(NameOrAddress::Address(Address::from_str(&userinfo.to)?));
+        }
+        if !userinfo.data.is_empty() {
+            tx = tx.data(userinfo.data.as_slice().to_vec());
+        }
+        if !userinfo.common.gas_limit.is_empty() {
+            tx = tx.gas(U256::from_dec_str(&userinfo.common.gas_limit)?);
+        }
+        if !userinfo.common.gas_price.is_empty() {
+            tx = tx
+                .max_priority_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?)
+                .max_fee_per_gas(U256::from_dec_str(&userinfo.common.gas_price)?);
+        }
+        if !userinfo.common.nonce.is_empty() {
+            tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
+        }
+        if !userinfo.common.chainid == 0 {
+            tx = tx.chain_id(userinfo.common.chainid);
+        }
+        if !userinfo.value.is_empty() {
+            tx = tx.value(U256::from_dec_str(&userinfo.value)?);
+        }
+
+        let newclient = client.clone();
+        let typedtx = TypedTransaction::Eip1559(tx);
+
+        let tx_bytes = self
+            .rt
+            .block_on(send_typed_tx(newclient, typedtx, signeraddress))
+            .map_err(|e| anyhow!("send_typed_transaction error {}", e.to_string()))?;
+
+        Ok(tx_bytes.0.to_vec())
     }
 
     fn get_signed_tx_raw_bytes(

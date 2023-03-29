@@ -41,7 +41,8 @@ rust::Box<WalletconnectClient> make_new_client(std::string filename) {
     } else {
         rust::Box<WalletconnectClient> client = walletconnect_new_client(
             "Defi WalletConnect example.", "http://localhost:8080/",
-            rust::Vec<rust::String>(), "Defi WalletConnect Web3 Example", 25);
+            rust::Vec<rust::String>(), "Defi WalletConnect Web3 Example",
+            338); // ChainId of Cronos Testnet
         std::cout << "qrcode= " << client->get_connection_string() << std::endl;
 
         return client;
@@ -136,22 +137,20 @@ int main(int argc, char *argv[]) {
             std::cout << "signature length=" << sig1.size() << std::endl;
         } else {
             WalletConnectTxEip155 info;
+            // send to the connected wallet itself
+            // To send to other wallet address, simply
+            // info.to = "0x....";
             info.to = rust::String(
                 std::string("0x") +
                 address_to_hex_string(result.addresses[0].address).c_str());
-            info.common.gas_limit = "21000"; // gas limit
-            info.common.gas_price = "10000"; // gas price
-            info.value = "100000000000000";  // 0.0001 eth
-            info.data = rust::Vec<uint8_t>();
-            info.common.nonce = "1";
-            info.common.chainid = 777;
-            rust::Vec<uint8_t> signedtx =
-                client->sign_eip155_transaction_blocking(
+            info.value = "1000000000000000000"; // 1 TCRO
+            info.common.chainid = result.chain_id;
+            rust::Vec<uint8_t> receipt =
+                client->send_eip155_transaction_blocking(
                     info, result.addresses[0].address);
 
-            std::cout << "signedtx=" << bytes_to_hex_string(signedtx).c_str()
-                      << std::endl;
-            std::cout << "signedtx length=" << signedtx.size() << std::endl;
+            std::cout << "transaction_hash="
+                      << bytes_to_hex_string(receipt).c_str() << std::endl;
         }
 
         // waiting update or disconnect
