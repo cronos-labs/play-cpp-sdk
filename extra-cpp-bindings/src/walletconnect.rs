@@ -14,7 +14,7 @@ use url::Url;
 use crate::ffi::WalletConnectSessionInfo;
 use cxx::UniquePtr;
 use ethers::prelude::{Address, Eip1559TransactionRequest, NameOrAddress, U256};
-use ethers::prelude::{Bytes, Middleware, Signature};
+use ethers::prelude::{Middleware, Signature, TxHash};
 use ethers::types::H160;
 use eyre::eyre;
 use std::str::FromStr;
@@ -238,9 +238,9 @@ async fn sign_typed_tx(
     Ok(signature)
 }
 
-async fn send_typed_tx(client: Client, tx: &TypedTransaction, address: Address) -> Result<Bytes> {
+async fn send_typed_tx(client: Client, tx: TypedTransaction, address: Address) -> Result<TxHash> {
     let middleware = WCMiddleware::new(client).with_sender(address);
-    let receipt = middleware.send_transaction(tx).await?;
+    let receipt = middleware.send_transaction(tx, None).await?.tx_hash();
     Ok(receipt)
 }
 
@@ -445,10 +445,10 @@ impl WalletconnectClient {
 
         let tx_bytes = self
             .rt
-            .block_on(send_typed_tx(newclient, &typedtx, signeraddress))
+            .block_on(send_typed_tx(newclient, typedtx, signeraddress))
             .map_err(|e| anyhow!("send_typed_transaction error {}", e.to_string()))?;
 
-        Ok(tx_bytes.to_vec())
+        Ok(tx_bytes.0.to_vec())
     }
 
     fn get_signed_tx_raw_bytes(
