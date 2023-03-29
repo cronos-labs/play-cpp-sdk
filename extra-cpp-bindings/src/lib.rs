@@ -387,6 +387,7 @@ mod ffi {
         pub fn erc1155_approve(&mut self, info: &WalletConnectErc1155Approve) -> Result<Vec<u8>>;
 
         /// build cronos(eth) eip155 transaction
+        /// Supported Wallets: Trust Wallet, Crypto.com Desktop Defi Wallet
         pub fn sign_eip155_transaction_blocking(
             &mut self,
             info: &WalletConnectTxEip155,
@@ -394,6 +395,7 @@ mod ffi {
         ) -> Result<Vec<u8>>;
 
         /// send cronos(eth) eip155 transaction
+        /// Supported Wallets: MetaMask and Crypto.com Mobile Defi Wallet
         pub fn send_eip155_transaction_blocking(
             &mut self,
             info: &WalletConnectTxEip155,
