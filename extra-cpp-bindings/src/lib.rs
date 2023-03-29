@@ -395,7 +395,7 @@ mod ffi {
         ) -> Result<Vec<u8>>;
 
         /// send cronos(eth) eip155 transaction
-        /// Supported Wallets: MetaMask and Crypto.com Mobile Defi Wallet
+        /// Supported Wallets: Trust Wallet, MetaMask and Crypto.com Mobile Defi Wallet
         pub fn send_eip155_transaction_blocking(
             &mut self,
             info: &WalletConnectTxEip155,
