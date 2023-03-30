@@ -1,6 +1,9 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.18-alpha] - 2023-3-30
+- Add eth_sendTransaction support for WalletConnect 1.0
+
 ## [v0.0.17-alpha] - 2023-3-24
 - Support WalletConnect 2.0 (incomplete)
 - Upgrade Rust to 1.68
