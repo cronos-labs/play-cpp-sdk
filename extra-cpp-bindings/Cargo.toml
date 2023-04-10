@@ -31,5 +31,5 @@ cxx-build = "1"
 
 [dev-dependencies]
 sha2 = "0.10"
-hex-literal="0.3"
+hex-literal="0.4"
 uuid = "1"
