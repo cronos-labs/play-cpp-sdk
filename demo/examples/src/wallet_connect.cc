@@ -10,6 +10,7 @@
 #include <sstream>
 #include <chrono>
 #include <thread>
+using namespace org::defi_wallet_core;
 using namespace com::crypto::game_sdk;
 using namespace org::defi_wallet_core;
 
@@ -146,6 +147,16 @@ int main(int argc, char *argv[]) {
 
         // send transaction
         if (test_basic) {
+            std::cout << "Get transaction_receipt..." << std::endl;
+
+            rust::String tx_receipt = get_eth_transaction_receipt_blocking(
+                "d6dcb26d14f27ce8ae9b394fdecf02d48f5f6f7aea9a159fc0a8114c"
+                "26efe2ef",
+                "https://evm-t3.cronos.org");
+
+            std::cout << "transaction_receipt=" << tx_receipt.c_str()
+                      << std::endl;
+
             WalletConnectTxEip155 info;
             // send to the connected wallet itself
             // To send to other wallet address, simply
@@ -155,12 +166,18 @@ int main(int argc, char *argv[]) {
                 address_to_hex_string(result.addresses[0].address).c_str());
             info.value = "1000000000000000000"; // 1 TCRO
             info.common.chainid = result.chain_id;
-            rust::Vec<uint8_t> receipt =
+            rust::Vec<uint8_t> tx_hash =
                 client->send_eip155_transaction_blocking(
                     info, result.addresses[0].address);
 
             std::cout << "transaction_hash="
-                      << bytes_to_hex_string(receipt).c_str() << std::endl;
+                      << bytes_to_hex_string(tx_hash).c_str() << std::endl;
+
+            tx_receipt = get_eth_transaction_receipt_blocking(
+                tx_hash, "https://evm-t3.cronos.org");
+
+            std::cout << "transaction_receipt=" << tx_receipt.c_str()
+                      << std::endl;
         }
 
         // send contract transaction
