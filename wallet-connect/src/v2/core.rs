@@ -1,5 +1,21 @@
 use std::{sync::Arc, time::Duration};
 
+use super::{
+    crypto::{decode_decrypt, encrypt_and_encode},
+    protocol::{
+        WcSessionDelete, WcSessionExtend, WcSessionPing, WcSessionProposeResponse,
+        WcSessionRequest, WcSessionSettle, WcSessionUpdate, WC_SESSION_DELETE_RESPONSE_TAG,
+        WC_SESSION_EVENT_RESPONSE_TAG, WC_SESSION_EXTEND_RESPONSE_TAG,
+        WC_SESSION_PING_REQUEST_METHOD, WC_SESSION_PING_REQUEST_TAG, WC_SESSION_PING_RESPONSE_TAG,
+        WC_SESSION_PROPOSE_REQUEST_METHOD, WC_SESSION_PROPOSE_REQUEST_TAG,
+        WC_SESSION_REQUEST_METHOD, WC_SESSION_REQUEST_TAG, WC_SESSION_SETTLE_RESPONSE_TAG,
+        WC_SESSION_UPDATE_RESPONSE_TAG,
+    },
+    session::SessionInfo,
+};
+use crate::crypto::Key;
+use crate::v2::WcSessionPropose;
+use crate::{v2::WcSessionEvent, ClientError, Request, Response};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use ethers::providers::JsonRpcClient;
@@ -12,18 +28,6 @@ use relay_rpc::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::{mpsc, oneshot, Mutex, Notify};
-
-use crate::{ClientError, Request, Response};
-
-use super::{
-    crypto::{decode_decrypt, encrypt_and_encode},
-    protocol::{
-        WcSessionProposeResponse, WcSessionRequest, WcSessionSettle,
-        WC_SESSION_PROPOSE_REQUEST_METHOD, WC_SESSION_PROPOSE_REQUEST_TAG,
-        WC_SESSION_REQUEST_METHOD, WC_SESSION_REQUEST_TAG, WC_SESSION_SETTLE_RESPONSE_TAG,
-    },
-    session::SessionInfo,
-};
 
 /// This `Context` holds the wallet-connect client state
 #[derive(Debug)]
@@ -66,6 +70,174 @@ impl Context {
             subscriptions: DashMap::new(),
         }
     }
+
+    async fn send_response<T: Serialize>(
+        &self,
+        argresponse: Response<T>,
+        sender: &mpsc::Sender<ConnectorMessage>,
+        tag: u32,
+    ) -> eyre::Result<()> {
+        let response_str = serde_json::to_string(&argresponse)?;
+        let session = self.session.lock().await;
+        if let Some((t, key)) = &session.pairing_topic_symkey {
+            let message = encrypt_and_encode(key, response_str.as_bytes());
+            let _ = sender
+                .send(ConnectorMessage::Publish(t.clone(), message, tag))
+                .await;
+        }
+        Ok(())
+    }
+    async fn send_callback<T: Serialize>(
+        &self,
+        message: T,
+        callback_sender: Option<mpsc::UnboundedSender<String>>,
+    ) -> eyre::Result<()> {
+        let request_str = serde_json::to_string(&message)?;
+        if let Some(sender) = callback_sender {
+            sender.send(request_str).unwrap();
+        }
+        Ok(())
+    }
+
+    async fn handle_session_proposal_response(
+        &self,
+        plain: &[u8],
+        sender: &mpsc::Sender<ConnectorMessage>,
+    ) -> eyre::Result<()> {
+        let response = serde_json::from_slice::<Response<WcSessionProposeResponse>>(plain)?;
+        {
+            let response_json = serde_json::to_value(&response)?;
+            if let Ok(r) = response.data.into_result() {
+                let mut session = self.session.lock().await;
+                if let Some(t) = session.session_proposal_response(&r) {
+                    let _ = sender.send(ConnectorMessage::Subscribe(t.clone())).await;
+                }
+            }
+            if let Some((_, sender)) = self.pending_requests.remove(&response.id) {
+                let _ = sender.send(response_json);
+            }
+        }
+        Ok(())
+    }
+
+    async fn handle_session_settle_request(
+        &self,
+        plain: &[u8],
+        sender: &mpsc::Sender<ConnectorMessage>,
+    ) -> eyre::Result<()> {
+        let request = serde_json::from_slice::<Request<WcSessionSettle>>(plain)?;
+        {
+            let response = Response::new(request.id, true);
+
+            self.send_response(response, sender, WC_SESSION_SETTLE_RESPONSE_TAG)
+                .await?;
+            let mut session = self.session.lock().await;
+            session.session_settle(request.params);
+            session.connected = true;
+            self.session_pending_notify.notify_waiters();
+        }
+        Ok(())
+    }
+
+    async fn handle_session_event_request(
+        &self,
+        plain: &[u8],
+        sender: &mpsc::Sender<ConnectorMessage>,
+        callback_sender: Option<mpsc::UnboundedSender<String>>,
+    ) -> eyre::Result<()> {
+        let request = serde_json::from_slice::<Request<WcSessionEvent>>(plain)?;
+        let response = Response::new(request.id, true);
+        self.send_response(response, sender, WC_SESSION_EVENT_RESPONSE_TAG)
+            .await?;
+        self.send_callback(request, callback_sender).await?;
+        Ok(())
+    }
+
+    async fn handle_session_delete_request(
+        &self,
+        plain: &[u8],
+        sender: &mpsc::Sender<ConnectorMessage>,
+        callback_sender: Option<mpsc::UnboundedSender<String>>,
+    ) -> eyre::Result<()> {
+        let request = serde_json::from_slice::<Request<WcSessionDelete>>(plain)?;
+        {
+            let mut session = self.session.lock().await;
+            session.session_delete();
+        }
+        let response = Response::new(request.id, true);
+        self.send_response(response, sender, WC_SESSION_DELETE_RESPONSE_TAG)
+            .await?;
+
+        self.send_callback(request, callback_sender).await?;
+        Ok(())
+    }
+
+    async fn handle_session_update_request(
+        &self,
+        plain: &[u8],
+        sender: &mpsc::Sender<ConnectorMessage>,
+        callback_sender: Option<mpsc::UnboundedSender<String>>,
+    ) -> eyre::Result<()> {
+        let request = serde_json::from_slice::<Request<WcSessionUpdate>>(plain)?;
+
+        {
+            let mut session = self.session.lock().await;
+            session.session_update(request.params.clone());
+        }
+
+        let response = Response::new(request.id, true);
+        self.send_response(response, sender, WC_SESSION_UPDATE_RESPONSE_TAG)
+            .await?;
+        self.send_callback(request, callback_sender).await?;
+        Ok(())
+    }
+
+    async fn handle_session_extend_request(
+        &self,
+        plain: &[u8],
+        sender: &mpsc::Sender<ConnectorMessage>,
+        callback_sender: Option<mpsc::UnboundedSender<String>>,
+    ) -> eyre::Result<()> {
+        let request = serde_json::from_slice::<Request<WcSessionExtend>>(plain)?;
+
+        {
+            let mut session = self.session.lock().await;
+            session.session_extend();
+        }
+
+        let response = Response::new(request.id, true);
+        self.send_response(response, sender, WC_SESSION_EXTEND_RESPONSE_TAG)
+            .await?;
+        self.send_callback(request, callback_sender).await?;
+        Ok(())
+    }
+
+    async fn handle_session_ping_request(
+        &self,
+        plain: &[u8],
+        sender: &mpsc::Sender<ConnectorMessage>,
+        callback_sender: Option<mpsc::UnboundedSender<String>>,
+    ) -> eyre::Result<()> {
+        let request = serde_json::from_slice::<Request<WcSessionPing>>(plain)?;
+        let response = Response::new(request.id, true);
+        self.send_response(response, sender, WC_SESSION_PING_RESPONSE_TAG)
+            .await?;
+        self.send_callback(request, callback_sender).await?;
+        Ok(())
+    }
+
+    async fn handle_normal_rpc_response(&self, plain: &[u8]) -> eyre::Result<()> {
+        let response = serde_json::from_slice::<Response<serde_json::Value>>(plain)
+            .map_err(eyre::Report::from)?;
+
+        let (_, sender) = self
+            .pending_requests
+            .remove(&response.id)
+            .ok_or_else(|| eyre::eyre!("Request not found"))?;
+        let value = response.data.into_value().map_err(eyre::Report::from)?;
+        let _ = sender.send(value);
+        Ok(())
+    }
 }
 
 /// The handler of WC 2.0 messages
@@ -78,16 +250,24 @@ struct MessageHandler {
     /// the last error if any
     /// (currently not used; for debugging purposes)
     last_connection_error: Option<Error>,
-    sender: mpsc::Sender<ConnectorMessage>,
+    sender: mpsc::Sender<ConnectorMessage>, // send queue
+
+    callback_sender: Option<mpsc::UnboundedSender<String>>, // callback
 }
 
 impl MessageHandler {
-    fn new(context: SharedContext, sender: mpsc::Sender<ConnectorMessage>) -> Self {
+    fn new(
+        context: SharedContext,
+        sender: mpsc::Sender<ConnectorMessage>,
+
+        callback_sender: Option<tokio::sync::mpsc::UnboundedSender<String>>,
+    ) -> Self {
         Self {
             context,
             connected: false,
             last_connection_error: None,
             sender,
+            callback_sender,
         }
     }
 }
@@ -101,14 +281,19 @@ impl ConnectionHandler for MessageHandler {
         self.connected = false;
     }
 
+    // TODO: collect the JoinHandle and await them in a separate loop/task?
+    // or rewrite this whole thing, such that here it'll just push `message`
+    // onto a channel and the processing will be done in a separate task spawned elsewhere?
+    //
+    // send event back to a channel (whole json)
+    // in c++ bindings, also whole json can be sent
     fn message_received(&mut self, message: PublishedMessage) {
         let context = self.context.clone();
         let sender = self.sender.clone();
-        // TODO: collect the JoinHandle and await them in a separate loop/task?
-        // or rewrite this whole thing, such that here it'll just push `message`
-        // onto a channel and the processing will be done in a separate task spawned elsewhere?
+        let callback_sender = self.callback_sender.clone();
+
         tokio::spawn(async move {
-            let mut session = context.session.lock().await;
+            let session = context.session.lock().await;
             match (&message.topic, &session.pairing_topic_symkey) {
                 // this case is for the session proposal
                 // so expecting the session proposal response there
@@ -116,62 +301,87 @@ impl ConnectionHandler for MessageHandler {
                     if let Ok(plain) =
                         decode_decrypt(&session.session_proposal_symkey, &message.message)
                     {
-                        if let Ok(response) =
-                            serde_json::from_slice::<Response<WcSessionProposeResponse>>(&plain)
-                        {
-                            if let Ok(r) = response.data.into_result() {
-                                // derive the new topic and symkey
-                                if let Some(t) = session.session_proposal_response(&r) {
-                                    // subscribe to the new topic
-                                    let _ =
-                                        sender.send(ConnectorMessage::Subscribe(t.clone())).await;
-                                }
-                            }
-                            if let Some((_, sender)) = context.pending_requests.remove(&response.id)
-                            {
-                                // notify the client app that the session is being established
-                                let _ = sender.send(serde_json::Value::Null);
-                            }
-                        }
+                        drop(session);
+                        let _ = context
+                            .handle_session_proposal_response(&plain, &sender)
+                            .await;
                     }
                 }
                 // this case is for the session settlement and normal requests
                 // (and events? TODO: check if session updates are sent here)
                 (t1, Some((t2, key))) if t1 == t2 => {
                     if let Ok(plain) = decode_decrypt(key, &message.message) {
-                        // the response to normal RPC requests (e.g. eth_sendTransaction)
-                        if let Ok(response) =
-                            serde_json::from_slice::<Response<serde_json::Value>>(&plain)
-                        {
-                            if let Some((_, sender)) = context.pending_requests.remove(&response.id)
-                            {
-                                if let Ok(value) = response.data.into_value() {
-                                    // notify the client dApp that the response is received
-                                    let _ = sender.send(value);
+                        drop(session);
+                        let plain = plain.as_slice();
+                        let plainjson = serde_json::from_slice::<serde_json::Value>(plain).unwrap();
+                        // request json
+                        // jsonrpc, id, method, params
+                        if let Some(method_value) = plainjson.get("method") {
+                            if let Some(method) = method_value.as_str() {
+                                match method {
+                                    "wc_sessionSettle" => {
+                                        let _ = context
+                                            .handle_session_settle_request(plain, &sender)
+                                            .await;
+                                    }
+
+                                    "wc_sessionUpdate" => {
+                                        let _ = context
+                                            .handle_session_update_request(
+                                                plain,
+                                                &sender,
+                                                callback_sender,
+                                            )
+                                            .await;
+                                    }
+
+                                    "wc_sessionExtend" => {
+                                        let _ = context
+                                            .handle_session_extend_request(
+                                                plain,
+                                                &sender,
+                                                callback_sender,
+                                            )
+                                            .await;
+                                    }
+
+                                    "wc_sessionPing" => {
+                                        let _ = context
+                                            .handle_session_ping_request(
+                                                plain,
+                                                &sender,
+                                                callback_sender,
+                                            )
+                                            .await;
+                                    }
+
+                                    "wc_sessionDelete" => {
+                                        let _ = context
+                                            .handle_session_delete_request(
+                                                plain,
+                                                &sender,
+                                                callback_sender,
+                                            )
+                                            .await;
+                                    }
+
+                                    "wc_sessionEvent" => {
+                                        let _ = context
+                                            .handle_session_event_request(
+                                                plain,
+                                                &sender,
+                                                callback_sender,
+                                            )
+                                            .await;
+                                    }
+
+                                    _ => (),
                                 }
                             }
                         } else {
-                            // the request for session settlement
-                            if let Ok(request) =
-                                serde_json::from_slice::<Request<WcSessionSettle>>(&plain)
-                            {
-                                let response = Response::new(request.id, true);
-                                let response_str =
-                                    serde_json::to_string(&response).expect("serialize response");
-                                let message = encrypt_and_encode(key, response_str.as_bytes());
-                                // need to send a reply to the wallet
-                                let _ = sender
-                                    .send(ConnectorMessage::Publish(
-                                        t1.clone(),
-                                        message,
-                                        WC_SESSION_SETTLE_RESPONSE_TAG,
-                                    ))
-                                    .await;
-                                session.session_settle(request.params);
-                                session.connected = true;
-                                // notify the client dApp that the session is settled
-                                context.session_pending_notify.notify_waiters();
-                            }
+                            // response json
+                            // jsonrpc, id, result
+                            let _ = context.handle_normal_rpc_response(plain).await;
                         }
                     }
                 }
@@ -227,67 +437,116 @@ impl Connector {
         session.clone()
     }
 
+    pub async fn do_request<T: Serialize>(
+        &self,
+        topic: Topic,
+        key: &Key,
+        method: &str,
+        params: T,
+        tag: u32,
+    ) -> eyre::Result<serde_json::Value> {
+        let request_id = get_safe_random();
+        let req = Request::new(request_id, method, params);
+        use eyre::Context;
+        let request_str = serde_json::to_string(&req).wrap_err("serialize request")?;
+        let message = encrypt_and_encode(key, request_str.as_bytes());
+
+        let (ping_sender, ping_receiver) = oneshot::channel();
+        self.context
+            .pending_requests
+            .insert(request_id, ping_sender);
+
+        self.sender
+            .send(ConnectorMessage::Publish(
+                topic.clone(),
+                message.clone(),
+                tag,
+            ))
+            .await
+            .map_err(|e| ClientError::Eyre(eyre::eyre!(e)))?;
+        let receivedpacket = ping_receiver.await?;
+        Ok(receivedpacket)
+    }
+
+    pub async fn send_ping(&mut self) -> eyre::Result<String> {
+        let params = serde_json::json!({});
+
+        let session = self.context.session.lock().await;
+        let topickey = if let Some((topic, key)) = session.pairing_topic_symkey.as_ref() {
+            Some((topic.clone(), key.clone()))
+        } else {
+            None
+        };
+        drop(session);
+        // if pairing was established, we should have a topic + symmetric key
+        if let Some((topic, key)) = topickey {
+            let receivedpacket = self
+                .do_request(
+                    topic,
+                    &key,
+                    WC_SESSION_PING_REQUEST_METHOD,
+                    params,
+                    WC_SESSION_PING_REQUEST_TAG,
+                )
+                .await?;
+            let receivedpacket_str = serde_json::to_string(&receivedpacket)?;
+
+            Ok(receivedpacket_str)
+        } else {
+            Err(eyre::eyre!("no pairing established"))
+        }
+    }
+
     /// establishes the session
     pub async fn ensure_session(&mut self) -> eyre::Result<()> {
+        let session = self.context.session.lock().await;
         // the session proposal topic
-        let topic = self
-            .context
-            .session
-            .lock()
-            .await
-            .session_proposal_topic
-            .clone();
+        let topic = session.session_proposal_topic.clone();
         use eyre::Context;
         // subscribe to that topic
         self.sender
             .send(ConnectorMessage::Subscribe(topic.clone()))
             .await
             .wrap_err("subscribe")?;
-        // create a session proposal request
-        let session_request_id = get_safe_random();
-        let session = self.context.session.lock().await;
-        let session_request = Request::new(
-            session_request_id,
-            WC_SESSION_PROPOSE_REQUEST_METHOD,
-            session.session_proposal(),
-        );
-        let session_request_str =
-            serde_json::to_string(&session_request).expect("serialize session request");
-        let message = encrypt_and_encode(
-            &session.session_proposal_symkey,
-            session_request_str.as_bytes(),
-        );
-        // release the lock
+
+        let proposal: WcSessionPropose = session.session_proposal();
+        let key: Key = session.session_proposal_symkey.clone();
         drop(session);
-        let (proposal_sender, proposal_receiver) = oneshot::channel();
-        self.context
-            .pending_requests
-            .insert(session_request_id, proposal_sender);
-        // request for publishing the session proposal request
-        self.sender
-            .send(ConnectorMessage::Publish(
+
+        let response = self
+            .do_request(
                 topic,
-                message,
+                &key,
+                WC_SESSION_PROPOSE_REQUEST_METHOD,
+                proposal,
                 WC_SESSION_PROPOSE_REQUEST_TAG,
-            ))
-            .await
-            .wrap_err("publish")?;
-        // wait for the session proposal response
-        let _ = proposal_receiver.await;
+            )
+            .await?;
+
+        if let Some(error) = response.get("error") {
+            return Err(eyre::eyre!(
+                "EnsureSessionFail {}",
+                serde_json::to_string(&error)?
+            ));
+        }
+
         // wait for the session settle request
         self.context.session_pending_notify.notified().await;
         Ok(())
     }
 
     /// creates a new connector
-    pub async fn new_client(session: SessionInfo) -> Result<Self, Error> {
+    pub async fn new_client(
+        session: SessionInfo,
+        callback_sender: Option<tokio::sync::mpsc::UnboundedSender<String>>,
+    ) -> Result<Self, Error> {
         let mut relay_address = session.relay_server.clone().to_string();
         // remove "/"
         relay_address.pop();
         let project_id = session.project_id.clone();
         let context = Arc::new(Context::new(session));
         let (sender, mut receiver) = mpsc::channel(10);
-        let handler = MessageHandler::new(context.clone(), sender.clone());
+        let handler = MessageHandler::new(context.clone(), sender.clone(), callback_sender);
         let client = Client::new(handler);
         let key = Keypair::generate(&mut rand::thread_rng());
         let auth = AuthToken::new(AuthSubject::generate())

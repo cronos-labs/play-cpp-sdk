@@ -6,14 +6,17 @@ use ethers::types::Address;
 ///! FIXME: wc_sessionExtend
 ///! FIXME: wc_sessionEvent
 ///! FIXME: wc_sessionDelete
-///! FIXME: wc_sessionPing
+///! FIXME: wc_sessionPing OK
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 /// https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods#wc_sessionpropose
 pub const WC_SESSION_PROPOSE_REQUEST_METHOD: &str = "wc_sessionPropose";
+pub const WC_SESSION_PING_REQUEST_METHOD: &str = "wc_sessionPing";
 /// https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods#wc_sessionpropose
 pub const WC_SESSION_PROPOSE_REQUEST_TAG: u32 = 1100;
+pub const WC_SESSION_PING_REQUEST_TAG: u32 = 1114;
+
 /// Method: wc_sessionPropose
 #[derive(Serialize, Deserialize)]
 pub struct WcSessionPropose {
@@ -96,8 +99,41 @@ pub struct WcSessionSettle {
     expiry: i64,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct WcSessionUpdate {
+    pub namespaces: Namespaces,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct WcSessionEventEvent {
+    pub name: String,
+    pub data: Vec<String>,
+}
+#[derive(Serialize, Deserialize)]
+pub struct WcSessionEvent {
+    pub event: WcSessionEventEvent,
+    pub chain_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct WcSessionPing {}
+
+#[derive(Serialize, Deserialize)]
+pub struct WcSessionExtend {}
+
+#[derive(Serialize, Deserialize)]
+pub struct WcSessionDelete {
+    pub code: i64,
+    pub message: String,
+}
+
 /// https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods#wc_sessionsettle
 pub const WC_SESSION_SETTLE_RESPONSE_TAG: u32 = 1103;
+pub const WC_SESSION_UPDATE_RESPONSE_TAG: u32 = 1105;
+pub const WC_SESSION_PING_RESPONSE_TAG: u32 = 1115;
+pub const WC_SESSION_DELETE_RESPONSE_TAG: u32 = 1113;
+pub const WC_SESSION_EVENT_RESPONSE_TAG: u32 = 1111;
+pub const WC_SESSION_EXTEND_RESPONSE_TAG: u32 = 1107;
 
 /// The peer metadata
 #[derive(Serialize, Deserialize, Clone, Debug)]

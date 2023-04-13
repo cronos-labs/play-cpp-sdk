@@ -43,6 +43,8 @@ pub struct ClientOptions {
     pub required_namespaces: RequiredNamespaces,
     /// The client / dApp metadata
     pub client_meta: Metadata,
+    /// callback
+    pub callback_sender: Option<tokio::sync::mpsc::UnboundedSender<String>>,
 }
 
 /// The WalletConnect 2.0 client
@@ -63,7 +65,7 @@ impl Client {
             opts.required_namespaces,
             opts.client_meta,
         );
-        let connector = Connector::new_client(session).await?;
+        let connector = Connector::new_client(session, opts.callback_sender).await?;
         Ok(Client {
             connection: Arc::new(RwLock::new(connector)),
         })
@@ -93,6 +95,11 @@ impl Client {
             .await
             .namespaces
             .ok_or_else(|| eyre!("No namespaces in session info"))
+    }
+
+    pub async fn send_ping(&mut self) -> Result<String, eyre::Error> {
+        let mut connection = self.connection.write().await;
+        connection.send_ping().await
     }
 
     /// Send a request to sign a message as per https://eips.ethereum.org/EIPS/eip-1271
