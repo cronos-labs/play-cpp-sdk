@@ -22,7 +22,7 @@ use ffi::{
 use qrcodegen::QrCode;
 use qrcodegen::QrCodeEcc;
 use serde::{Deserialize, Serialize};
-use walletconnect::WalletconnectClient;
+use walletconnect::{new_jsonrpc_method, Method, WalletconnectClient};
 
 #[cxx::bridge(namespace = "com::crypto::game_sdk")]
 mod ffi {
@@ -348,7 +348,7 @@ mod ffi {
 
         /// setup callback
         pub fn setup_callback_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             usercallback: UniquePtr<WalletConnectCallback>,
         ) -> Result<()>;
         /// create or restore a session
@@ -357,39 +357,67 @@ mod ffi {
             self: &mut WalletconnectClient,
         ) -> Result<WalletConnectEnsureSessionResult>;
         /// get connection string for qrcode
-        pub fn get_connection_string(&mut self) -> Result<String>;
+        pub fn get_connection_string(self: &mut WalletconnectClient) -> Result<String>;
         /// write session-info to string, which can be written to file
-        pub fn save_client(&mut self) -> Result<String>;
+        pub fn save_client(self: &mut WalletconnectClient) -> Result<String>;
         /// print qrcode in termal, for debugging
-        pub fn print_uri(&mut self) -> Result<String>;
+        pub fn print_uri(self: &mut WalletconnectClient) -> Result<String>;
         /// sign message
         pub fn sign_personal_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             message: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
-        pub fn erc20_transfer(&mut self, info: &WalletConnectErc20Transfer) -> Result<Vec<u8>>;
+        type Method;
+        pub fn new_jsonrpc_method(method: &str) -> Result<Box<Method>>;
 
-        pub fn erc721_transfer(&mut self, info: &WalletConnectErc721Transfer) -> Result<Vec<u8>>;
-
-        pub fn erc1155_transfer(&mut self, info: &WalletConnectErc1155Transfer) -> Result<Vec<u8>>;
-
-        pub fn erc1155_transfer_batch(
-            &mut self,
-            info: &WalletConnectErc1155Batch,
+        pub fn erc20_transfer(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc20Transfer,
+            method: &Method,
         ) -> Result<Vec<u8>>;
 
-        pub fn erc20_approve(&mut self, info: &WalletConnectErc20Approve) -> Result<Vec<u8>>;
+        pub fn erc721_transfer(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc721Transfer,
+            method: &Method,
+        ) -> Result<Vec<u8>>;
 
-        pub fn erc721_approve(&mut self, info: &WalletConnectErc721Approve) -> Result<Vec<u8>>;
+        pub fn erc1155_transfer(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc1155Transfer,
+            method: &Method,
+        ) -> Result<Vec<u8>>;
 
-        pub fn erc1155_approve(&mut self, info: &WalletConnectErc1155Approve) -> Result<Vec<u8>>;
+        pub fn erc1155_transfer_batch(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc1155Batch,
+            method: &Method,
+        ) -> Result<Vec<u8>>;
+
+        pub fn erc20_approve(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc20Approve,
+            method: &Method,
+        ) -> Result<Vec<u8>>;
+
+        pub fn erc721_approve(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc721Approve,
+            method: &Method,
+        ) -> Result<Vec<u8>>;
+
+        pub fn erc1155_approve(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc1155Approve,
+            method: &Method,
+        ) -> Result<Vec<u8>>;
 
         /// build cronos(eth) eip155 transaction
         /// Supported Wallets: Trust Wallet, Crypto.com Desktop Defi Wallet
         pub fn sign_eip155_transaction_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             info: &WalletConnectTxEip155,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
@@ -397,7 +425,7 @@ mod ffi {
         /// send cronos(eth) eip155 transaction
         /// Supported Wallets: Trust Wallet, MetaMask and Crypto.com Mobile Defi Wallet
         pub fn send_eip155_transaction_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             info: &WalletConnectTxEip155,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;

@@ -244,6 +244,19 @@ async fn send_typed_tx(client: Client, tx: TypedTransaction, address: Address) -
     Ok(receipt)
 }
 
+pub enum Method {
+    SignTyped,
+    SendTyped,
+}
+
+pub fn new_jsonrpc_method(method: &str) -> Result<Box<Method>> {
+    match method {
+        "eth_signTransaction" => Ok(Box::new(Method::SignTyped)),
+        "eth_sendTransaction" => Ok(Box::new(Method::SendTyped)),
+        _ => Err(anyhow!("unknown method")),
+    }
+}
+
 impl WalletconnectClient {
     /// sign a message
     pub fn sign_personal_blocking(
@@ -473,7 +486,34 @@ impl WalletconnectClient {
         let signed_tx = &typedtx.rlp_signed(&sig);
         Ok(signed_tx.to_vec())
     }
-    pub fn erc20_transfer(&mut self, info: &WalletConnectErc20Transfer) -> Result<Vec<u8>> {
+
+    fn get_sent_tx_raw_bytes(
+        &self,
+        newclient: Client,
+        signeraddress: H160,
+        typedtx: &mut TypedTransaction,
+        common: &WalletConnectTxCommon,
+    ) -> Result<Vec<u8>> {
+        let mynonce = U256::from_dec_str(&common.nonce)?;
+        typedtx.set_nonce(mynonce);
+        typedtx.set_from(signeraddress);
+        typedtx.set_chain_id(common.chainid);
+        typedtx.set_gas(U256::from_dec_str(&common.gas_limit)?);
+        typedtx.set_gas_price(U256::from_dec_str(&common.gas_price)?);
+
+        let tx_bytes = self
+            .rt
+            .block_on(send_typed_tx(newclient, typedtx.clone(), signeraddress))
+            .map_err(|e| anyhow!("send_typed_transaction error {}", e.to_string()))?;
+
+        Ok(tx_bytes.0.to_vec())
+    }
+
+    pub fn erc20_transfer(
+        &mut self,
+        info: &WalletConnectErc20Transfer,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -499,12 +539,22 @@ impl WalletconnectClient {
                     info.common.web3api_url.as_str(),
                 ))?;
 
-        let signed_tx =
-            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
-        Ok(signed_tx.to_vec())
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
     }
 
-    pub fn erc721_transfer(&mut self, info: &WalletConnectErc721Transfer) -> Result<Vec<u8>> {
+    pub fn erc721_transfer(
+        &mut self,
+        info: &WalletConnectErc721Transfer,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -530,12 +580,22 @@ impl WalletconnectClient {
                     info.common.web3api_url.as_str(),
                 ))?;
 
-        let signed_tx =
-            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
-        Ok(signed_tx.to_vec())
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
     }
 
-    pub fn erc1155_transfer(&mut self, info: &WalletConnectErc1155Transfer) -> Result<Vec<u8>> {
+    pub fn erc1155_transfer(
+        &mut self,
+        info: &WalletConnectErc1155Transfer,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -562,12 +622,22 @@ impl WalletconnectClient {
                     },
                     info.common.web3api_url.as_str(),
                 ))?;
-        let signed_tx =
-            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
-        Ok(signed_tx.to_vec())
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
     }
 
-    pub fn erc20_approve(&mut self, info: &WalletConnectErc20Approve) -> Result<Vec<u8>> {
+    pub fn erc20_approve(
+        &mut self,
+        info: &WalletConnectErc20Approve,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -593,12 +663,22 @@ impl WalletconnectClient {
                     info.common.web3api_url.as_str(),
                 ))?;
 
-        let signed_tx =
-            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
-        Ok(signed_tx.to_vec())
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
     }
 
-    pub fn erc721_approve(&mut self, info: &WalletConnectErc721Approve) -> Result<Vec<u8>> {
+    pub fn erc721_approve(
+        &mut self,
+        info: &WalletConnectErc721Approve,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -624,12 +704,22 @@ impl WalletconnectClient {
                     info.common.web3api_url.as_str(),
                 ))?;
 
-        let signed_tx =
-            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
-        Ok(signed_tx.to_vec())
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
     }
 
-    pub fn erc1155_approve(&mut self, info: &WalletConnectErc1155Approve) -> Result<Vec<u8>> {
+    pub fn erc1155_approve(
+        &mut self,
+        info: &WalletConnectErc1155Approve,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -654,13 +744,22 @@ impl WalletconnectClient {
                     info.common.web3api_url.as_str(),
                 ))?;
 
-        let signed_tx =
-            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
-
-        Ok(signed_tx.to_vec())
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
     }
 
-    pub fn erc1155_transfer_batch(&mut self, info: &WalletConnectErc1155Batch) -> Result<Vec<u8>> {
+    pub fn erc1155_transfer_batch(
+        &mut self,
+        info: &WalletConnectErc1155Batch,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
@@ -688,9 +787,14 @@ impl WalletconnectClient {
             ),
         )?;
 
-        let signed_tx =
-            self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?;
-
-        Ok(signed_tx.to_vec())
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
     }
 }
