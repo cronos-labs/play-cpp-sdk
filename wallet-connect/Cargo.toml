@@ -12,7 +12,7 @@ base64 = "0.21"
 chacha20poly1305 = "0.10"
 cbc = { version = "0.1", features = ["alloc"] }
 dashmap = "5"
-ethers = { version = "1", features = ["rustls"] }
+ethers = { version = "2", features = ["rustls"] }
 eyre = "0.6"
 futures = "0.3"
 hkdf = "0.12"

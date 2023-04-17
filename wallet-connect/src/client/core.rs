@@ -171,7 +171,7 @@ impl JsonRpcClient for Connector {
 
     /// Sends a POST request with the provided method and the params serialized as JSON
     /// over HTTP
-    async fn request<T: Serialize + Send + Sync, R: DeserializeOwned>(
+    async fn request<T: Serialize + Send + Sync, R: DeserializeOwned + Send>(
         &self,
         method: &str,
         params: T,
