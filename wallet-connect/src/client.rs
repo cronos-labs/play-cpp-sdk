@@ -20,8 +20,9 @@ use async_trait::async_trait;
 use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers::{
     prelude::{
-        Address, BlockId, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress,
-        PendingTransaction, Provider, ProviderError, Signature, TransactionRequest,
+        Address, BlockId, Bytes, JsonRpcClient, JsonRpcError, Middleware, MiddlewareError,
+        NameOrAddress, PendingTransaction, Provider, ProviderError, RpcError, Signature,
+        TransactionRequest,
     },
     utils::rlp,
 };
@@ -179,6 +180,9 @@ impl Client {
 pub enum ClientError {
     #[error("{0}")]
     Eyre(#[from] eyre::Report),
+    #[error(transparent)]
+    /// Thrown if the response could not be parsed
+    JsonRpcError(#[from] JsonRpcError),
     #[error("Deserialization Error: {err}. Response: {text}")]
     /// Serde JSON Error
     SerdeJson {
@@ -193,6 +197,23 @@ impl From<ClientError> for ProviderError {
     }
 }
 
+impl RpcError for ClientError {
+    fn as_error_response(&self) -> Option<&JsonRpcError> {
+        if let ClientError::JsonRpcError(err) = self {
+            Some(err)
+        } else {
+            None
+        }
+    }
+
+    fn as_serde_error(&self) -> Option<&serde_json::Error> {
+        match self {
+            ClientError::SerdeJson { err, .. } => Some(err),
+            _ => None,
+        }
+    }
+}
+
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl JsonRpcClient for Client {
@@ -200,7 +221,7 @@ impl JsonRpcClient for Client {
 
     /// Sends a POST request with the provided method and the params serialized as JSON
     /// over HTTP
-    async fn request<T: Serialize + Send + Sync + std::fmt::Debug, R: DeserializeOwned>(
+    async fn request<T: Serialize + Send + Sync + std::fmt::Debug, R: DeserializeOwned + Send>(
         &self,
         method: &str,
         params: T,
@@ -235,9 +256,16 @@ pub enum WCError<M: Middleware> {
     ClientError(ClientError),
 }
 
-impl<M: Middleware> FromErr<M::Error> for WCError<M> {
-    fn from(src: M::Error) -> WCError<M> {
+impl<M: Middleware> MiddlewareError for WCError<M> {
+    type Inner = M::Error;
+    fn from_err(src: M::Error) -> Self {
         WCError::MiddlewareError(src)
+    }
+    fn as_inner(&self) -> Option<&Self::Inner> {
+        match self {
+            WCError::MiddlewareError(e) => Some(e),
+            _ => None,
+        }
     }
 }
 

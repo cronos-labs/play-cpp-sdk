@@ -5,8 +5,8 @@ use async_trait::async_trait;
 use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers::{
     prelude::{
-        Address, Bytes, FromErr, JsonRpcClient, Middleware, NameOrAddress, Provider, Signature,
-        TransactionRequest,
+        Address, Bytes, JsonRpcClient, Middleware, MiddlewareError, NameOrAddress, Provider,
+        Signature, TransactionRequest,
     },
     utils::rlp,
 };
@@ -125,7 +125,7 @@ impl JsonRpcClient for Client {
 
     /// Sends a POST request with the provided method and the params serialized as JSON
     /// over HTTP
-    async fn request<T: Serialize + Send + Sync + std::fmt::Debug, R: DeserializeOwned>(
+    async fn request<T: Serialize + Send + Sync + std::fmt::Debug, R: DeserializeOwned + Send>(
         &self,
         method: &str,
         params: T,
@@ -157,9 +157,16 @@ pub enum WCError<M: Middleware> {
     ClientError(ClientError),
 }
 
-impl<M: Middleware> FromErr<M::Error> for WCError<M> {
-    fn from(src: M::Error) -> WCError<M> {
+impl<M: Middleware> MiddlewareError for WCError<M> {
+    type Inner = M::Error;
+    fn from_err(src: M::Error) -> Self {
         WCError::MiddlewareError(src)
+    }
+    fn as_inner(&self) -> Option<&Self::Inner> {
+        match self {
+            WCError::MiddlewareError(e) => Some(e),
+            _ => None,
+        }
     }
 }
 
