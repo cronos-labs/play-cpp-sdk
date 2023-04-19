@@ -472,11 +472,19 @@ impl WalletconnectClient {
         common: &WalletConnectTxCommon,
     ) -> Result<Vec<u8>> {
         let mynonce = U256::from_dec_str(&common.nonce)?;
-        typedtx.set_nonce(mynonce);
+        if !mynonce.is_zero() {
+            typedtx.set_nonce(mynonce);
+        }
         typedtx.set_from(signeraddress);
-        typedtx.set_chain_id(common.chainid);
-        typedtx.set_gas(U256::from_dec_str(&common.gas_limit)?);
-        typedtx.set_gas_price(U256::from_dec_str(&common.gas_price)?);
+        if !common.chainid == 0 {
+            typedtx.set_chain_id(common.chainid);
+        }
+        if !common.gas_limit.is_empty() {
+            typedtx.set_gas(U256::from_dec_str(&common.gas_limit)?);
+        }
+        if !common.gas_price.is_empty() {
+            typedtx.set_gas_price(U256::from_dec_str(&common.gas_price)?);
+        }
 
         let sig = self
             .rt
@@ -495,11 +503,19 @@ impl WalletconnectClient {
         common: &WalletConnectTxCommon,
     ) -> Result<Vec<u8>> {
         let mynonce = U256::from_dec_str(&common.nonce)?;
-        typedtx.set_nonce(mynonce);
+        if !mynonce.is_zero() {
+            typedtx.set_nonce(mynonce);
+        }
         typedtx.set_from(signeraddress);
-        typedtx.set_chain_id(common.chainid);
-        typedtx.set_gas(U256::from_dec_str(&common.gas_limit)?);
-        typedtx.set_gas_price(U256::from_dec_str(&common.gas_price)?);
+        if !common.chainid == 0 {
+            typedtx.set_chain_id(common.chainid);
+        }
+        if !common.gas_limit.is_empty() {
+            typedtx.set_gas(U256::from_dec_str(&common.gas_limit)?);
+        }
+        if !common.gas_price.is_empty() {
+            typedtx.set_gas_price(U256::from_dec_str(&common.gas_price)?);
+        }
 
         let tx_bytes = self
             .rt

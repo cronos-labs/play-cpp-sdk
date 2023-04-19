@@ -126,8 +126,11 @@ int main(int argc, char *argv[]) {
         // it is important to close file and release the session file
         outfile.close();
 
-        // sign
         bool test_personal = true;
+        bool test_basic = false;
+        bool test_nft = false;
+
+        // sign personal message
         if (test_personal) {
             /* message signing */
             rust::Vec<uint8_t> sig1 = client->sign_personal_blocking(
@@ -135,7 +138,10 @@ int main(int argc, char *argv[]) {
             std::cout << "signature=" << bytes_to_hex_string(sig1).c_str()
                       << std::endl;
             std::cout << "signature length=" << sig1.size() << std::endl;
-        } else {
+        }
+
+        // send transaction
+        if (test_basic) {
             WalletConnectTxEip155 info;
             // send to the connected wallet itself
             // To send to other wallet address, simply
@@ -151,6 +157,26 @@ int main(int argc, char *argv[]) {
 
             std::cout << "transaction_hash="
                       << bytes_to_hex_string(receipt).c_str() << std::endl;
+        }
+
+        // send contract transaction
+        if (test_nft) {
+            std::cout << "toaddress=" << toaddress << std::endl;
+            WalletConnectErc1155Transfer info;
+            info.contract_address = ""; // TODO
+            info.from_address = result.addresses[0].address;
+            info.to_address = ""; // TODO
+            info.token_id = "0";
+            info.amount = "1";
+            info.common.chainid = result.chain_id;
+            info.common.web3api_url =
+                "https://evm-t3.cronos.org"; // TODO redudant
+
+            Vec<uint8_t> tx_hash = client->erc1155_transfer(
+                info, *new_jsonrpc_method("eth_sendTransaction"));
+
+            std::cout << "transaction_hash="
+                      << bytes_to_hex_string(tx_hash).c_str() << std::endl;
         }
 
         // waiting update or disconnect
