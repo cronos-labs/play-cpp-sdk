@@ -163,7 +163,9 @@ int main(int argc, char *argv[]) {
         if (test_nft) {
             WalletConnectErc1155Transfer info;
             info.contract_address = ""; // TODO
-            info.from_address = result.addresses[0].address;
+            info.from_address = rust::String(
+                std::string("0x") +
+                address_to_hex_string(result.addresses[0].address).c_str());
             info.to_address = ""; // TODO
             info.token_id = "0";
             info.amount = "1";
@@ -171,7 +173,7 @@ int main(int argc, char *argv[]) {
             info.common.web3api_url =
                 "https://evm-t3.cronos.org"; // TODO redudant
 
-            Vec<uint8_t> tx_hash = client->erc1155_transfer(
+            rust::Vec<uint8_t> tx_hash = client->erc1155_transfer(
                 info, *new_jsonrpc_method("eth_sendTransaction"));
 
             std::cout << "transaction_hash="
