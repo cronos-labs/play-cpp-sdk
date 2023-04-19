@@ -296,7 +296,8 @@ void test_wallet_connect() {
             info.common.chainid = 1;
             info.common.web3api_url = mycronosrpc.c_str();
 
-            Vec<uint8_t> rawtx = client->erc1155_transfer(info);
+            Vec<uint8_t> rawtx = client->erc1155_transfer(
+                info, *new_jsonrpc_method("eth_sendTransaction"));
 
             auto receipt = org::defi_wallet_core::broadcast_eth_signed_raw_tx(
                 rawtx, mycronosrpc, 3000);
