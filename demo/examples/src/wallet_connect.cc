@@ -161,7 +161,6 @@ int main(int argc, char *argv[]) {
 
         // send contract transaction
         if (test_nft) {
-            std::cout << "toaddress=" << toaddress << std::endl;
             WalletConnectErc1155Transfer info;
             info.contract_address = ""; // TODO
             info.from_address = result.addresses[0].address;
