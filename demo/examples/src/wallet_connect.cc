@@ -188,7 +188,6 @@ int main(int argc, char *argv[]) {
             info.from_address = from_address; // TODO unused for erc20 transfer
             info.to_address = "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7";
             info.amount = "1";
-            // info.common.gas_limit = "100000"; // default 21000 is not enough
             info.common.chainid = result.chain_id;
             info.common.web3api_url =
                 "https://evm-t3.cronos.org"; // TODO unnessary for walletconnect
