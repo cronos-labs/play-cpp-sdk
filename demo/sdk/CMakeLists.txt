@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQURIED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(play_cpp_sdk VERSION 0.0.1)
 
@@ -13,13 +13,22 @@ file(GLOB PLAY_CPP_SDK_SROUCES include/*.cc)
 find_library(RUST_LIB cxxbridge1 REQUIRED PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 # Find the prebuilt static and dynamic libraries
-if (WIN32)
+if (WIN32 AND MSYS)
+  find_library(PLAY_CPP_SDK_LIB libplay_cpp_sdk.a PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+  find_library(PLAY_CPP_SDK_DYLIB libplay_cpp_sdk.dll.a PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+  find_file(PLAY_CPP_SDK_DLL NAME play_cpp_sdk.dll PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+  # Add static library play_cpp_sdk built from bindings source files
+  add_library(play_cpp_sdk STATIC ${DEFI_WALLET_CORE_CPP_BINDINGS} ${EXTRA_CPP_BINDINGS} ${PLAY_CPP_SDK_SROUCES})
+  target_link_libraries(play_cpp_sdk ${PLAY_CPP_SDK_LIB} Ncrypt userenv ntdll Secur32 crypt32 ws2_32 ntdll)
+endif()
+
+if (WIN32 AND NOT MSYS)
   find_library(PLAY_CPP_SDK_LIB play_cpp_sdk.lib PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
   find_library(PLAY_CPP_SDK_DYLIB play_cpp_sdk.dll.lib PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
   find_file(PLAY_CPP_SDK_DLL NAME play_cpp_sdk.dll PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
   # Add static library play_cpp_sdk built from bindings source files
   add_library(play_cpp_sdk STATIC ${DEFI_WALLET_CORE_CPP_BINDINGS} ${EXTRA_CPP_BINDINGS} ${PLAY_CPP_SDK_SROUCES})
-  target_link_libraries(play_cpp_sdk ${RUST_LIB} ${PLAY_CPP_SDK_DYLIB} Ncrypt userenv ntdll Secur32 crypt32)
+  target_link_libraries(play_cpp_sdk ${PLAY_CPP_SDK_LIB} Ncrypt userenv ntdll Secur32 crypt32 ws2_32 ntdll)
 endif()
 
 if (APPLE)
