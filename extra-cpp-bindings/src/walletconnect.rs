@@ -1,7 +1,8 @@
 use crate::ffi::{
     WalletConnectCallback, WalletConnectErc1155Approve, WalletConnectErc1155Batch,
     WalletConnectErc1155Transfer, WalletConnectErc20Approve, WalletConnectErc20Transfer,
-    WalletConnectErc721Approve, WalletConnectErc721Transfer, WalletConnectTxCommon,
+    WalletConnectErc20TransferFrom, WalletConnectErc721Approve, WalletConnectErc721Transfer,
+    WalletConnectTxCommon,
 };
 use anyhow::{anyhow, Result};
 use defi_wallet_connect::session::SessionInfo;
@@ -533,6 +534,48 @@ impl WalletconnectClient {
         if self.client.is_none() {
             anyhow::bail!("no client");
         }
+        // TODO unsued in erc20 transfer
+        let signeraddress = Address::from_str(&info.from_address)?;
+        let client = self
+            .client
+            .as_ref()
+            .ok_or_else(|| anyhow!("get walllet-connect client error"))?;
+        let newclient = client.clone();
+        let mut typedtx =
+            self.rt
+                .block_on(defi_wallet_core_common::construct_contract_transfer_tx(
+                    defi_wallet_core_common::ContractTransfer::Erc20Transfer {
+                        contract_address: info.contract_address.clone(),
+                        to_address: info.to_address.clone(),
+                        amount: info.amount.clone(),
+                    },
+                    defi_wallet_core_common::EthNetwork::Custom {
+                        chain_id: info.common.chainid,
+                        legacy: false,
+                    },
+                    // TODO unnessary for walletconnect
+                    info.common.web3api_url.as_str(),
+                ))?;
+
+        let tx = match method {
+            Method::SignTyped => {
+                self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+            Method::SendTyped => {
+                self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &info.common)?
+            }
+        };
+        Ok(tx.to_vec())
+    }
+
+    pub fn erc20_transfer_from(
+        &mut self,
+        info: &WalletConnectErc20TransferFrom,
+        method: &Method,
+    ) -> Result<Vec<u8>> {
+        if self.client.is_none() {
+            anyhow::bail!("no client");
+        }
         let signeraddress = Address::from_str(&info.from_address)?;
         let client = self
             .client
@@ -552,6 +595,7 @@ impl WalletconnectClient {
                         chain_id: info.common.chainid,
                         legacy: false,
                     },
+                    // TODO unnessary for walletconnect
                     info.common.web3api_url.as_str(),
                 ))?;
 

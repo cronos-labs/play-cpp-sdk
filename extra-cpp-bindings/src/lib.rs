@@ -145,6 +145,17 @@ mod ffi {
         pub common: WalletConnectTxCommon,
     }
 
+    /// wallet connect cronos(eth) erc20-tx signing info
+    #[derive(Debug, Default)]
+    pub struct WalletConnectErc20TransferFrom {
+        pub contract_address: String, // hexstring, "0x..."
+        pub from_address: String,     // hexstring, "0x..."
+        pub to_address: String,       // hexstring, "0x..."
+        pub amount: String,           // decimal string, "1"
+
+        pub common: WalletConnectTxCommon,
+    }
+
     /// wallet connect cronos(eth) erc721-tx signing info
     #[derive(Debug, Default)]
     pub struct WalletConnectErc721Transfer {
@@ -375,6 +386,12 @@ mod ffi {
         pub fn erc20_transfer(
             self: &mut WalletconnectClient,
             info: &WalletConnectErc20Transfer,
+            method: &Method,
+        ) -> Result<Vec<u8>>;
+
+        pub fn erc20_transfer_from(
+            self: &mut WalletconnectClient,
+            info: &WalletConnectErc20TransferFrom,
             method: &Method,
         ) -> Result<Vec<u8>>;
 
