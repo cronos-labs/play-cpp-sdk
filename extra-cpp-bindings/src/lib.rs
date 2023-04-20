@@ -22,7 +22,7 @@ use ffi::{
 use qrcodegen::QrCode;
 use qrcodegen::QrCodeEcc;
 use serde::{Deserialize, Serialize};
-use walletconnect::{new_jsonrpc_method, Method, WalletconnectClient};
+use walletconnect::WalletconnectClient;
 
 #[cxx::bridge(namespace = "com::crypto::game_sdk")]
 mod ffi {
@@ -131,89 +131,6 @@ mod ffi {
         pub value: String, // decimal string, in wei units
         pub data: Vec<u8>, // data, as bytes
 
-        pub common: WalletConnectTxCommon,
-    }
-
-    /// wallet connect cronos(eth) erc20-tx signing info
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc20Transfer {
-        pub contract_address: String, // hexstring, "0x..."
-        pub from_address: String,     // hexstring, "0x..."
-        pub to_address: String,       // hexstring, "0x..."
-        pub amount: String,           // decimal string, "1"
-
-        pub common: WalletConnectTxCommon,
-    }
-
-    /// wallet connect cronos(eth) erc20-tx signing info
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc20TransferFrom {
-        pub contract_address: String, // hexstring, "0x..."
-        pub from_address: String,     // hexstring, "0x..."
-        pub to_address: String,       // hexstring, "0x..."
-        pub amount: String,           // decimal string, "1"
-
-        pub common: WalletConnectTxCommon,
-    }
-
-    /// wallet connect cronos(eth) erc721-tx signing info
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc721Transfer {
-        pub contract_address: String, // hexstring, "0x..."
-        pub from_address: String,     // hexstring, "0x..."
-        pub to_address: String,       // hexstring, "0x..."
-        pub token_id: String,         // decimal string, "1"
-
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc1155Transfer {
-        pub contract_address: String,
-        pub from_address: String,
-        pub to_address: String,
-        pub token_id: String,
-        pub amount: String,
-        pub additional_data: Vec<u8>,
-
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc1155Batch {
-        pub contract_address: String,
-        pub from_address: String,
-        pub to_address: String,
-        pub token_ids: Vec<String>,
-        pub amounts: Vec<String>,
-        pub additional_data: Vec<u8>,
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc20Approve {
-        pub contract_address: String,
-        pub from_address: String,
-        pub approved_address: String,
-        pub amount: String,
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc721Approve {
-        pub contract_address: String,
-        pub from_address: String,
-        pub approved_address: String,
-        pub token_id: String,
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc1155Approve {
-        pub contract_address: String,
-        pub from_address: String,
-        pub approved_address: String,
-        pub approved: bool,
         pub common: WalletConnectTxCommon,
     }
 
@@ -380,57 +297,6 @@ mod ffi {
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
-        type Method;
-        pub fn new_jsonrpc_method(method: &str) -> Result<Box<Method>>;
-
-        pub fn erc20_transfer(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc20Transfer,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc20_transfer_from(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc20TransferFrom,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc721_transfer(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc721Transfer,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc1155_transfer(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc1155Transfer,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc1155_transfer_batch(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc1155Batch,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc20_approve(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc20Approve,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc721_approve(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc721Approve,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc1155_approve(
-            self: &mut WalletconnectClient,
-            info: &WalletConnectErc1155Approve,
-            method: &Method,
-        ) -> Result<Vec<u8>>;
-
         /// build cronos(eth) eip155 transaction
         /// Supported Wallets: Trust Wallet, Crypto.com Desktop Defi Wallet
         pub fn sign_eip155_transaction_blocking(
@@ -444,6 +310,32 @@ mod ffi {
         pub fn send_eip155_transaction_blocking(
             self: &mut WalletconnectClient,
             info: &WalletConnectTxEip155,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        pub fn sign_transaction(
+            self: &mut WalletconnectClient,
+            eip1559_transaction_request: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        pub fn send_transaction(
+            self: &mut WalletconnectClient,
+            eip1559_transaction_request: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        pub fn sign_contract_transaction(
+            self: &mut WalletconnectClient,
+            contract_action: String,
+            common: &WalletConnectTxCommon,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        pub fn send_contract_transaction(
+            self: &mut WalletconnectClient,
+            contract_action: String,
+            common: &WalletConnectTxCommon,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 

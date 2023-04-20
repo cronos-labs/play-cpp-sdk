@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
 
         // send contract transaction
         if (test_erc20) {
-            WalletConnectErc20Transfer info;
+            WalletConnectTxCommon common;
             // Verify the contract
             // Test ERC20 Token: GLD
             // https://testnet.cronoscan.com/token/0xc213a7b37f4f7ec81f78895e50ea773aa8e78255
@@ -183,22 +183,28 @@ int main(int argc, char *argv[]) {
                       << std::endl;
 
             // construct tx info
-            info.contract_address =
-                "0xC213a7B37F4f7eC81f78895E50EA773aA8E78255";
-            info.from_address = from_address; // TODO unused for erc20 transfer
-            info.to_address = "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7";
-            info.amount = "1";
-            info.common.chainid = result.chain_id;
-            info.common.web3api_url =
-                "https://evm-t3.cronos.org"; // TODO unnessary for walletconnect
+            rust::String contract_action =
+                R"({
+                      "Erc20Transfer": {
+                        "contract_address": "0xC213a7B37F4f7eC81f78895E50EA773aA8E78255",
+                        "to_address": "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7",
+                        "amount": "1"
+                      }
+                   })";
 
-            rust::Vec<uint8_t> tx_hash = client->erc20_transfer(
-                info, *new_jsonrpc_method("eth_sendTransaction"));
+            common.chainid = result.chain_id;
+            common.web3api_url =
+                "https://evm-t3.cronos.org"; // TODO unnessary for
+                                             // walletconnect
+
+            rust::Vec<uint8_t> tx_hash = client->send_contract_transaction(
+                contract_action, common, result.addresses[0].address);
 
             std::cout << "transaction_hash="
                       << bytes_to_hex_string(tx_hash).c_str() << std::endl;
 
-            // TODO verify the balance is deducted, after transaction successful
+            // TODO verify the balance is deducted, after transaction
+            // successful
             assert(erc20.balance_of(from_address) ==
                    erc20_balance.sub(u256("1")));
         }

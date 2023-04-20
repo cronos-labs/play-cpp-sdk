@@ -284,20 +284,26 @@ void test_wallet_connect() {
                                       fromaddress.c_str(), mycronosrpc)
                                       .c_str();
             cout << "nonce=" << mynonce << endl;
-            WalletConnectErc1155Transfer info;
-            info.contract_address = contractaddress;
-            info.from_address = fromaddress;
-            info.to_address = toaddress;
-            info.token_id = "0";
-            info.amount = "1";
-            info.common.nonce = mynonce;
-            info.common.gas_price = "21000";
-            info.common.gas_limit = "100000";
-            info.common.chainid = 1;
-            info.common.web3api_url = mycronosrpc.c_str();
+            WalletConnectTxCommon common;
+            // TODO use variables
+            rust::String contract_action =
+                R"({
+                      "Erc20Transfer": {
+                        "contract_address": "0xC213a7B37F4f7eC81f78895E50EA773aA8E78255",
+                        "to_address": "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7",
+                        "token_id": "0",
+                        "amount": "1"
+                      }
+                   })";
 
-            Vec<uint8_t> rawtx = client->erc1155_transfer(
-                info, *new_jsonrpc_method("eth_signTransaction"));
+            common.nonce = mynonce;
+            common.gas_price = "21000";
+            common.gas_limit = "100000";
+            common.chainid = 1;
+            common.web3api_url = mycronosrpc.c_str();
+
+            rust::Vec<uint8_t> rawtx = client->sign_contract_transaction(
+                contract_action, common, result.addresses[0].address);
 
             auto receipt = org::defi_wallet_core::broadcast_eth_signed_raw_tx(
                 rawtx, mycronosrpc, 3000);
