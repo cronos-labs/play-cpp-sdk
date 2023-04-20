@@ -10,6 +10,11 @@ target/
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 *.swp
+demo/demo/demo.vcxproj.user
+demo/demo/x64/
+demo/out/
+demo/demostatic/x64/ 
+demo/.vs
 demo/bin/
 demo/*.h
 demo/*.cc

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQURIED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED  ON)
 set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 if (APPLE)
@@ -22,7 +22,10 @@ add_subdirectory(sdk)
 
 # add static demo
 add_executable(demostatic main.cc chainmain.cc cronos.cc extra.cc third_party/easywsclient/easywsclient.cpp)
-if (WIN32)
+if (WIN32 AND MSYS)
+  target_link_libraries(demostatic PUBLIC ${PLAY_CPP_SDK_LIB} Ncrypt userenv ntdll Secur32 crypt32 ws2_32 ntdll)
+endif()
+if (WIN32 AND NOT MSYS)
   target_link_libraries(demostatic PUBLIC ${PLAY_CPP_SDK_LIB} Ncrypt userenv ntdll Secur32 crypt32)
 endif()
 if (APPLE)
@@ -34,7 +37,10 @@ endif()
 
 # add dynamic demo
 add_executable(demo main.cc chainmain.cc cronos.cc extra.cc third_party/easywsclient/easywsclient.cpp)
-if (WIN32)
+if (WIN32 AND MSYS)
+  target_link_libraries(demo PUBLIC ${PLAY_CPP_SDK_LIB} Ncrypt userenv ntdll Secur32 crypt32 ws2_32 ntdll)
+endif()
+if (WIN32 AND NOT MSYS)
   target_link_libraries(demo PUBLIC play_cpp_sdk)
   # Copy dll
   add_custom_command(TARGET demo

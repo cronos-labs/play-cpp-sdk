@@ -117,11 +117,19 @@ def copy_cxxbridge(output_path):
 def copy_lib_files(output_path):
     os.makedirs(output_path, exist_ok=True)
     files = []
-    if platform.system() == 'Windows':
-        files.extend(collect_files("*.lib", TARGET_DIR, recursive=False))
-        files.extend(collect_files("*.dll", TARGET_DIR, recursive=False))
-        # workaround: search libcxxbridge1.lib and push the first one
-        files.append(collect_files("cxxbridge1.lib", TARGET_DIR)[0])
+    # when msys updated, platform.system() returns 'MINGW64_NT-10.0-19042'
+    if platform.system() == 'Windows' or platform.system().startswith('MINGW64'):       
+        # if msys2, copy *.a files
+        if 'MINGW64' in os.environ.get('MSYSTEM', ''): # msys2
+            # need to copy libplay_cpp_sdk.a for msys2 
+            # *.lib files are for msvc, not compatible with msys2
+            files.extend(collect_files("*.a", TARGET_DIR, recursive=False))
+            files.append(collect_files("libcxxbridge1.a", TARGET_DIR)[0])
+        else: #msvc
+            files.extend(collect_files("*.lib", TARGET_DIR, recursive=False))
+            files.extend(collect_files("*.dll", TARGET_DIR, recursive=False))
+            # workaround: search libcxxbridge1.lib and push the first one
+            files.append(collect_files("cxxbridge1.lib", TARGET_DIR)[0])
     elif platform.system() == 'Linux':
         files.extend(collect_files("*.a", TARGET_DIR, recursive=False))
         # TODO support *.so

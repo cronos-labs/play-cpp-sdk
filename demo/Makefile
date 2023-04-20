@@ -77,6 +77,18 @@ endif
 
 static: easywsclient.o
 	mkdir -p bin
+ifeq ($(MSYSTEM), MINGW64)
+	$(CXX) -o bin/demostatic \
+		easywsclient.o \
+		main.cc \
+		chainmain.cc \
+		cronos.cc \
+		extra.cc \
+		$(sdk_dir)/lib/libplay_cpp_sdk.a \
+		-lws2_32 -lntdll \
+		-lcrypt32 -lsecur32 -lbcrypt -luserenv -lncrypt \
+		-std=c++14 $(FLAGS) 
+else
 	$(CXX) -o bin/demostatic \
 		easywsclient.o \
 		main.cc \
@@ -85,6 +97,7 @@ static: easywsclient.o
 		extra.cc \
 		$(sdk_dir)/lib/libplay_cpp_sdk.a \
 		-std=c++14 $(FLAGS)
+endif 
 
 dynamic: easywsclient.o libplay_cpp_sdk.so libplay_cpp_sdk.dylib
 	mkdir -p bin
