@@ -53,7 +53,7 @@ async fn new_client(
     // convert string array to url array
     let mut icons: Vec<Url> = Vec::new();
     for icon in icon_urls {
-        icons.push(icon.parse().expect("url"));
+        icons.push(icon.parse()?);
     }
     let chain_id = match chain_id {
         0 => None,
@@ -62,7 +62,7 @@ async fn new_client(
     let client = Client::new(
         Metadata {
             description,
-            url: url.parse().expect("url"),
+            url: url.parse()?,
             icons,
             name,
         },
