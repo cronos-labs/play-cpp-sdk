@@ -23,15 +23,13 @@ int main(int argc, char *argv[]) {
         test_login();          // decentralized login
         cronos_process();      // cronos
         test_cronos_testnet(); // cronos testnet
-    } catch (const rust::cxxbridge1::Error &e) {
+        test_interval();
+        test_blackscout_cronoscan();
+        test_wallet_connect();
+
+    } catch (const std::exception &e) {
         // Use `Assertion failed`, the same as `assert` function
         std::cout << "Assertion failed: " << e.what() << std::endl;
     }
-
-    test_interval();
-
-    test_blackscout_cronoscan();
-    test_wallet_connect();
-
     return 0;
 }
