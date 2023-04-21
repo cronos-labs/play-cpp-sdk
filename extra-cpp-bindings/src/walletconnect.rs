@@ -619,7 +619,7 @@ impl WalletconnectClient {
             }
         };
 
-        let tx = self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &common)?;
+        let tx = self.get_signed_tx_raw_bytes(newclient, signeraddress, &mut typedtx, common)?;
         Ok(tx.to_vec())
     }
 
@@ -669,7 +669,7 @@ impl WalletconnectClient {
             }
         };
 
-        let tx = self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, &common)?;
+        let tx = self.get_sent_tx_raw_bytes(newclient, signeraddress, &mut typedtx, common)?;
         Ok(tx.to_vec())
     }
 }

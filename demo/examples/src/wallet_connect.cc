@@ -207,6 +207,8 @@ int main(int argc, char *argv[]) {
 
             // TODO verify the balance is deducted, after transaction
             // successful
+            // Workaround: sleep 3 second
+            std::this_thread::sleep_for(std::chrono::seconds(3));
             assert(erc20.balance_of(from_address) ==
                    erc20_balance.sub(u256("1000000000000000000")));
         }

@@ -1201,7 +1201,7 @@ dependencies = [
 
 [[package]]
 name = "defi-wallet-core-common"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -1242,7 +1242,7 @@ dependencies = [
 
 [[package]]
 name = "defi-wallet-core-cpp"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "cosmos-sdk-proto",
