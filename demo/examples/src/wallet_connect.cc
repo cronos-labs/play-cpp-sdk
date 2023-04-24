@@ -94,7 +94,7 @@ void UserWalletConnectCallback::onConnecting(
     print_session(sessioninfo);
     // !!! Important !!!
     // Comment out this line for actual test
-    // exit(0);
+    exit(0);
 }
 void UserWalletConnectCallback::onUpdated(
     const WalletConnectSessionInfo &sessioninfo) const {
@@ -130,9 +130,9 @@ int main(int argc, char *argv[]) {
         // it is important to close file and release the session file
         outfile.close();
 
-        bool test_personal = false;
+        bool test_personal = true;
         bool test_basic = false;
-        bool test_erc20 = true;
+        bool test_erc20 = false;
 
         // sign personal message
         if (test_personal) {
