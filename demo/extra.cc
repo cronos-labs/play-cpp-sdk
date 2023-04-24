@@ -288,12 +288,13 @@ void test_wallet_connect() {
             // TODO use variables
             rust::String contract_action =
                 R"({
-                      "Erc20Transfer": {
-                        "contract_address": "0xC213a7B37F4f7eC81f78895E50EA773aA8E78255",
-                        "to_address": "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7",
-                        "token_id": "0",
-                        "amount": "1"
-                      }
+                        "ContractTransfer": {
+                            "Erc20Transfer": {
+                                "contract_address": "0xC213a7B37F4f7eC81f78895E50EA773aA8E78255",
+                                "to_address": "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7",
+                                "amount": "1000000000000000000"
+                            }
+                        }
                    })";
 
             common.nonce = mynonce;
