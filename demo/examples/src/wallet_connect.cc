@@ -1,4 +1,7 @@
 #include <cassert>
+#include <defi-wallet-core-cpp/src/contract.rs.h>
+#include <defi-wallet-core-cpp/src/lib.rs.h>
+#include <defi-wallet-core-cpp/src/uint.rs.h>
 #include <extra-cpp-bindings/src/lib.rs.h> // nolint is not effective, it's compiler error, ignore
 #include <fstream>
 #include <iomanip>
@@ -8,6 +11,7 @@
 #include <chrono>
 #include <thread>
 using namespace com::crypto::game_sdk;
+using namespace org::defi_wallet_core;
 
 // convert byte array to hex string
 rust::String bytes_to_hex_string(rust::Vec<uint8_t> bytes) {
@@ -126,8 +130,11 @@ int main(int argc, char *argv[]) {
         // it is important to close file and release the session file
         outfile.close();
 
-        // sign
         bool test_personal = true;
+        bool test_basic = false;
+        bool test_erc20 = false;
+
+        // sign personal message
         if (test_personal) {
             /* message signing */
             rust::Vec<uint8_t> sig1 = client->sign_personal_blocking(
@@ -135,7 +142,10 @@ int main(int argc, char *argv[]) {
             std::cout << "signature=" << bytes_to_hex_string(sig1).c_str()
                       << std::endl;
             std::cout << "signature length=" << sig1.size() << std::endl;
-        } else {
+        }
+
+        // send transaction
+        if (test_basic) {
             WalletConnectTxEip155 info;
             // send to the connected wallet itself
             // To send to other wallet address, simply
@@ -151,6 +161,56 @@ int main(int argc, char *argv[]) {
 
             std::cout << "transaction_hash="
                       << bytes_to_hex_string(receipt).c_str() << std::endl;
+        }
+
+        // send contract transaction
+        if (test_erc20) {
+            WalletConnectTxCommon common;
+            // Verify the contract
+            // Test ERC20 Token: GLD
+            // https://testnet.cronoscan.com/token/0xc213a7b37f4f7ec81f78895e50ea773aa8e78255
+            Erc20 erc20 =
+                new_erc20("0xC213a7B37F4f7eC81f78895E50EA773aA8E78255",
+                          "https://evm-dev-t3.cronos.org", 338);
+            assert(erc20.name() == "Gold");
+            assert(erc20.symbol() == "GLD");
+            assert(erc20.decimals() == 18);
+            rust::String from_address = rust::String(
+                std::string("0x") +
+                address_to_hex_string(result.addresses[0].address).c_str());
+            U256 erc20_balance = erc20.balance_of(from_address);
+            std::cout << "erc20 balance=" << erc20_balance.to_string()
+                      << std::endl;
+
+            // construct tx info
+            rust::String contract_action =
+                R"({
+                        "ContractTransfer": {
+                            "Erc20Transfer": {
+                                "contract_address": "0xC213a7B37F4f7eC81f78895E50EA773aA8E78255",
+                                "to_address": "0xA914161b1b8d9dbC9c5310Fc7EBee5A5B18044b7",
+                                "amount": "1000000000000000000"
+                            }
+                        }
+                   })";
+
+            common.chainid = result.chain_id;
+            common.web3api_url =
+                "https://evm-dev-t3.cronos.org"; // TODO unnessary for
+                                                 // walletconnect
+
+            rust::Vec<uint8_t> tx_hash = client->send_contract_transaction(
+                contract_action, common, result.addresses[0].address);
+
+            std::cout << "transaction_hash="
+                      << bytes_to_hex_string(tx_hash).c_str() << std::endl;
+
+            // TODO verify the balance is deducted, after transaction
+            // successful
+            // Workaround: sleep 3 second
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+            assert(erc20.balance_of(from_address) ==
+                   erc20_balance.sub(u256("1000000000000000000")));
         }
 
         // waiting update or disconnect

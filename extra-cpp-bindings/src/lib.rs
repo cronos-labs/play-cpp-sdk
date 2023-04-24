@@ -134,78 +134,6 @@ mod ffi {
         pub common: WalletConnectTxCommon,
     }
 
-    /// wallet connect cronos(eth) erc20-tx signing info
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc20Transfer {
-        pub contract_address: String, // hexstring, "0x..."
-        pub from_address: String,     // hexstring, "0x..."
-        pub to_address: String,       // hexstring, "0x..."
-        pub amount: String,           // decimal string, "1"
-
-        pub common: WalletConnectTxCommon,
-    }
-
-    /// wallet connect cronos(eth) erc721-tx signing info
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc721Transfer {
-        pub contract_address: String, // hexstring, "0x..."
-        pub from_address: String,     // hexstring, "0x..."
-        pub to_address: String,       // hexstring, "0x..."
-        pub token_id: String,         // decimal string, "1"
-
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc1155Transfer {
-        pub contract_address: String,
-        pub from_address: String,
-        pub to_address: String,
-        pub token_id: String,
-        pub amount: String,
-        pub additional_data: Vec<u8>,
-
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc1155Batch {
-        pub contract_address: String,
-        pub from_address: String,
-        pub to_address: String,
-        pub token_ids: Vec<String>,
-        pub amounts: Vec<String>,
-        pub additional_data: Vec<u8>,
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc20Approve {
-        pub contract_address: String,
-        pub from_address: String,
-        pub approved_address: String,
-        pub amount: String,
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc721Approve {
-        pub contract_address: String,
-        pub from_address: String,
-        pub approved_address: String,
-        pub token_id: String,
-        pub common: WalletConnectTxCommon,
-    }
-
-    #[derive(Debug, Default)]
-    pub struct WalletConnectErc1155Approve {
-        pub contract_address: String,
-        pub from_address: String,
-        pub approved_address: String,
-        pub approved: bool,
-        pub common: WalletConnectTxCommon,
-    }
-
     /// cronos address info
     pub struct WalletConnectAddress {
         pub address: [u8; 20], // address, as bytes, 20 bytes
@@ -348,7 +276,7 @@ mod ffi {
 
         /// setup callback
         pub fn setup_callback_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             usercallback: UniquePtr<WalletConnectCallback>,
         ) -> Result<()>;
         /// create or restore a session
@@ -357,39 +285,22 @@ mod ffi {
             self: &mut WalletconnectClient,
         ) -> Result<WalletConnectEnsureSessionResult>;
         /// get connection string for qrcode
-        pub fn get_connection_string(&mut self) -> Result<String>;
+        pub fn get_connection_string(self: &mut WalletconnectClient) -> Result<String>;
         /// write session-info to string, which can be written to file
-        pub fn save_client(&mut self) -> Result<String>;
+        pub fn save_client(self: &mut WalletconnectClient) -> Result<String>;
         /// print qrcode in termal, for debugging
-        pub fn print_uri(&mut self) -> Result<String>;
+        pub fn print_uri(self: &mut WalletconnectClient) -> Result<String>;
         /// sign message
         pub fn sign_personal_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             message: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
-        pub fn erc20_transfer(&mut self, info: &WalletConnectErc20Transfer) -> Result<Vec<u8>>;
-
-        pub fn erc721_transfer(&mut self, info: &WalletConnectErc721Transfer) -> Result<Vec<u8>>;
-
-        pub fn erc1155_transfer(&mut self, info: &WalletConnectErc1155Transfer) -> Result<Vec<u8>>;
-
-        pub fn erc1155_transfer_batch(
-            &mut self,
-            info: &WalletConnectErc1155Batch,
-        ) -> Result<Vec<u8>>;
-
-        pub fn erc20_approve(&mut self, info: &WalletConnectErc20Approve) -> Result<Vec<u8>>;
-
-        pub fn erc721_approve(&mut self, info: &WalletConnectErc721Approve) -> Result<Vec<u8>>;
-
-        pub fn erc1155_approve(&mut self, info: &WalletConnectErc1155Approve) -> Result<Vec<u8>>;
-
         /// build cronos(eth) eip155 transaction
         /// Supported Wallets: Trust Wallet, Crypto.com Desktop Defi Wallet
         pub fn sign_eip155_transaction_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             info: &WalletConnectTxEip155,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
@@ -397,8 +308,64 @@ mod ffi {
         /// send cronos(eth) eip155 transaction
         /// Supported Wallets: Trust Wallet, MetaMask and Crypto.com Mobile Defi Wallet
         pub fn send_eip155_transaction_blocking(
-            &mut self,
+            self: &mut WalletconnectClient,
             info: &WalletConnectTxEip155,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        /// eip1559_transaction_request: json string of Eip1559TransactionRequest
+        /// return signed transaction bytes
+        pub fn sign_transaction(
+            self: &mut WalletconnectClient,
+            eip1559_transaction_request: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        /// eip1559_transaction_request: json string of Eip1559TransactionRequest
+        /// return transaction hash bytes
+        pub fn send_transaction(
+            self: &mut WalletconnectClient,
+            eip1559_transaction_request: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        /// sign a contract transaction
+        /// contract_action is a json string of `ContractAction` type, for example:
+        /// for example, transfer Erc20 token
+        /// {
+        ///     "ContractTransfer": {
+        ///         "Erc20Transfer": {
+        ///             "contract_address": "0xxxxx",
+        ///             "to_address": "0xxxxx",
+        ///             "amount": "1000000000000000000"
+        ///         }
+        ///     }
+        /// }
+        /// return signed transaction bytes
+        pub fn sign_contract_transaction(
+            self: &mut WalletconnectClient,
+            contract_action: String,
+            common: &WalletConnectTxCommon,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+
+        // send a contract transaction
+        /// contract_action is a json string of `ContractAction` type
+        /// for example, transfer Erc20 token
+        /// {
+        ///     "ContractTransfer": {
+        ///         "Erc20Transfer": {
+        ///             "contract_address": "0xxxxx",
+        ///             "to_address": "0xxxxx",
+        ///             "amount": "1000000000000000000"
+        ///         }
+        ///     }
+        /// }
+        // return transaction hash bytes
+        pub fn send_contract_transaction(
+            self: &mut WalletconnectClient,
+            contract_action: String,
+            common: &WalletConnectTxCommon,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
