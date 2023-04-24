@@ -330,7 +330,17 @@ mod ffi {
         ) -> Result<Vec<u8>>;
 
         /// sign a contract transaction
-        /// contract_action is a json string of `ContractAction` type
+        /// contract_action is a json string of `ContractAction` type, for example:
+        /// for example, transfer Erc20 token
+        /// {
+        ///     "ContractTransfer": {
+        ///         "Erc20Transfer": {
+        ///             "contract_address": "0xxxxx",
+        ///             "to_address": "0xxxxx",
+        ///             "amount": "1000000000000000000"
+        ///         }
+        ///     }
+        /// }
         /// return signed transaction bytes
         pub fn sign_contract_transaction(
             self: &mut WalletconnectClient,
@@ -341,6 +351,16 @@ mod ffi {
 
         // send a contract transaction
         /// contract_action is a json string of `ContractAction` type
+        /// for example, transfer Erc20 token
+        /// {
+        ///     "ContractTransfer": {
+        ///         "Erc20Transfer": {
+        ///             "contract_address": "0xxxxx",
+        ///             "to_address": "0xxxxx",
+        ///             "amount": "1000000000000000000"
+        ///         }
+        ///     }
+        /// }
         // return transaction hash bytes
         pub fn send_contract_transaction(
             self: &mut WalletconnectClient,
