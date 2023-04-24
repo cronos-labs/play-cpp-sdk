@@ -1,5 +1,14 @@
 # Changelog
 ## [Unreleased]
+## [v0.0.19-alpha] - 2023-4-24
+- Upgrade ethers to 2.0
+- Add msys2 build support
+- Add general eip1559 functions for walletconnect 1.0
+  - sign_transaction
+  - send_transaction
+- Refactor ERC20/721/1155 contract functions to general functions for walletconnect 1.0
+  - sign_contract_transaction
+  - send_contract_transaction
 
 ## [v0.0.18-alpha] - 2023-3-30
 - Add eth_sendTransaction support for WalletConnect 1.0
