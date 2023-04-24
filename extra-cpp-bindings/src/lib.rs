@@ -313,18 +313,25 @@ mod ffi {
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
+        /// eip1559_transaction_request: json string of Eip1559TransactionRequest
+        /// return signed transaction bytes
         pub fn sign_transaction(
             self: &mut WalletconnectClient,
             eip1559_transaction_request: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
+        /// eip1559_transaction_request: json string of Eip1559TransactionRequest
+        /// return transaction hash bytes
         pub fn send_transaction(
             self: &mut WalletconnectClient,
             eip1559_transaction_request: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
+        /// sign a contract transaction
+        /// contract_action is a json string of `ContractAction` type
+        /// return signed transaction bytes
         pub fn sign_contract_transaction(
             self: &mut WalletconnectClient,
             contract_action: String,
@@ -332,6 +339,9 @@ mod ffi {
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
 
+        // send a contract transaction
+        /// contract_action is a json string of `ContractAction` type
+        // return transaction hash bytes
         pub fn send_contract_transaction(
             self: &mut WalletconnectClient,
             contract_action: String,
