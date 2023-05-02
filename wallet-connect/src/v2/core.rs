@@ -23,8 +23,8 @@ use relay_client::{
     Client, CloseFrame, ConnectionHandler, ConnectionOptions, Error, PublishedMessage,
 };
 use relay_rpc::{
-    auth::{ed25519_dalek::Keypair, rand, rand::Rng, AuthToken},
-    domain::{AuthSubject, SubscriptionId, Topic},
+    auth::{rand, rand::Rng},
+    domain::{SubscriptionId, Topic},
 };
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::{mpsc, oneshot, Mutex, Notify};
@@ -236,6 +236,18 @@ impl Context {
             .ok_or_else(|| eyre::eyre!("Request not found"))?;
         let value = response.data.into_value().map_err(eyre::Report::from)?;
         let _ = sender.send(value);
+        Ok(())
+    }
+
+    async fn restore_subription(
+        &self,
+        sender: &mpsc::Sender<ConnectorMessage>,
+    ) -> eyre::Result<()> {
+        let session = self.session.lock().await;
+        if let Some((t, _key)) = &session.pairing_topic_symkey {
+            let _ = sender.send(ConnectorMessage::Subscribe(t.clone())).await;
+        }
+
         Ok(())
     }
 }
@@ -451,10 +463,8 @@ impl Connector {
         let request_str = serde_json::to_string(&req).wrap_err("serialize request")?;
         let message = encrypt_and_encode(key, request_str.as_bytes());
 
-        let (ping_sender, ping_receiver) = oneshot::channel();
-        self.context
-            .pending_requests
-            .insert(request_id, ping_sender);
+        let (msgsender, msgreceiver) = oneshot::channel();
+        self.context.pending_requests.insert(request_id, msgsender);
 
         self.sender
             .send(ConnectorMessage::Publish(
@@ -464,13 +474,12 @@ impl Connector {
             ))
             .await
             .map_err(|e| ClientError::Eyre(eyre::eyre!(e)))?;
-        let receivedpacket = ping_receiver.await?;
+        let receivedpacket = msgreceiver.await?;
         Ok(receivedpacket)
     }
 
     pub async fn send_ping(&mut self) -> eyre::Result<String> {
         let params = serde_json::json!({});
-
         let session = self.context.session.lock().await;
         let topickey = if let Some((topic, key)) = session.pairing_topic_symkey.as_ref() {
             Some((topic.clone(), key.clone()))
@@ -490,7 +499,6 @@ impl Connector {
                 )
                 .await?;
             let receivedpacket_str = serde_json::to_string(&receivedpacket)?;
-
             Ok(receivedpacket_str)
         } else {
             Err(eyre::eyre!("no pairing established"))
@@ -500,6 +508,12 @@ impl Connector {
     /// establishes the session
     pub async fn ensure_session(&mut self) -> eyre::Result<()> {
         let session = self.context.session.lock().await;
+
+        if session.connected {
+            drop(session);
+            self.context.restore_subription(&self.sender).await?;
+            return Ok(());
+        }
         // the session proposal topic
         let topic = session.session_proposal_topic.clone();
         use eyre::Context;
@@ -522,7 +536,6 @@ impl Connector {
                 WC_SESSION_PROPOSE_REQUEST_TAG,
             )
             .await?;
-
         if let Some(error) = response.get("error") {
             return Err(eyre::eyre!(
                 "EnsureSessionFail {}",
@@ -544,16 +557,11 @@ impl Connector {
         // remove "/"
         relay_address.pop();
         let project_id = session.project_id.clone();
-        let context = Arc::new(Context::new(session));
+        let context = Arc::new(Context::new(session.clone()));
         let (sender, mut receiver) = mpsc::channel(10);
         let handler = MessageHandler::new(context.clone(), sender.clone(), callback_sender);
         let client = Client::new(handler);
-        let key = Keypair::generate(&mut rand::thread_rng());
-        let auth = AuthToken::new(AuthSubject::generate())
-            .aud(relay_address.clone())
-            .ttl(Duration::from_secs(60 * 60))
-            .as_jwt(&key)
-            .expect("jwt token");
+        let auth = session.auth_jwt.clone();
         let opts = ConnectionOptions::new(project_id, auth).with_address(relay_address);
         client.connect(opts).await?;
 

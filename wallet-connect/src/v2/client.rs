@@ -65,9 +65,22 @@ impl Client {
             opts.required_namespaces,
             opts.client_meta,
         );
+
         let connector = Connector::new_client(session, opts.callback_sender).await?;
         Ok(Client {
             connection: Arc::new(RwLock::new(connector)),
+        })
+    }
+
+    /// Restore a new client from the provided options
+    pub async fn restore(
+        session_info: SessionInfo,
+        callback_sender: Option<tokio::sync::mpsc::UnboundedSender<String>>,
+    ) -> eyre::Result<Self> {
+        Ok(Client {
+            connection: Arc::new(RwLock::new(
+                Connector::new_client(session_info, callback_sender).await?,
+            )),
         })
     }
 
