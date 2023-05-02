@@ -11,7 +11,7 @@ use super::{
     crypto::derive_symkey_topic,
     protocol::{
         Namespaces, OptionalNamespaces, Peer, Relay, RequiredNamespaces, WcSessionPropose,
-        WcSessionProposeResponse, WcSessionSettle,
+        WcSessionProposeResponse, WcSessionSettle, WcSessionUpdate,
     },
     Metadata,
 };
@@ -130,5 +130,19 @@ impl SessionInfo {
     pub fn session_settle(&mut self, settle: WcSessionSettle) {
         self.pairing_peer_meta = Some(settle.controller);
         self.namespaces = Some(settle.namespaces);
+    }
+
+    pub fn session_update(&mut self, info: WcSessionUpdate) {
+        self.namespaces = Some(info.namespaces);
+    }
+
+    // FIXME: 7 days
+    pub fn session_extend(&mut self) {}
+
+    pub fn session_delete(&mut self) {
+        self.connected = false;
+        self.pairing_topic_symkey = None;
+        self.pairing_peer_meta = None;
+        self.namespaces = None;
     }
 }
