@@ -1,5 +1,10 @@
 # Changelog
 ## [Unreleased]
+
+## [v0.0.20-alpha] - 2023-5-2
+- add session updates / events for wc 2.0 (rust)
+- change tokio tungstenite to webpkit roots
+
 ## [v0.0.19-alpha] - 2023-4-24
 - Upgrade ethers to 2.0
 - Add msys2 build support
