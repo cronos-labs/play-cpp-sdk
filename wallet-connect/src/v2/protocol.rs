@@ -9,7 +9,6 @@ use ethers::types::Address;
 ///! FIXME: wc_sessionPing OK
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
-
 /// https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods#wc_sessionpropose
 pub const WC_SESSION_PROPOSE_REQUEST_METHOD: &str = "wc_sessionPropose";
 pub const WC_SESSION_PING_REQUEST_METHOD: &str = "wc_sessionPing";
@@ -177,7 +176,13 @@ impl FromStr for Eip155AddressWithChainId {
 
 impl Display for Eip155AddressWithChainId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "eip155:{}:{}", self.chain_id, self.address)
+        let address = self.address;
+        let full_address = format!("{address:?}");
+        assert!(
+            full_address.starts_with("0x"),
+            "Address must start with '0x'"
+        );
+        write!(f, "eip155:{}:{}", self.chain_id, full_address)
     }
 }
 

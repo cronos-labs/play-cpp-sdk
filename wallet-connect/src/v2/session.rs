@@ -1,12 +1,3 @@
-use relay_rpc::domain::Topic;
-use secrecy::ExposeSecret;
-use serde::{Deserialize, Serialize};
-use url::Url;
-use x25519_dalek::{PublicKey, StaticSecret};
-use zeroize::Zeroize;
-
-use crate::{crypto::Key, hex};
-
 use super::{
     crypto::derive_symkey_topic,
     protocol::{
@@ -15,6 +6,18 @@ use super::{
     },
     Metadata,
 };
+use crate::{crypto::Key, hex};
+use relay_rpc::auth::AuthToken;
+use relay_rpc::auth::SerializedAuthToken;
+use relay_rpc::auth::{ed25519_dalek::Keypair, rand};
+use relay_rpc::domain::AuthSubject;
+use relay_rpc::domain::Topic;
+use secrecy::ExposeSecret;
+use serde::{Deserialize, Serialize};
+use tokio::time::Duration;
+use url::Url;
+use x25519_dalek::{PublicKey, StaticSecret};
+use zeroize::Zeroize;
 
 /// The WalletConnect 2.0 session information
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -43,6 +46,10 @@ pub struct SessionInfo {
     pub pairing_peer_meta: Option<Peer>,
     /// the one-time request ID
     pub session_proposal_topic: Topic,
+    /// hex (without 0x) of ed 25519 keypair
+    pub pairing_keypair: Vec<u8>, // ed 25519
+    /// jwt
+    pub auth_jwt: SerializedAuthToken,
 }
 
 impl SessionInfo {
@@ -53,11 +60,24 @@ impl SessionInfo {
     /// and prepare the client/peer metadata from it
     /// and provided arguments.
     pub fn new(
-        relay_server: Url,
+        relay_server: Url, // wss://relay.walletconnect.com/
         project_id: String,
         required_namespaces: RequiredNamespaces,
         metadata: Metadata,
     ) -> Self {
+        let key = Keypair::generate(&mut rand::thread_rng());
+        let pairing_keypair = key.to_bytes().to_vec();
+
+        let mut relay_address = relay_server.to_string();
+        // remove "/"
+        relay_address.pop();
+
+        let auth_jwt = AuthToken::new(AuthSubject::generate())
+            .aud(relay_address.clone())
+            .ttl(Duration::from_secs(60 * 60))
+            .as_jwt(&key)
+            .expect("jwt token");
+
         let mut client_secret = StaticSecret::new(relay_rpc::auth::rand::thread_rng());
         let client_public = PublicKey::from(&client_secret);
         let client_secret_key = Key::from_raw(client_secret.to_bytes());
@@ -81,6 +101,8 @@ impl SessionInfo {
             pairing_topic_symkey: None,
             pairing_peer_meta: None,
             session_proposal_topic,
+            pairing_keypair,
+            auth_jwt,
         }
     }
 
