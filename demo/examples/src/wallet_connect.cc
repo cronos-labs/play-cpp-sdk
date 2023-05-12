@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
             std::cout << "transaction_hash="
                       << bytes_to_hex_string(tx_hash).c_str() << std::endl;
 
-            tx_receipt = get_eth_transaction_receipt_blocking(
+            tx_receipt = wait_for_transaction_receipt_blocking(
                 tx_hash, "https://evm-t3.cronos.org");
 
             std::cout << "transaction_receipt=" << tx_receipt.c_str()
