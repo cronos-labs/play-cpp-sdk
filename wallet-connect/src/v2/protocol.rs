@@ -33,7 +33,7 @@ pub struct OptionalNamespaces {
 }
 
 /// FIXME: is it duplicate with WalletConnect 1.0?
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Metadata {
     pub description: String,
     pub url: String,
@@ -48,7 +48,7 @@ pub struct Relay {
 }
 
 /// the namespaces required by the dApp / client
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct RequiredNamespaces {
     pub(crate) eip155: Eip155,
     // FIXME: Cosmos, Solana, Stellar...
@@ -71,7 +71,7 @@ impl RequiredNamespaces {
 /// chains are the chain IDs prefixed with "eip155:"
 /// TODO: just store the chain IDs and have custom deserialize/serialize?
 /// TODO: methods/events -- use Enum of known Ethereum methods/events?
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Eip155 {
     methods: Vec<String>,
     pub(crate) chains: Vec<String>,
@@ -146,7 +146,7 @@ pub struct Peer {
 /// The namespaces returned by the wallet
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Namespaces {
-    pub(crate) eip155: NamespacesEip155,
+    pub eip155: NamespacesEip155,
 }
 
 /// The address with EIP155 chain ID
@@ -196,9 +196,9 @@ impl Namespaces {
 /// FIXME: parse events and methods to the known Ethereum events and methods?
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NamespacesEip155 {
-    pub(crate) accounts: Vec<Eip155AddressWithChainId>,
-    pub(crate) methods: Vec<String>,
-    pub(crate) events: Vec<String>,
+    pub accounts: Vec<Eip155AddressWithChainId>,
+    pub methods: Vec<String>,
+    pub events: Vec<String>,
 }
 
 /// ref: https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods#wc_sessionrequest

@@ -4,9 +4,10 @@ mod pay;
 /// Wallect Connect registry of wallets/apps support
 mod wallectconnectregistry;
 mod walletconnect;
+mod walletconnect2;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 use ethers::core::types::{BlockNumber, Chain};
 use ethers::etherscan::{
@@ -23,6 +24,7 @@ use qrcodegen::QrCode;
 use qrcodegen::QrCodeEcc;
 use serde::{Deserialize, Serialize};
 use walletconnect::WalletconnectClient;
+use walletconnect2::Walletconnect2Client;
 
 #[cxx::bridge(namespace = "com::crypto::game_sdk")]
 mod ffi {
@@ -135,14 +137,33 @@ mod ffi {
     }
 
     /// cronos address info
+    #[derive(Debug, Default)]
     pub struct WalletConnectAddress {
         pub address: [u8; 20], // address, as bytes, 20 bytes
     }
 
     /// walletconnect ensure-session result
+    #[derive(Debug, Default)]
     pub struct WalletConnectEnsureSessionResult {
         pub addresses: Vec<WalletConnectAddress>,
         pub chain_id: u64,
+    }
+
+    #[derive(Debug, Default)]
+    pub struct WalletConnect2Eip155Accounts {
+        pub address: WalletConnectAddress,
+        pub chain_id: u64,
+    }
+    #[derive(Debug, Default)]
+    pub struct WalletConnect2Eip155 {
+        pub(crate) accounts: Vec<WalletConnect2Eip155Accounts>,
+        pub(crate) methods: Vec<String>,
+        pub(crate) events: Vec<String>,
+    }
+
+    #[derive(Debug, Default)]
+    pub struct WalletConnect2EnsureSessionResult {
+        pub eip155: WalletConnect2Eip155,
     }
 
     /// the subset of payment object from https://pay-docs.crypto.com
@@ -260,10 +281,14 @@ mod ffi {
         pub fn generate_qrcode(qrcodestring: String) -> Result<WalletQrcode>;
         /// WallnetConnect API
         type WalletconnectClient;
+        type Walletconnect2Client;
         /// restore walletconnect-session from string
         pub fn walletconnect_restore_client(
             session_info: String,
         ) -> Result<Box<WalletconnectClient>>;
+        pub fn walletconnect2_restore_client(
+            session_info: String,
+        ) -> Result<Box<Walletconnect2Client>>;
         /// create walletconnect-session
         /// the chain id (if 0, retrived and decided by wallet, if > 0, decided by the client)
         pub fn walletconnect_new_client(
@@ -273,6 +298,12 @@ mod ffi {
             name: String,
             chain_id: u64,
         ) -> Result<Box<WalletconnectClient>>;
+        pub fn walletconnect2_client_new(
+            relayserver: String,
+            project_id: String,
+            required_namespaces: String,
+            client_meta: String,
+        ) -> Result<Box<Walletconnect2Client>>;
 
         /// setup callback
         pub fn setup_callback_blocking(
@@ -284,10 +315,23 @@ mod ffi {
         pub fn ensure_session_blocking(
             self: &mut WalletconnectClient,
         ) -> Result<WalletConnectEnsureSessionResult>;
+
+        pub fn ensure_session_blocking(
+            self: &mut Walletconnect2Client,
+            waitmillis: u64,
+        ) -> Result<WalletConnect2EnsureSessionResult>;
+
+        pub fn poll_events_blocking(
+            self: &mut Walletconnect2Client,
+            waitmillis: u64,
+        ) -> Result<String>;
+
         /// get connection string for qrcode
         pub fn get_connection_string(self: &mut WalletconnectClient) -> Result<String>;
+        pub fn get_connection_string(self: &mut Walletconnect2Client) -> Result<String>;
         /// write session-info to string, which can be written to file
         pub fn save_client(self: &mut WalletconnectClient) -> Result<String>;
+        pub fn save_client(self: &mut Walletconnect2Client) -> Result<String>;
         /// print qrcode in termal, for debugging
         pub fn print_uri(self: &mut WalletconnectClient) -> Result<String>;
         /// sign message
@@ -296,6 +340,12 @@ mod ffi {
             message: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
+        pub fn sign_personal_blocking(
+            self: &mut Walletconnect2Client,
+            message: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+        pub fn ping_blocking(self: &mut Walletconnect2Client, waitmillis: u64) -> Result<String>;
 
         /// build cronos(eth) eip155 transaction
         /// Supported Wallets: Trust Wallet, Crypto.com Desktop Defi Wallet
@@ -793,6 +843,22 @@ fn walletconnect_restore_client(session_info: String) -> Result<Box<Walletconnec
     }))
 }
 
+fn walletconnect2_restore_client(session_info: String) -> Result<Box<Walletconnect2Client>> {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let rt = tokio::runtime::Runtime::new()?;
+    let client = rt.block_on(walletconnect2::restore_client(
+        session_info,
+        Some(tx.clone()),
+    ))?;
+    let client = Walletconnect2Client {
+        client: Some(client),
+        rt,
+        tx,
+        rx,
+    };
+    Ok(Box::new(client))
+}
+
 fn walletconnect_new_client(
     description: String,
     url: String,
@@ -934,6 +1000,79 @@ impl From<TransactionReceipt> for WalletConnectTransactionReceiptRaw {
             logs: src.logs,
         }
     }
+}
+
+// relay_server_string: "wss://relay.walletconnect.com"
+// project_id: hex string without 0x prefix
+//required_namespaces_json: {"eip155":{"methods":["eth_sendTransaction","eth_signTransaction","eth_sign","personal_sign","eth_signTypedData"],"chains":["eip155:5"],"events":["chainChanged","accountsChanged"]}}
+//client_meta_json: {"description":"Defi WalletConnect v2 example.","url":"http://localhost:8080/","icons":[],"name":"Defi WalletConnect Web3 Example"}
+pub fn walletconnect2_client_new(
+    relay_server_string: String,
+    project_id: String,
+    required_namespaces_json: String,
+    client_meta_json: String,
+) -> Result<Box<Walletconnect2Client>> {
+    // project_id is "", return error with anyhow
+    if project_id.is_empty() {
+        return Err(anyhow!("project_id is empty"));
+    }
+    // print all arguments
+    println!("relay_server_string: {:?}", relay_server_string);
+    println!("project_id: {:?}", project_id);
+    println!("required_namespaces_json: {:?}", required_namespaces_json);
+    println!("client_meta_json: {:?}", client_meta_json);
+
+    let mut opts = defi_wallet_connect::v2::ClientOptions::default();
+    // print opts
+    println!("opts1: {:?}", opts);
+
+    if !relay_server_string.is_empty() {
+        let relay_server = url::Url::parse(&relay_server_string)?;
+        opts.relay_server = relay_server;
+    }
+
+    if !project_id.is_empty() {
+        opts.project_id = project_id;
+    }
+
+    if !required_namespaces_json.is_empty() {
+        let required_namespaces: defi_wallet_connect::v2::RequiredNamespaces =
+            serde_json::from_str(&required_namespaces_json)?;
+        opts.required_namespaces = required_namespaces;
+    }
+
+    if !client_meta_json.is_empty() {
+        let client_meta: defi_wallet_connect::v2::Metadata =
+            serde_json::from_str(&client_meta_json)?;
+        opts.client_meta = client_meta;
+    }
+
+    println!("opts: {:?}", opts);
+    let required_namespaces = serde_json::to_string(&opts.required_namespaces)?;
+    println!("required_namespaces_json: {}", required_namespaces);
+    let client_meta = serde_json::to_string(&opts.client_meta)?;
+    println!("client_meta_json: {}", client_meta);
+
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+
+    opts.callback_sender = Some(tx.clone());
+
+    /* {
+        relay_server,
+        project_id,
+        required_namespaces,
+        client_meta,
+        callback_sender: Some(tx.clone()),
+    };*/
+    let rt = tokio::runtime::Runtime::new()?;
+    let client = rt.block_on(walletconnect2::new_client(opts))?;
+    let client = Walletconnect2Client {
+        client: Some(client),
+        rt,
+        tx,
+        rx,
+    };
+    Ok(Box::new(client))
 }
 
 #[cfg(test)]

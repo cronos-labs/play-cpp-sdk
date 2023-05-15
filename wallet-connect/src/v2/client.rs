@@ -26,6 +26,7 @@ use super::session::SessionInfo;
 use super::Metadata;
 use relay_client::Error;
 
+#[derive(Debug)]
 /// The WalletConnect 2.0 basic client options
 pub struct ClientOptions {
     /// The relay server url
@@ -45,6 +46,34 @@ pub struct ClientOptions {
     pub client_meta: Metadata,
     /// callback
     pub callback_sender: Option<tokio::sync::mpsc::UnboundedSender<String>>,
+}
+
+// implement Default for ClientOptions
+impl Default for ClientOptions {
+    fn default() -> Self {
+        Self {
+            relay_server: "wss://relay.walletconnect.com".parse().expect("url"),
+            project_id: "".into(),
+            required_namespaces: RequiredNamespaces::new(
+                vec![
+                    "eth_sendTransaction".to_owned(),
+                    "eth_signTransaction".to_owned(),
+                    "eth_sign".to_owned(),
+                    "personal_sign".to_owned(),
+                    "eth_signTypedData".to_owned(),
+                ],
+                vec!["eip155:5".to_owned()],
+                vec!["chainChanged".to_owned(), "accountsChanged".to_owned()],
+            ),
+            client_meta: Metadata {
+                description: "Defi WalletConnect v2 example.".into(),
+                url: "http://localhost:8080/".parse().expect("url"),
+                icons: vec![],
+                name: "Defi WalletConnect Web3 Example".into(),
+            },
+            callback_sender: None,
+        }
+    }
 }
 
 /// The WalletConnect 2.0 client
