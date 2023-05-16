@@ -147,8 +147,8 @@ int main(int argc, char *argv[]) {
 
         // send transaction
         if (test_basic) {
-            rust::String block_number = get_block_number_blocking(
-                "https://evm-t3.cronos.org");
+            rust::String block_number =
+                get_block_number_blocking("https://evm-t3.cronos.org");
             std::cout << "block number=" << block_number.c_str() << std::endl;
 
             std::cout << "Get transaction_receipt..." << std::endl;
