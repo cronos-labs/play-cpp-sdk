@@ -1,5 +1,15 @@
 # Changelog
 ## [Unreleased]
+## [v0.0.20-alpha] - 2023-5-16
+- Use defi-wallet-core-rs v0.3.6
+  - Add get_eth_transaction_receipt_blocking
+  - Add wait_for_transaction_receipt_blocking
+  - get_block_number_blocking
+- Update walletconnect 2.0 support
+  - Add session file
+  - Add session updates/events
+- Use rustls-tls-webpki-roots
+
 ## [v0.0.19-alpha] - 2023-4-24
 - Upgrade ethers to 2.0
 - Add msys2 build support

@@ -1203,7 +1203,7 @@ dependencies = [
 
 [[package]]
 name = "defi-wallet-core-common"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -1214,6 +1214,8 @@ dependencies = [
  "defi-wallet-core-proto",
  "ethers",
  "eyre",
+ "futures",
+ "futures-util",
  "hex",
  "ibc",
  "ibc-proto",
@@ -1222,6 +1224,7 @@ dependencies = [
  "once_cell",
  "pest",
  "pest_derive",
+ "pin-project",
  "prost",
  "rand 0.8.5",
  "rand_core 0.6.4",
@@ -1245,7 +1248,7 @@ dependencies = [
 
 [[package]]
 name = "defi-wallet-core-cpp"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "anyhow",
  "cosmos-sdk-proto",
@@ -3451,7 +3454,7 @@ checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
 name = "play-cpp-sdk"
-version = "0.0.19-alpha"
+version = "0.0.20-alpha"
 dependencies = [
  "defi-wallet-core-cpp",
  "extra-cpp-bindings",

@@ -147,8 +147,11 @@ int main(int argc, char *argv[]) {
 
         // send transaction
         if (test_basic) {
-            std::cout << "Get transaction_receipt..." << std::endl;
+            rust::String block_number =
+                get_block_number_blocking("https://evm-t3.cronos.org");
+            std::cout << "block number=" << block_number.c_str() << std::endl;
 
+            std::cout << "Get transaction_receipt..." << std::endl;
             rust::String tx_receipt = get_eth_transaction_receipt_blocking(
                 "d6dcb26d14f27ce8ae9b394fdecf02d48f5f6f7aea9a159fc0a8114c"
                 "26efe2ef",
@@ -175,9 +178,17 @@ int main(int argc, char *argv[]) {
 
             tx_receipt = get_eth_transaction_receipt_blocking(
                 tx_hash, "https://evm-t3.cronos.org");
-
             std::cout << "transaction_receipt=" << tx_receipt.c_str()
                       << std::endl;
+
+            tx_receipt = wait_for_transaction_receipt_blocking(
+                tx_hash, "https://evm-t3.cronos.org");
+            std::cout << "transaction_receipt=" << tx_receipt.c_str()
+                      << std::endl;
+
+            block_number =
+                get_block_number_blocking("https://evm-t3.cronos.org");
+            std::cout << "block number=" << block_number.c_str() << std::endl;
         }
 
         // send contract transaction
