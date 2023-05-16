@@ -1215,6 +1215,7 @@ dependencies = [
  "ethers",
  "eyre",
  "futures",
+ "futures-util",
  "hex",
  "ibc",
  "ibc-proto",
