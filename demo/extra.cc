@@ -45,17 +45,17 @@ void test_blackscout_cronoscan() {
     if (CRONOSCAN_API_KEY != "") {
         Vec<RawTxDetail> txs = get_transaction_history_blocking(
             "0x7de9ab1e6a60ac7a70ce96d1d95a0dfcecf7bfb7", CRONOSCAN_API_KEY);
-        cout << txs.size() << endl;
+        std::cout << txs.size() << endl;
 
         for (Vec<RawTxDetail>::iterator ptr = txs.begin(); ptr < txs.end();
              ptr++) {
-            cout << ptr->hash << " ";
-            cout << ptr->to_address << " ";
-            cout << ptr->from_address << " ";
-            cout << ptr->value << " ";
-            cout << ptr->block_no << " ";
-            cout << ptr->timestamp << " ";
-            cout << ptr->contract_address << " " << endl;
+            std::cout << ptr->hash << " ";
+            std::cout << ptr->to_address << " ";
+            std::cout << ptr->from_address << " ";
+            std::cout << ptr->value << " ";
+            std::cout << ptr->block_no << " ";
+            std::cout << ptr->timestamp << " ";
+            std::cout << ptr->contract_address << " " << endl;
         }
 
         Vec<RawTxDetail> erc20_txs = get_erc20_transfer_history_blocking(
@@ -65,13 +65,13 @@ void test_blackscout_cronoscan() {
 
         for (Vec<RawTxDetail>::iterator ptr = erc20_txs.begin();
              ptr < erc20_txs.end(); ptr++) {
-            cout << ptr->hash << " ";
-            cout << ptr->to_address << " ";
-            cout << ptr->from_address << " ";
-            cout << ptr->value << " ";
-            cout << ptr->block_no << " ";
-            cout << ptr->timestamp << " ";
-            cout << ptr->contract_address << " " << endl;
+            std::cout << ptr->hash << " ";
+            std::cout << ptr->to_address << " ";
+            std::cout << ptr->from_address << " ";
+            std::cout << ptr->value << " ";
+            std::cout << ptr->block_no << " ";
+            std::cout << ptr->timestamp << " ";
+            std::cout << ptr->contract_address << " " << endl;
         }
 
         Vec<RawTxDetail> erc721_txs = get_erc721_transfer_history_blocking(
@@ -81,13 +81,13 @@ void test_blackscout_cronoscan() {
 
         for (Vec<RawTxDetail>::iterator ptr = erc721_txs.begin();
              ptr < erc721_txs.end(); ptr++) {
-            cout << ptr->hash << " ";
-            cout << ptr->to_address << " ";
-            cout << ptr->from_address << " ";
-            cout << ptr->value << " ";
-            cout << ptr->block_no << " ";
-            cout << ptr->timestamp << " ";
-            cout << ptr->contract_address << " " << endl;
+            std::cout << ptr->hash << " ";
+            std::cout << ptr->to_address << " ";
+            std::cout << ptr->from_address << " ";
+            std::cout << ptr->value << " ";
+            std::cout << ptr->block_no << " ";
+            std::cout << ptr->timestamp << " ";
+            std::cout << ptr->contract_address << " " << endl;
         }
     }
 
@@ -97,13 +97,13 @@ void test_blackscout_cronoscan() {
                             "0x652d53227d7013f3FbBeA542443Dc2eeF05719De");
     for (Vec<RawTokenResult>::iterator ptr = tokens_txs.begin();
          ptr < tokens_txs.end(); ptr++) {
-        cout << ptr->balance << " ";
-        cout << ptr->contract_address << " ";
-        cout << ptr->decimals << " ";
-        cout << ptr->id << " ";
-        cout << ptr->name << " ";
-        cout << ptr->symbol << " ";
-        cout << ptr->token_type << endl;
+        std::cout << ptr->balance << " ";
+        std::cout << ptr->contract_address << " ";
+        std::cout << ptr->decimals << " ";
+        std::cout << ptr->id << " ";
+        std::cout << ptr->name << " ";
+        std::cout << ptr->symbol << " ";
+        std::cout << ptr->token_type << endl;
     }
 
     Vec<RawTxDetail> token_transfer_txs = get_token_transfers_blocking(
@@ -112,13 +112,13 @@ void test_blackscout_cronoscan() {
         QueryOption::ByAddress);
     for (Vec<RawTxDetail>::iterator ptr = token_transfer_txs.begin();
          ptr < token_transfer_txs.end(); ptr++) {
-        cout << ptr->hash << " ";
-        cout << ptr->to_address << " ";
-        cout << ptr->from_address << " ";
-        cout << ptr->value << " ";
-        cout << ptr->block_no << " ";
-        cout << ptr->timestamp << " ";
-        cout << ptr->contract_address << " " << endl;
+        std::cout << ptr->hash << " ";
+        std::cout << ptr->to_address << " ";
+        std::cout << ptr->from_address << " ";
+        std::cout << ptr->value << " ";
+        std::cout << ptr->block_no << " ";
+        std::cout << ptr->timestamp << " ";
+        std::cout << ptr->contract_address << " " << endl;
     }
 
     test_crypto_pay();
@@ -157,7 +157,46 @@ Box<WalletconnectClient> make_new_client(std::string filename) {
         Box<WalletconnectClient> client = walletconnect_new_client(
             "Defi WalletConnect example.", "http://localhost:8080/",
             Vec<rust::String>(), "Defi WalletConnect Web3 Example", 25);
-        cout << "qrcode= " << client->get_connection_string() << endl;
+        std::cout << "qrcode= " << client->get_connection_string() << endl;
+
+        return client;
+    }
+}
+
+/**
+@summary    make new client2
+@param      filename : which stores session informaiton as json
+@return     client : Walletconnect2Client, ownership is transferred to caller
+@throws     Error : if sessioninfo is invalid, throw error
+*/
+
+Box<Walletconnect2Client> make_new_client2(std::string filename) {
+
+    ifstream file(filename.c_str());
+    if (file.is_open()) {
+        std::string sessioninfostring((istreambuf_iterator<char>(file)),
+                                      istreambuf_iterator<char>());
+        Box<Walletconnect2Client> client =
+            walletconnect2_restore_client(sessioninfostring);
+        return client;
+    } else {
+        // read env
+        String relay_server_string = "wss://relay.walletconnect.com";
+        String required_namespaces_json =
+            "{\"eip155\":{\"methods\":[\"eth_sendTransaction\",\"eth_"
+            "signTransaction\",\"eth_sign\",\"personal_sign\",\"eth_"
+            "signTypedData\"],\"chains\":[\"eip155:5\"],\"events\":["
+            "\"chainChanged\",\"accountsChanged\"]}}";
+        String client_meta_json =
+            "{\"description\":\"Defi WalletConnect v2 "
+            "example.\",\"url\":\"http://localhost:8080/"
+            "\",\"icons\":[],\"name\":\"Defi WalletConnect Web3 Example\"}";
+
+        String projectid = getEnv("NEXT_PUBLIC_PROJECT_ID");
+        Box<Walletconnect2Client> client = walletconnect2_client_new(
+            relay_server_string.c_str(), projectid.c_str(),
+            required_namespaces_json.c_str(), client_meta_json.c_str());
+        std::cout << "qrcode= " << client->get_connection_string() << endl;
 
         return client;
     }
@@ -210,9 +249,12 @@ void UserWalletConnectCallback::onUpdated(
     print_session(sessioninfo);
 }
 
+/**
+ * @summary     test wallet connect 1.0    (will be deprecated)
+ * @description basic test for wallet connect 1.0
+ */
 void test_wallet_connect() {
-    std::string mycronosrpc = getenv("CRONOSRPC");
-    std::cout << "read mycronosrpc: " << mycronosrpc << std::endl;
+    std::string mycronosrpc = getEnv("CRONOSRPC").c_str();
     bool test_personal = true;
     bool test_basic = false;
     bool test_nft = false;
@@ -239,21 +281,21 @@ void test_wallet_connect() {
             /* message signing */
             Vec<uint8_t> sig1 = client->sign_personal_blocking(
                 "hello", result.addresses[0].address);
-            cout << "signature=" << bytes_to_hex_string(sig1).c_str()
-                 << std::endl;
-            cout << "signature length=" << sig1.size() << endl;
+            std::cout << "signature=" << bytes_to_hex_string(sig1).c_str()
+                      << std::endl;
+            std::cout << "signature length=" << sig1.size() << endl;
         }
 
         if (test_basic) {
             std::string fromaddress = getenv("MYFROMADDRESS");
-            cout << "mycronosrpc=" << mycronosrpc << endl;
-            cout << "fromaddress=" << fromaddress << endl;
+            std::cout << "mycronosrpc=" << mycronosrpc << endl;
+            std::cout << "fromaddress=" << fromaddress << endl;
             std::string toaddress = getenv("MYTOADDRESS");
-            cout << "toaddress=" << toaddress << endl;
+            std::cout << "toaddress=" << toaddress << endl;
             std::string mynonce = org::defi_wallet_core::get_eth_nonce(
                                       fromaddress.c_str(), mycronosrpc)
                                       .c_str();
-            cout << "nonce=" << mynonce << endl;
+            std::cout << "nonce=" << mynonce << endl;
             WalletConnectTxEip155 info;
             info.to = toaddress;
             info.common.gas_limit = "21000"; // gas limit
@@ -268,22 +310,22 @@ void test_wallet_connect() {
 
             auto receipt = org::defi_wallet_core::broadcast_eth_signed_raw_tx(
                 rawtx, mycronosrpc, 3000);
-            cout << "transaction_hash="
-                 << bytes_to_hex_string(receipt.transaction_hash).c_str()
-                 << endl;
+            std::cout << "transaction_hash="
+                      << bytes_to_hex_string(receipt.transaction_hash).c_str()
+                      << endl;
         }
 
         if (test_nft) {
             std::string contractaddress = getenv("MYCONTRACTADDRESS");
             std::string fromaddress = getenv("MYFROMADDRESS");
-            cout << "mycronosrpc=" << mycronosrpc << endl;
-            cout << "fromaddress=" << fromaddress << endl;
+            std::cout << "mycronosrpc=" << mycronosrpc << endl;
+            std::cout << "fromaddress=" << fromaddress << endl;
             std::string toaddress = getenv("MYTOADDRESS");
-            cout << "toaddress=" << toaddress << endl;
+            std::cout << "toaddress=" << toaddress << endl;
             std::string mynonce = org::defi_wallet_core::get_eth_nonce(
                                       fromaddress.c_str(), mycronosrpc)
                                       .c_str();
-            cout << "nonce=" << mynonce << endl;
+            std::cout << "nonce=" << mynonce << endl;
             WalletConnectTxCommon common;
             // TODO use variables
             rust::String contract_action =
@@ -308,12 +350,83 @@ void test_wallet_connect() {
 
             auto receipt = org::defi_wallet_core::broadcast_eth_signed_raw_tx(
                 rawtx, mycronosrpc, 3000);
-            cout << "transaction_hash="
-                 << bytes_to_hex_string(receipt.transaction_hash).c_str()
-                 << endl;
+            std::cout << "transaction_hash="
+                      << bytes_to_hex_string(receipt.transaction_hash).c_str()
+                      << endl;
         }
     } catch (const cxxbridge1::Error e) {
-        cout << "wallet connect error=" << e.what() << std::endl;
+        std::cout << "wallet connect error=" << e.what() << std::endl;
+    }
+}
+
+/**
+ * @summary     test wallet connect 2.0
+ * @description basic test for wallet connect 2.0
+ */
+
+void test_wallet_connect2() {
+    std::string mycronosrpc = getEnv("CRONOSRPC").c_str();
+    bool test_personal = true;
+    bool test_basic = false;
+    bool test_nft = false;
+    std::string filename = "sessioninfo2.json";
+    bool exit_program = false;
+    try {
+        Box<Walletconnect2Client> client = make_new_client2(filename);
+        WalletConnect2EnsureSessionResult result =
+            client->ensure_session_blocking(60000);
+        std::cout << "session result=" << result.eip155.accounts.size()
+                  << std::endl;
+
+        std::cout << "ping" << endl;
+        String pingresult = client->ping_blocking(60000);
+        std::cout << "ping result=" << pingresult.c_str() << std::endl;
+
+        // spawn thread
+        std::thread pollingthread([&]() {
+            try {
+                bool *exitthread = &exit_program;
+                while (!(*exitthread)) {
+                    try {
+                        String ret = client->poll_events_blocking(1000);
+                        std::cout << "poll events result=" << ret.c_str()
+                                  << std::endl;
+                    } catch (const std::exception &e) {
+                    }
+                }
+            } catch (const std::exception &e) {
+                std::cout << "wallet connect error=" << e.what() << std::endl;
+            }
+        });
+        String sessioninfo = client->save_client();
+        {
+            ofstream outfile(filename);
+            outfile.write(sessioninfo.c_str(), sessioninfo.size());
+        }
+
+        assert(result.eip155.accounts.size() > 0);
+        bool test_personal = true;
+
+        if (test_personal) {
+            Vec<uint8_t> sig1 = client->sign_personal_blocking(
+                "hello", result.eip155.accounts.at(0).address.address);
+            std::cout << "signature length=" << sig1.size() << endl;
+        }
+
+        std::cout << "enter q to exit" << std::endl;
+        while (true) {
+            // read input, if q is pressed, quit
+            char c = getchar();
+            if (c == 'q') {
+                exit_program = true;
+                std::cout << "exit program" << endl;
+                break;
+            }
+        }
+        pollingthread.join();
+
+    } catch (const std::exception &e) {
+        std::cout << "wallet connect error=" << e.what() << std::endl;
     }
 }
 
@@ -331,13 +444,13 @@ void test_crypto_pay() {
     opiton_args.description = "Crypto.com Tee (Unisex)";
     CryptoComPaymentResponse resp =
         create_payment(PAY_API_KEY, "2500", "USD", opiton_args);
-    cout << "create payment:" << resp.id << " ";
-    cout << resp.main_app_qr_code << " ";
-    cout << resp.onchain_deposit_address << " ";
-    cout << resp.base_amount << " ";
-    cout << resp.currency << " ";
-    cout << resp.expiration << " ";
-    cout << resp.status << endl;
+    std::cout << "create payment:" << resp.id << " ";
+    std::cout << resp.main_app_qr_code << " ";
+    std::cout << resp.onchain_deposit_address << " ";
+    std::cout << resp.base_amount << " ";
+    std::cout << resp.currency << " ";
+    std::cout << resp.expiration << " ";
+    std::cout << resp.status << endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     stop_thread_1 = true; // force stopping websocket thread after timeout
@@ -359,22 +472,22 @@ void websocket_client_thread(std::atomic<bool> &stop_thread, String &id) {
             &*ws; // <-- because a unique_ptr cannot be copied into a lambda
         ws->poll();
         ws->dispatch([wsp](std::string msg) {
-            // cout << "Receive webhook event: " << msg << endl;
+            // std::cout << "Receive webhook event: " << msg << endl;
             try {
                 auto message = json::parse(msg);
                 assert(message.at("type") == "payment.created");
                 String id = message.at("data").at("object").at("id");
                 CryptoComPaymentResponse resp = get_payment(PAY_API_KEY, id);
-                cout << "get payment: " << resp.id << " ";
-                cout << resp.main_app_qr_code << " ";
-                cout << resp.onchain_deposit_address << " ";
-                cout << resp.base_amount << " ";
-                cout << resp.currency << " ";
-                cout << resp.expiration << " ";
-                cout << resp.status << endl;
+                std::cout << "get payment: " << resp.id << " ";
+                std::cout << resp.main_app_qr_code << " ";
+                std::cout << resp.onchain_deposit_address << " ";
+                std::cout << resp.base_amount << " ";
+                std::cout << resp.currency << " ";
+                std::cout << resp.expiration << " ";
+                std::cout << resp.status << endl;
                 wsp->close();
             } catch (const nlohmann::detail::parse_error &e) {
-                cout << e.what() << endl;
+                std::cout << e.what() << endl;
                 wsp->close();
             }
         });
@@ -382,5 +495,5 @@ void websocket_client_thread(std::atomic<bool> &stop_thread, String &id) {
             return;
         }
     }
-    cout << "websocket client thread ends" << endl;
+    std::cout << "websocket client thread ends" << endl;
 }

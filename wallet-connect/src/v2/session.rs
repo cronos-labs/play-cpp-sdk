@@ -46,8 +46,6 @@ pub struct SessionInfo {
     pub pairing_peer_meta: Option<Peer>,
     /// the one-time request ID
     pub session_proposal_topic: Topic,
-    /// hex (without 0x) of ed 25519 keypair
-    pub pairing_keypair: Vec<u8>, // ed 25519
     /// jwt
     pub auth_jwt: SerializedAuthToken,
 }
@@ -66,7 +64,6 @@ impl SessionInfo {
         metadata: Metadata,
     ) -> Self {
         let key = Keypair::generate(&mut rand::thread_rng());
-        let pairing_keypair = key.to_bytes().to_vec();
 
         let mut relay_address = relay_server.to_string();
         // remove "/"
@@ -101,7 +98,6 @@ impl SessionInfo {
             pairing_topic_symkey: None,
             pairing_peer_meta: None,
             session_proposal_topic,
-            pairing_keypair,
             auth_jwt,
         }
     }
