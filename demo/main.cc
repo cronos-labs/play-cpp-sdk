@@ -26,7 +26,6 @@ int main(int argc, char *argv[]) {
         test_interval();
         test_blackscout_cronoscan();
         test_wallet_connect();
-
     } catch (const std::exception &e) {
         // Use `Assertion failed`, the same as `assert` function
         std::cout << "Assertion failed: " << e.what() << std::endl;

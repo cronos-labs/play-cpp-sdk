@@ -334,6 +334,7 @@ mod ffi {
         pub fn save_client(self: &mut Walletconnect2Client) -> Result<String>;
         /// print qrcode in termal, for debugging
         pub fn print_uri(self: &mut WalletconnectClient) -> Result<String>;
+        pub fn print_uri(self: &mut Walletconnect2Client) -> Result<String>;
         /// sign message
         pub fn sign_personal_blocking(
             self: &mut WalletconnectClient,
@@ -354,11 +355,21 @@ mod ffi {
             info: &WalletConnectTxEip155,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
+        pub fn sign_eip155_transaction_blocking(
+            self: &mut Walletconnect2Client,
+            info: &WalletConnectTxEip155,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
 
         /// send cronos(eth) eip155 transaction
         /// Supported Wallets: Trust Wallet, MetaMask and Crypto.com Mobile Defi Wallet
         pub fn send_eip155_transaction_blocking(
             self: &mut WalletconnectClient,
+            info: &WalletConnectTxEip155,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+        pub fn send_eip155_transaction_blocking(
+            self: &mut Walletconnect2Client,
             info: &WalletConnectTxEip155,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
@@ -370,11 +381,21 @@ mod ffi {
             eip1559_transaction_request: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
+        pub fn sign_transaction(
+            self: &mut Walletconnect2Client,
+            eip1559_transaction_request: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
 
         /// eip1559_transaction_request: json string of Eip1559TransactionRequest
         /// return transaction hash bytes
         pub fn send_transaction(
             self: &mut WalletconnectClient,
+            eip1559_transaction_request: String,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+        pub fn send_transaction(
+            self: &mut Walletconnect2Client,
             eip1559_transaction_request: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
@@ -398,6 +419,12 @@ mod ffi {
             common: &WalletConnectTxCommon,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
+        pub fn sign_contract_transaction(
+            self: &mut Walletconnect2Client,
+            contract_action: String,
+            common: &WalletConnectTxCommon,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
 
         // send a contract transaction
         /// contract_action is a json string of `ContractAction` type
@@ -414,6 +441,12 @@ mod ffi {
         // return transaction hash bytes
         pub fn send_contract_transaction(
             self: &mut WalletconnectClient,
+            contract_action: String,
+            common: &WalletConnectTxCommon,
+            address: [u8; 20],
+        ) -> Result<Vec<u8>>;
+        pub fn send_contract_transaction(
+            self: &mut Walletconnect2Client,
             contract_action: String,
             common: &WalletConnectTxCommon,
             address: [u8; 20],
@@ -1017,14 +1050,12 @@ pub fn walletconnect2_client_new(
         return Err(anyhow!("project_id is empty"));
     }
     // print all arguments
-    println!("relay_server_string: {:?}", relay_server_string);
-    println!("project_id: {:?}", project_id);
-    println!("required_namespaces_json: {:?}", required_namespaces_json);
-    println!("client_meta_json: {:?}", client_meta_json);
+    println!("relay_server_string: {relay_server_string:?}");
+    println!("project_id: {project_id:?}");
+    println!("required_namespaces_json: {required_namespaces_json:?}");
+    println!("client_meta_json: {client_meta_json:?}");
 
     let mut opts = defi_wallet_connect::v2::ClientOptions::default();
-    // print opts
-    println!("opts1: {:?}", opts);
 
     if !relay_server_string.is_empty() {
         let relay_server = url::Url::parse(&relay_server_string)?;
@@ -1047,11 +1078,11 @@ pub fn walletconnect2_client_new(
         opts.client_meta = client_meta;
     }
 
-    println!("opts: {:?}", opts);
+    println!("opts: {opts:?}");
     let required_namespaces = serde_json::to_string(&opts.required_namespaces)?;
-    println!("required_namespaces_json: {}", required_namespaces);
+    println!("required_namespaces_json: {required_namespaces}",);
     let client_meta = serde_json::to_string(&opts.client_meta)?;
-    println!("client_meta_json: {}", client_meta);
+    println!("client_meta_json: {client_meta}");
 
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 

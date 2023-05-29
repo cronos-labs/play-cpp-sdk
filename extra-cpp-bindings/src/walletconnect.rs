@@ -384,7 +384,7 @@ impl WalletconnectClient {
         if !userinfo.common.nonce.is_empty() {
             tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
         }
-        if !userinfo.common.chainid == 0 {
+        if userinfo.common.chainid != 0 {
             tx = tx.chain_id(userinfo.common.chainid);
         }
         if !userinfo.value.is_empty() {
@@ -437,7 +437,7 @@ impl WalletconnectClient {
         if !userinfo.common.nonce.is_empty() {
             tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
         }
-        if !userinfo.common.chainid == 0 {
+        if userinfo.common.chainid != 0 {
             tx = tx.chain_id(userinfo.common.chainid);
         }
         if !userinfo.value.is_empty() {

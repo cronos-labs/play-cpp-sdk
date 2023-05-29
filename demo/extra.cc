@@ -5,6 +5,7 @@
 #include "sdk/include/rust/cxx.h"
 #include "third_party/easywsclient/easywsclient.hpp"
 #include "third_party/json/single_include/nlohmann/json.hpp"
+#include <cassert>
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -363,16 +364,17 @@ void test_wallet_connect() {
  * @summary     test wallet connect 2.0
  * @description basic test for wallet connect 2.0
  */
-
 void test_wallet_connect2() {
     std::string mycronosrpc = getEnv("CRONOSRPC").c_str();
-    bool test_personal = true;
-    bool test_basic = false;
+    bool test_personal = false;
+    bool test_basic = true;
     bool test_nft = false;
     std::string filename = "sessioninfo2.json";
     bool exit_program = false;
     try {
         Box<Walletconnect2Client> client = make_new_client2(filename);
+        String uri = client->print_uri();
+        std::cout << "uri= " << uri.c_str() << std::endl;
         WalletConnect2EnsureSessionResult result =
             client->ensure_session_blocking(60000);
         std::cout << "session result=" << result.eip155.accounts.size()
@@ -405,12 +407,35 @@ void test_wallet_connect2() {
         }
 
         assert(result.eip155.accounts.size() > 0);
-        bool test_personal = true;
 
         if (test_personal) {
             Vec<uint8_t> sig1 = client->sign_personal_blocking(
                 "hello", result.eip155.accounts.at(0).address.address);
             std::cout << "signature length=" << sig1.size() << endl;
+        }
+
+        if (test_basic) {
+            std::string fromaddress = getenv("MYFROMADDRESS");
+            std::cout << "mycronosrpc=" << mycronosrpc << endl;
+            std::cout << "fromaddress=" << fromaddress << endl;
+            std::string toaddress = getenv("MYTOADDRESS");
+            std::cout << "toaddress=" << toaddress << endl;
+            std::string mynonce = org::defi_wallet_core::get_eth_nonce(
+                                      fromaddress.c_str(), mycronosrpc)
+                                      .c_str();
+            std::cout << "nonce=" << mynonce << endl;
+            WalletConnectTxEip155 info;
+            info.to = toaddress;
+            info.common.gas_limit = "21000"; // gas limit
+            info.common.gas_price = "10000"; // gas price
+            info.value = "100000000000000";  // 0.0001 eth
+            info.data = Vec<uint8_t>();
+            info.common.nonce = mynonce;
+            info.common.chainid = 1;
+
+            assert(result.eip155.accounts.size() > 0);
+            Vec<uint8_t> rawtx = client->sign_eip155_transaction_blocking(
+                info, result.eip155.accounts[0].address.address);
         }
 
         std::cout << "enter q to exit" << std::endl;

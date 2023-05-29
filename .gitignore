@@ -39,3 +39,21 @@ demo/cronos.h
 demo/sdk
 
 install
+
+wallet-connect/qrcode.png
+
+wallet-connect/session.bin
+
+defi-wallet-core-rs
+
+demo/third_party/easywsclient
+
+demo/third_party/json
+
+wallet-connect/yarn.lock
+
+wallet-connect/node_modules/
+
+.DS_Store
+
+sessioninfo2.json
