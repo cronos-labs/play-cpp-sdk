@@ -53,17 +53,34 @@ clone:
 
 build_play-cpp-sdk: clone
 ifeq ($(shell uname -m), x86_64)
-ifeq ($(UNAME), Darwin)
+ ifeq ($(UNAME), Darwin)		
+  ifeq ($(USE_ARM64),true)
+	rustup target add aarch64-apple-darwin
+	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release --target aarch64-apple-darwin
+  else
+	rustup target add x86_64-apple-darwin
 	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
-endif
-ifeq ($(UNAME), Linux)
+  endif		
+ endif
+ ifeq ($(UNAME), Linux)
 	CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
-endif
-endif
-ifeq ($(shell uname -m), arm64)
+ endif
+else 
+ ifeq ($(shell uname -m), arm64)
+  ifeq ($(UNAME), Darwin)
+   ifeq ($(USE_ARM64), true)
+	rustup target add aarch64-apple-darwin
+	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
+   else
 	rustup target add x86_64-apple-darwin
 	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
+   endif
+  endif
+ else
+	CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
+ endif
 endif
+
 
 build_extra-cpp-bindings:
 	CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package extra-cpp-bindings --release

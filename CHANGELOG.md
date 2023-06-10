@@ -1,5 +1,9 @@
 # Changelog
 ## [Unreleased]
+
+## [v0.0.21-alpha] - 2023-6-12
+- release arm64 apple
+
 ## [v0.0.20-alpha] - 2023-5-16
 - Use defi-wallet-core-rs v0.3.6
   - Add get_eth_transaction_receipt_blocking
