@@ -17,14 +17,31 @@ else
 endif
 
 ifeq ($(shell uname -m), x86_64)
-	TARGET_DIR = ../target/release
-endif
-
-ifeq ($(shell uname -m), arm64)
-	CXX = arch -x86_64 clang++ # for arm64, we only use clang++
-	TARGET_DIR = ../target/x86_64-apple-darwin/release
+ ifeq ($(UNAME), Darwin)
+  ifeq ($(USE_ARM64),true) 
+  CXX = clang++ -target arm64-apple-darwin # for arm64, we only use clang++
+  TARGET_DIR = ../target/aarch64-apple-darwin/release
+  else
+  CXX = arch -x86_64 clang++ # for intel, we only use clang++
+  TARGET_DIR = ../target/release
+  endif
+ else
+  TARGET_DIR = ../target/release
+ endif
 else
-
+ ifeq ($(shell uname -m), arm64)
+  ifeq ($(UNAME), Darwin)
+   ifeq ($(USE_ARM64),true)
+  CXX = clang++  # for arm64, we only use clang++
+  TARGET_DIR = ../target/release
+   else
+  CXX = arch -x86_64 clang++ # for intel, we only use clang++
+  TARGET_DIR = ../target/x86_64-apple-darwin/release
+   endif
+  endif
+ else
+  TARGET_DIR = ../target/release
+ endif
 endif
 
 ifeq ($(UNAME), Darwin)
@@ -128,9 +145,13 @@ ifeq ($(UNAME), Darwin)
 endif
 
 cmake:
+# if mac and arm64 do nothing
+ifeq ($(USE_ARM64),true)
+	echo "skip cmake"
+else 
 	mkdir -p build
 	cd build && CXX="$(CXX)" CXXFLAGS=$(CXXFLAGS) cmake .. && make
-
+endif	
 run_static:
 	. ./.env && ./bin/demostatic && ./build/demostatic
 
