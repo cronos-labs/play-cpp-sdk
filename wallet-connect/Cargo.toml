@@ -34,6 +34,8 @@ url = { version = "2", features = ["serde"] }
 x25519-dalek = "1"
 zeroize = "1"
 hex = "0.4"
+qrcode = "0.12"
+image = "0.23"
 
 [dev-dependencies]
 quickcheck = "1"

@@ -195,6 +195,9 @@ impl WCMiddleware<Provider<Client>> {
     pub fn new(client: Client) -> Self {
         WCMiddleware(Provider::new(client))
     }
+    pub fn with_sender(self, address: impl Into<Address>) -> Self {
+        WCMiddleware(self.0.with_sender(address))
+    }
 }
 
 /// The wrapper error type for `ethers` middleware-related issues
@@ -216,6 +219,26 @@ impl<M: Middleware> MiddlewareError for WCError<M> {
             WCError::MiddlewareError(e) => Some(e),
             _ => None,
         }
+    }
+}
+
+/// make string even length by padding with 0
+/// s : string to pad
+fn pad_zero(s: String) -> String {
+    if s.len() % 2 != 0 {
+        format!("0{s}")
+    } else {
+        s
+    }
+}
+
+/// add 0x prefix if not present
+/// s: string to append 0x to
+fn append_hex(s: String) -> String {
+    if s.starts_with("0x") {
+        s
+    } else {
+        format!("0x{s}")
     }
 }
 
@@ -245,23 +268,23 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         }
         if let Some(data) = tx.data() {
             tx_obj.insert("data", format!("0x{}", hex::encode(data)));
-        } else {
-            tx_obj.insert("data", "".to_string());
         }
         if let Some(gas) = tx.gas() {
-            tx_obj.insert("gas", format!("0x{gas:x}"));
+            // gas not working for webwallet
+            tx_obj.insert("gasLimit", append_hex(pad_zero(format!("{gas:x}"))));
         }
+
         if let Some(gas_price) = tx.gas_price() {
-            tx_obj.insert("gasPrice", format!("0x{gas_price:x}"));
+            tx_obj.insert("gasPrice", append_hex(pad_zero(format!("{gas_price:x}"))));
         }
         if let Some(value) = tx.value() {
-            tx_obj.insert("value", format!("0x{value:x}"));
+            tx_obj.insert("value", append_hex(pad_zero(format!("{value:x}"))));
         }
         if let Some(nonce) = tx.nonce() {
-            tx_obj.insert("nonce", format!("0x{nonce:x}"));
+            tx_obj.insert("nonce", append_hex(pad_zero(format!("{nonce:x}"))));
         }
         if let Some(c) = tx.chain_id() {
-            tx_obj.insert("chainId", format!("0x{c:x}"));
+            tx_obj.insert("chainId", append_hex(pad_zero(format!("{c:x}"))));
         }
         // TODO: put those error cases to WCError instead of wrapping in eyre
         let tx_bytes: Bytes = self

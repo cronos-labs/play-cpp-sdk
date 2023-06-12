@@ -1,12 +1,12 @@
 use std::{fmt::Display, str::FromStr};
 
 use ethers::types::Address;
-///! https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods
-///! FIXME: wc_sessionUpdate
-///! FIXME: wc_sessionExtend
-///! FIXME: wc_sessionEvent
-///! FIXME: wc_sessionDelete
-///! FIXME: wc_sessionPing OK
+// https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods
+// FIXME: wc_sessionUpdate
+// FIXME: wc_sessionExtend
+// FIXME: wc_sessionEvent
+// FIXME: wc_sessionDelete
+// FIXME: wc_sessionPing OK
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 /// https://docs.walletconnect.com/2.0/specs/clients/sign/rpc-methods#wc_sessionpropose
