@@ -1,6 +1,8 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.22-alpha] - 2023-7-26
+- fix Array in abi json encoding
 ## [v0.0.21-alpha] - 2023-6-12
 - release arm64 apple
 
