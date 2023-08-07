@@ -1,6 +1,9 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.23-alpha] - 2023-8-7
+- add mac universal binary (arm64 + x86_64)
+
 ## [v0.0.22-alpha] - 2023-7-26
 - fix Array in abi json encoding
 ## [v0.0.21-alpha] - 2023-6-12
