@@ -54,13 +54,13 @@ clone:
 build_play-cpp-sdk: clone
 ifeq ($(shell uname -m), x86_64)
  ifeq ($(UNAME), Darwin)		
-  ifeq ($(USE_ARM64),true)
+	cargo install cargo-lipo
 	rustup target add aarch64-apple-darwin
-	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release --target aarch64-apple-darwin
-  else
 	rustup target add x86_64-apple-darwin
-	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
-  endif		
+	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release --target aarch64-apple-darwin
+	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release		
+	lipo -create -output  ./target/release/libplay_cpp_sdk_universal.a ./target/release/libplay_cpp_sdk.a ./target/aarch64-apple-darwin/release/libplay_cpp_sdk.a
+	lipo -create -output  ./target/aarch64-apple-darwin/release/libplay_cpp_sdk_universal.a ./target/release/libplay_cpp_sdk.a ./target/aarch64-apple-darwin/release/libplay_cpp_sdk.a
  endif
  ifeq ($(UNAME), Linux)
 	CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
@@ -68,13 +68,13 @@ ifeq ($(shell uname -m), x86_64)
 else 
  ifeq ($(shell uname -m), arm64)
   ifeq ($(UNAME), Darwin)
-   ifeq ($(USE_ARM64), true)
+	cargo install cargo-lipo
 	rustup target add aarch64-apple-darwin
-	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
-   else
 	rustup target add x86_64-apple-darwin
+	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
 	MACOSX_DEPLOYMENT_TARGET=10.15 CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release --target x86_64-apple-darwin
-   endif
+	lipo -create -output  ./target/release/libplay_cpp_sdk_universal.a ./target/release/libplay_cpp_sdk.a ./target/x86_64-apple-darwin/release/libplay_cpp_sdk.a
+	lipo -create -output  ./target/x86_64-apple-darwin/release/libplay_cpp_sdk_universal.a ./target/release/libplay_cpp_sdk.a ./target/x86_64-apple-darwin/release/libplay_cpp_sdk.a
   endif
  else
 	CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) cargo build --package play-cpp-sdk --release
