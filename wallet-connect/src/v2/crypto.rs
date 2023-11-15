@@ -80,7 +80,12 @@ mod test {
             132, 149, 158, 189, 217, 78, 224, 11, 145, 159, 235, 198, 115,
         ];
         let key = Key::from_raw(dapp_secret);
-        let Some((topic, _)) = derive_symkey_topic("f22533e8a398c465569c04c14b853c86b63ad94ffa916861eb138819c8be475f", &key) else { panic!("can't derive topic") };
+        let Some((topic, _)) = derive_symkey_topic(
+            "f22533e8a398c465569c04c14b853c86b63ad94ffa916861eb138819c8be475f",
+            &key,
+        ) else {
+            panic!("can't derive topic")
+        };
         assert_eq!(
             topic.as_ref(),
             "1630ba5249b23659ee3d7e5f5561b784710bc50a0ef50869c774c831b68452d0"

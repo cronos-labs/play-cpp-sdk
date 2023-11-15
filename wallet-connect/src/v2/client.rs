@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-use std::str::FromStr;
-
 use async_trait::async_trait;
+use ethers::prelude::PendingTransaction;
 use ethers::types::transaction::eip2718::TypedTransaction;
+use ethers::types::BlockId;
 use ethers::{
     prelude::{
         Address, Bytes, JsonRpcClient, Middleware, MiddlewareError, NameOrAddress, Provider,
@@ -13,17 +12,18 @@ use ethers::{
 use eyre::eyre;
 use eyre::Context;
 use serde::{de::DeserializeOwned, Serialize};
+use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
 use url::Url;
 
-use crate::{hex, ClientError};
-
 use super::core::Connector;
 use super::protocol::{Namespaces, RequiredNamespaces};
 use super::session::SessionInfo;
 use super::Metadata;
+use crate::{hex, ClientError};
 use relay_client::Error;
 
 #[derive(Debug)]
@@ -62,7 +62,7 @@ impl Default for ClientOptions {
                     "personal_sign".to_owned(),
                     "eth_signTypedData".to_owned(),
                 ],
-                vec!["eip155:5".to_owned()],
+                vec!["eip155:338".to_owned()],
                 vec!["chainChanged".to_owned(), "accountsChanged".to_owned()],
             ),
             client_meta: Metadata {
@@ -316,5 +316,48 @@ impl Middleware for WCMiddleware<Provider<Client>> {
                 "failed to decode transaction"
             ))))
         }
+    }
+    async fn send_transaction<T: Into<TypedTransaction> + Send + Sync>(
+        &self,
+        tx: T,
+        _block: Option<BlockId>,
+    ) -> Result<PendingTransaction<'_, Self::Provider>, Self::Error> {
+        let tx: TypedTransaction = tx.into();
+
+        let mut tx_obj = HashMap::new();
+        if let Some(from) = tx.from() {
+            let addr = *from;
+            tx_obj.insert("from", format!("{addr:?}"));
+        }
+        if let Some(to) = tx.to() {
+            let addr = match to {
+                NameOrAddress::Address(addr) => *addr,
+                NameOrAddress::Name(n) => self.resolve_name(n).await?,
+            };
+            tx_obj.insert("to", format!("{addr:?}"));
+        }
+        if let Some(data) = tx.data() {
+            tx_obj.insert("data", format!("0x{}", hex::encode(data)));
+        }
+        if let Some(gas) = tx.gas() {
+            tx_obj.insert("gasLimit", append_hex(pad_zero(format!("{gas:x}"))));
+        }
+        if let Some(gas_price) = tx.gas_price() {
+            tx_obj.insert("gasPrice", append_hex(pad_zero(format!("{gas_price:x}"))));
+        }
+        if let Some(value) = tx.value() {
+            tx_obj.insert("value", append_hex(pad_zero(format!("{value:x}"))));
+        }
+        if let Some(nonce) = tx.nonce() {
+            tx_obj.insert("nonce", append_hex(pad_zero(format!("{nonce:x}"))));
+        }
+
+        let tx_hash = self
+            .0
+            .request("eth_sendTransaction", vec![tx_obj])
+            .await
+            .map_err(|e| WCError::ClientError(ClientError::Eyre(eyre!(e))))?;
+
+        Ok(PendingTransaction::new(tx_hash, self.provider()))
     }
 }
