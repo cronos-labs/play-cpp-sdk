@@ -1,5 +1,6 @@
 # Changelog
 ## [Unreleased]
+- fix walletconnect 2.0 send_tx
 
 ## [v0.0.23-alpha] - 2023-8-7
 - add mac universal binary (arm64 + x86_64)

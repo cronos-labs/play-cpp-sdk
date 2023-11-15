@@ -1,9 +1,11 @@
+use ethers::abi::Address;
+use ethers::core::types::transaction::eip2718::TypedTransaction;
 use eyre::Result;
 use image::Luma;
 use qrcode::QrCode;
-
-use ethers::abi::Address;
-use ethers::core::types::transaction::eip2718::TypedTransaction;
+use std::fs;
+use std::io;
+use std::io::Write;
 //use ethers::ethers_providers::Middleware;
 use defi_wallet_connect::v2::WCMiddleware;
 use ethers::prelude::*;
@@ -13,6 +15,11 @@ use std::str::FromStr;
 use defi_wallet_connect::v2::{Client, ClientOptions, Metadata, RequiredNamespaces, SessionInfo};
 use std::error::Error;
 use std::io::BufRead;
+
+const RPC_URL: &str = env!("MY_RPC_URL");
+const CHAIN_ID: &str = env!("MY_CHAIN_ID");
+const FROM_ADDRESS: &str = env!("MY_FROM_ADDRESS");
+const TO_ADDRESS: &str = env!("MY_TO_ADDRESS");
 
 #[derive(Debug, Default)]
 pub struct WalletConnectTxCommon {
@@ -36,18 +43,20 @@ pub struct WalletConnectTxEip155 {
 async fn make_client(
     callback_sender: Option<tokio::sync::mpsc::UnboundedSender<String>>,
 ) -> Result<Client, relay_client::Error> {
+    let mychain = format!("eip155:{}", CHAIN_ID);
     let opts = ClientOptions {
         relay_server: "wss://relay.walletconnect.com".parse().expect("url"),
         project_id: std::env::args().skip(1).next().expect("project_id"),
         required_namespaces: RequiredNamespaces::new(
             vec![
                 "eth_sendTransaction".to_owned(),
+                "eth_sendRawTransaction".to_owned(),
                 "eth_signTransaction".to_owned(),
                 "eth_sign".to_owned(),
                 "personal_sign".to_owned(),
                 "eth_signTypedData".to_owned(),
             ],
-            vec!["eip155:5".to_owned()],
+            vec![mychain.to_owned()],
             vec!["chainChanged".to_owned(), "accountsChanged".to_owned()],
         ),
         client_meta: Metadata {
@@ -62,15 +71,24 @@ async fn make_client(
     Client::new(opts).await
 }
 
-async fn load() -> eyre::Result<SessionInfo> {
+async fn load() -> Result<SessionInfo> {
     let file_path = "session.bin";
-    let contents = tokio::fs::read(file_path).await?;
+    let contents = fs::read(file_path)?;
+
     let session_info: SessionInfo = bincode::deserialize(&contents)?;
     Ok(session_info)
 }
-async fn save(info: &SessionInfo) -> eyre::Result<()> {
+
+async fn save(info: &SessionInfo) -> Result<()> {
     let binary_data = bincode::serialize(&info)?;
-    tokio::fs::write("session.bin", binary_data).await?;
+
+    let file_path = "session.bin";
+    let file = fs::File::create(file_path)?;
+    let mut writer = io::BufWriter::new(file);
+
+    writer.write_all(&binary_data)?;
+    writer.flush()?;
+
     Ok(())
 }
 
@@ -79,7 +97,7 @@ async fn sign_typed_tx(
     tx: &TypedTransaction,
     address: Address,
 ) -> Result<Signature> {
-    let middleware = WCMiddleware::new(client);
+    let middleware: WCMiddleware<Provider<Client>> = WCMiddleware::new(client);
     let signature = middleware.sign_transaction(tx, address).await?;
     Ok(signature)
 }
@@ -155,6 +173,8 @@ pub async fn send_eip155_transaction_blocking(
     if !userinfo.data.is_empty() {
         tx = tx.data(userinfo.data.as_slice().to_vec());
     }
+    tx = tx.data(vec![]);
+
     if !userinfo.common.gas_limit.is_empty() {
         tx = tx.gas(U256::from_dec_str(&userinfo.common.gas_limit)?);
     }
@@ -176,9 +196,6 @@ pub async fn send_eip155_transaction_blocking(
     let newclient = client.clone();
     let typedtx = TypedTransaction::Eip1559(tx);
 
-    // print typedtx
-    println!("typedtx: {:?}", typedtx);
-    println!("send tx: {:?}", typedtx);
     let tx_bytes = send_typed_tx(newclient, typedtx, signeraddress)
         .await
         .map_err(|e| eyre::eyre!("send_typed_transaction error {}", e.to_string()))?;
@@ -197,6 +214,39 @@ async fn make_qrcode(uri: &str) -> Result<()> {
 
     Ok(())
 }
+
+// Function to create, sign, and send an Ethereum transaction
+async fn send_ethereum_transaction(
+    client: &mut Client,
+    from: &str,
+    to: &str,
+    amount: U256,
+) -> Result<TxHash> {
+    let from_address = Address::from_str(from)?;
+    let to_address = Address::from_str(to)?;
+
+    let provider = Provider::<Http>::try_from(RPC_URL)?;
+    let chain_id = provider.get_chainid().await?;
+    let nonce = provider.get_transaction_count(from_address, None).await?;
+    // Construct the transaction
+    let tx_request = Eip1559TransactionRequest::new()
+        .from(from_address)
+        .to(NameOrAddress::Address(to_address))
+        .value(amount)
+        .gas(U256::from_dec_str("2100000")?)
+        .max_priority_fee_per_gas(U256::from_dec_str("17646859727182")?)
+        .max_fee_per_gas(U256::from_dec_str("17646852851231")?)
+        .nonce(nonce)
+        .data(vec![])
+        .access_list(vec![])
+        .chain_id(chain_id.as_u64());
+
+    let typed_tx = TypedTransaction::Eip1559(tx_request);
+    let tx_hash = send_typed_tx(client.clone(), typed_tx, from_address).await?;
+
+    Ok(tx_hash)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     println!("walletconnect v2.0");
@@ -217,8 +267,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let test_ping = false;
-    let test_signing = false;
-    let test_tx = true;
+    let test_personal_signing = false;
+    let test_sign_tx = false;
+    let test_send_tx = true;
     let test_event_listening = false;
 
     let uri = client.get_connection_string().await;
@@ -237,37 +288,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let response = client.send_ping().await?;
         println!("ping response= {}", response);
     }
-    if test_signing {
+    if test_personal_signing {
         // 0xaddress
         let address1 = namespaces.get_ethereum_addresses()[0].address.clone();
         let sig1 = client.personal_sign("Hello Crypto", &address1).await?;
         println!("sig1: {:?}", sig1);
     }
 
-    if test_tx {
-        // read env MYTOADDRESS
-        let to = std::env::var("MYTOADDRESS").expect("MYTOADDRESS not set");
-        let fromaddress = namespaces.get_ethereum_addresses()[0].address.clone();
-        // print fromaddress
-        println!("fromaddress= {:?}", fromaddress);
+    if test_sign_tx {
+        // convert fromaddress to 20 fixed byte array
+        let fromaddress = Address::from_str(&FROM_ADDRESS)?;
+
         let txinfo = WalletConnectTxEip155 {
             common: WalletConnectTxCommon {
-                chainid: 5,
+                chainid: CHAIN_ID.parse::<u64>()?,
                 gas_limit: "21000".into(),
                 gas_price: "1000000000".into(),
                 nonce: "0".into(),
                 web3api_url: "".into(),
             },
-            to: to.into(),
+            to: TO_ADDRESS.into(),
             data: vec![],
             value: "1000".into(),
         };
-        let sig = sign_eip155_transaction_blocking(
-            &mut client,
-            &txinfo,
-            (*fromaddress.as_fixed_bytes()).into(),
-        )
-        .await?;
+        let sig =
+            sign_eip155_transaction_blocking(&mut client, &txinfo, fromaddress.into()).await?;
         let sig_hex = hex::encode(sig.as_slice());
         let sig_hex_length = sig_hex.len();
         println!("signature length {sig_hex_length} 0x{sig_hex}");
@@ -283,6 +328,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 break;
             }
         }
+    }
+
+    if test_send_tx {
+        let amount = U256::from_dec_str("1000012345678912")?; // 1 ETH for example
+
+        let tx_hash =
+            send_ethereum_transaction(&mut client, FROM_ADDRESS, TO_ADDRESS, amount).await?;
+
+        println!("Transaction sent with hash: {:?}", tx_hash);
     }
 
     Ok(())
