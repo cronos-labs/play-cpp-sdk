@@ -3,6 +3,7 @@
 
 ## [v0.0.24-alpha] - 2023-12-4
 - fix walletconnect 2.0 send_tx
+- add from_address for walletconnect 2.0 sendtx
 
 ## [v0.0.23-alpha] - 2023-8-7
 - add mac universal binary (arm64 + x86_64)

@@ -300,6 +300,11 @@ impl Walletconnect2Client {
 
         let mut tx = Eip1559TransactionRequest::new();
 
+        if !userinfo.from.is_empty() {
+            // from address is necessary for wc.20 , metamask
+            tx = tx.from(Address::from_str(&userinfo.from)?);
+        }
+
         if !userinfo.to.is_empty() {
             tx = tx.to(NameOrAddress::Address(Address::from_str(&userinfo.to)?));
         }
