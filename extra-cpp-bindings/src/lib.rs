@@ -129,6 +129,7 @@ mod ffi {
     /// wallet connect cronos(eth) eip155-tx signing info
     #[derive(Debug, Default)]
     pub struct WalletConnectTxEip155 {
+        pub from: String,  // hexstring, "0x..."
         pub to: String,    // hexstring, "0x..."
         pub value: String, // decimal string, in wei units
         pub data: Vec<u8>, // data, as bytes
