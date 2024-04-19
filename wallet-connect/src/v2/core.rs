@@ -619,7 +619,7 @@ impl JsonRpcClient for Connector {
             .required_namespaces
             .eip155
             .chains
-            .get(0)
+            .first()
             .map(ToOwned::to_owned)
             .unwrap_or_else(|| "eip155:25".to_owned());
         // release the lock

@@ -3,5 +3,4 @@ mod aead;
 /// wrapper around the symmetric key
 mod key;
 
-pub use aead::*;
 pub use key::*;

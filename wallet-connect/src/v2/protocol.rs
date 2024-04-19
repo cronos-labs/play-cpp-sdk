@@ -92,7 +92,7 @@ pub struct WcSessionProposeResponse {
 pub struct WcSessionSettle {
     relay: Relay,
     pub namespaces: Namespaces,
-    #[serde(rename = "requiredNamespaces")]
+    #[serde(rename = "requiredNamespaces", default)]
     required_namespaces: RequiredNamespaces,
     pub controller: Peer,
     expiry: i64,

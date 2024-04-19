@@ -1,25 +1,19 @@
+use defi_wallet_connect::v2::WCMiddleware;
 use ethers::abi::Address;
 use ethers::core::types::transaction::eip2718::TypedTransaction;
+use ethers::prelude::*;
 use eyre::Result;
 use image::Luma;
 use qrcode::QrCode;
 use std::fs;
 use std::io;
 use std::io::Write;
-//use ethers::ethers_providers::Middleware;
-use defi_wallet_connect::v2::WCMiddleware;
-use ethers::prelude::*;
 
 use std::str::FromStr;
 
 use defi_wallet_connect::v2::{Client, ClientOptions, Metadata, RequiredNamespaces, SessionInfo};
 use std::error::Error;
 use std::io::BufRead;
-
-const RPC_URL: &str = env!("MY_RPC_URL");
-const CHAIN_ID: &str = env!("MY_CHAIN_ID");
-const FROM_ADDRESS: &str = env!("MY_FROM_ADDRESS");
-const TO_ADDRESS: &str = env!("MY_TO_ADDRESS");
 
 #[derive(Debug, Default)]
 pub struct WalletConnectTxCommon {
@@ -43,7 +37,9 @@ pub struct WalletConnectTxEip155 {
 async fn make_client(
     callback_sender: Option<tokio::sync::mpsc::UnboundedSender<String>>,
 ) -> Result<Client, relay_client::Error> {
-    let mychain = format!("eip155:{}", CHAIN_ID);
+    let chain_id = std::env::var("MY_CHAIN_ID").expect("MY_CHAIN_ID not set");
+    let mychain = format!("eip155:{}", chain_id);
+
     let opts = ClientOptions {
         relay_server: "wss://relay.walletconnect.com".parse().expect("url"),
         project_id: std::env::args().skip(1).next().expect("project_id"),
@@ -200,7 +196,6 @@ pub async fn send_eip155_transaction_blocking(
         .await
         .map_err(|e| eyre::eyre!("send_typed_transaction error {}", e.to_string()))?;
 
-    //Ok(tx_bytes.0.to_vec())
     Ok(tx_bytes.0.to_vec())
 }
 
@@ -225,7 +220,8 @@ async fn send_ethereum_transaction(
     let from_address = Address::from_str(from)?;
     let to_address = Address::from_str(to)?;
 
-    let provider = Provider::<Http>::try_from(RPC_URL)?;
+    let rpc_url = std::env::var("MY_RPC_URL").expect("MY_RPC_URL not set");
+    let provider = Provider::<Http>::try_from(rpc_url.as_str())?;
     let chain_id = provider.get_chainid().await?;
     let nonce = provider.get_transaction_count(from_address, None).await?;
     // Construct the transaction
@@ -296,18 +292,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     if test_sign_tx {
+        let from_address = std::env::var("MY_FROM_ADDRESS").expect("MY_FROM_ADDRESS not set");
+        let to_address = std::env::var("MY_TO_ADDRESS").expect("MY_TO_ADDRESS not set");
+
         // convert fromaddress to 20 fixed byte array
-        let fromaddress = Address::from_str(&FROM_ADDRESS)?;
+        let fromaddress = Address::from_str(&from_address)?;
 
         let txinfo = WalletConnectTxEip155 {
             common: WalletConnectTxCommon {
-                chainid: CHAIN_ID.parse::<u64>()?,
+                chainid: std::env::var("MY_CHAIN_ID")
+                    .expect("MY_CHAIN_ID not set")
+                    .parse::<u64>()?,
                 gas_limit: "21000".into(),
                 gas_price: "1000000000".into(),
-                nonce: "0".into(),
+                nonce: "".into(),
                 web3api_url: "".into(),
             },
-            to: TO_ADDRESS.into(),
+            to: to_address.into(),
             data: vec![],
             value: "1000".into(),
         };
@@ -331,10 +332,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     if test_send_tx {
+        let from_address = std::env::var("MY_FROM_ADDRESS").expect("MY_FROM_ADDRESS not set");
+        let to_address = std::env::var("MY_TO_ADDRESS").expect("MY_TO_ADDRESS not set");
+
         let amount = U256::from_dec_str("1000012345678912")?; // 1 ETH for example
 
         let tx_hash =
-            send_ethereum_transaction(&mut client, FROM_ADDRESS, TO_ADDRESS, amount).await?;
+            send_ethereum_transaction(&mut client, &from_address, &to_address, amount).await?;
 
         println!("Transaction sent with hash: {:?}", tx_hash);
     }
