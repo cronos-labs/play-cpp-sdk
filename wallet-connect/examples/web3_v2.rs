@@ -304,7 +304,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 chainid: CHAIN_ID.parse::<u64>()?,
                 gas_limit: "21000".into(),
                 gas_price: "1000000000".into(),
-                nonce: "0".into(),
+                nonce: "".into(), 
                 web3api_url: "".into(),
             },
             to: TO_ADDRESS.into(),

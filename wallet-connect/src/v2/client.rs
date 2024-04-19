@@ -1,3 +1,4 @@
+use ethers::types::U256;
 use async_trait::async_trait;
 use ethers::prelude::PendingTransaction;
 use ethers::types::transaction::eip2718::TypedTransaction;
@@ -242,6 +243,22 @@ fn append_hex(s: String) -> String {
     }
 }
 
+
+// tx_bytes is 32 bytes, for defi-wallet , it's txhash
+fn make_defiwallet_signature(tx_bytes: &[u8]) -> Option<Signature> {
+    // print hex of tx_bytes
+    if tx_bytes.len() == 32 {
+        let r = U256::from_big_endian(tx_bytes);
+        let s = U256::zero();
+        let v = 0;
+        // r: 32 bytes, s: 32bytes, v: 1 bytes
+        let sig = Signature { r, s, v };
+        Some(sig)
+    } else {
+        None
+    }
+}
+
 #[async_trait]
 impl Middleware for WCMiddleware<Provider<Client>> {
     type Error = WCError<Provider<Client>>;
@@ -268,6 +285,9 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         }
         if let Some(data) = tx.data() {
             tx_obj.insert("data", format!("0x{}", hex::encode(data)));
+        } else {
+            // need for defi wallet, otherwise user rejection error
+            tx_obj.insert("data", "0x".to_string());
         }
         if let Some(gas) = tx.gas() {
             // gas not working for webwallet
@@ -299,6 +319,14 @@ impl Middleware for WCMiddleware<Provider<Client>> {
             ))));
         }
 
+        if tx_rlp.as_raw().len() == 32 {
+            // It's not RLP-encoded
+            return make_defiwallet_signature(tx_rlp.as_raw()).ok_or_else(|| {
+                WCError::ClientError(ClientError::Eyre(eyre!(
+                    "failed to decode defiwallet tx-hash signature"
+                )))
+            });
+        }
         let first_byte = tx_rlp.as_raw()[0];
         // TODO: check that the decoded request matches the typed transaction content here? or a new `sign_transaction` function that returns both request+signature?
         if first_byte <= 0x7f {
