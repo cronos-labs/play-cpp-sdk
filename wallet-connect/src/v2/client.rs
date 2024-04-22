@@ -1,8 +1,8 @@
-use ethers::types::U256;
 use async_trait::async_trait;
 use ethers::prelude::PendingTransaction;
 use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers::types::BlockId;
+use ethers::types::U256;
 use ethers::{
     prelude::{
         Address, Bytes, JsonRpcClient, Middleware, MiddlewareError, NameOrAddress, Provider,
@@ -242,7 +242,6 @@ fn append_hex(s: String) -> String {
         format!("0x{s}")
     }
 }
-
 
 // tx_bytes is 32 bytes, for defi-wallet , it's txhash
 fn make_defiwallet_signature(tx_bytes: &[u8]) -> Option<Signature> {
