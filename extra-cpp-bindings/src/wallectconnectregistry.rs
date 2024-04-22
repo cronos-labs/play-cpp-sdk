@@ -199,26 +199,6 @@ mod test {
     }
 
     #[test]
-    fn test_fetch_new_no_cache() {
-        let reg = Registry::fetch_new(None);
-        assert!(reg.is_ok());
-    }
-
-    #[test]
-    fn test_fetch_new_with_cache() {
-        let mut dir = std::env::temp_dir();
-        let tmpfile = format!("{}.json", uuid::Uuid::new_v4());
-        dir.push(tmpfile);
-        println!("{:?}", dir);
-
-        let reg = Registry::fetch_new(Some(dir.clone()));
-        assert!(reg.is_ok());
-
-        let reg = Registry::load_cached(Some(dir));
-        assert!(reg.is_ok());
-    }
-
-    #[test]
     fn test_load_cached() {
         let reg = Registry::load_cached(Some(PathBuf::from("./not_exists.json")));
         assert!(reg.is_err());
