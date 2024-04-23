@@ -1,6 +1,9 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.25-alpha] - 2024-4-23
+- support defi-wallet
+
 ## [v0.0.24-alpha] - 2023-12-4
 - fix walletconnect 2.0 send_tx
 - add from_address for walletconnect 2.0 sendtx
