@@ -304,13 +304,16 @@ impl Walletconnect2Client {
             // from address is necessary for wc.20 , metamask
             tx = tx.from(Address::from_str(&userinfo.from)?);
         }
-
         if !userinfo.to.is_empty() {
             tx = tx.to(NameOrAddress::Address(Address::from_str(&userinfo.to)?));
         }
         if !userinfo.data.is_empty() {
             tx = tx.data(userinfo.data.as_slice().to_vec());
+        } else {
+            // for defiwallet
+            tx = tx.data(vec![]);
         }
+
         if !userinfo.common.gas_limit.is_empty() {
             tx = tx.gas(U256::from_dec_str(&userinfo.common.gas_limit)?);
         }
