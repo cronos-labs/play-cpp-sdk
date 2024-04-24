@@ -365,6 +365,9 @@ impl Middleware for WCMiddleware<Provider<Client>> {
         }
         if let Some(data) = tx.data() {
             tx_obj.insert("data", format!("0x{}", hex::encode(data)));
+        } else {
+            // need for defi wallet, otherwise user rejection error
+            tx_obj.insert("data", "0x".to_string());
         }
         if let Some(gas) = tx.gas() {
             tx_obj.insert("gasLimit", append_hex(pad_zero(format!("{gas:x}"))));

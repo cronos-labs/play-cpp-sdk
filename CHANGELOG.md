@@ -1,6 +1,9 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.26-alpha] - 2024-4-24
+- fix null `data` field in wc 2.0
+
 ## [v0.0.25-alpha] - 2024-4-23
 - support defi-wallet
 

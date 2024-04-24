@@ -131,7 +131,7 @@ pub async fn sign_eip155_transaction_blocking(
         tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
     }
     if userinfo.common.chainid != 0 {
-        // tx = tx.chain_id(userinfo.common.chainid);
+        tx = tx.chain_id(userinfo.common.chainid);
     }
     if !userinfo.value.is_empty() {
         tx = tx.value(U256::from_dec_str(&userinfo.value)?);
@@ -162,14 +162,16 @@ pub async fn send_eip155_transaction_blocking(
     let signeraddress = Address::from_slice(&address);
 
     let mut tx = Eip1559TransactionRequest::new();
-
+    // need for defiwallet
+    tx = tx.from(signeraddress);
     if !userinfo.to.is_empty() {
         tx = tx.to(NameOrAddress::Address(Address::from_str(&userinfo.to)?));
     }
     if !userinfo.data.is_empty() {
         tx = tx.data(userinfo.data.as_slice().to_vec());
+    } else {
+        tx = tx.data(vec![]);
     }
-    tx = tx.data(vec![]);
 
     if !userinfo.common.gas_limit.is_empty() {
         tx = tx.gas(U256::from_dec_str(&userinfo.common.gas_limit)?);
@@ -183,7 +185,7 @@ pub async fn send_eip155_transaction_blocking(
         tx = tx.nonce(U256::from_dec_str(&userinfo.common.nonce)?);
     }
     if userinfo.common.chainid != 0 {
-        // tx = tx.chain_id(userinfo.common.chainid);
+        tx = tx.chain_id(userinfo.common.chainid);
     }
     if !userinfo.value.is_empty() {
         tx = tx.value(U256::from_dec_str(&userinfo.value)?);
@@ -198,7 +200,6 @@ pub async fn send_eip155_transaction_blocking(
 
     Ok(tx_bytes.0.to_vec())
 }
-
 async fn make_qrcode(uri: &str) -> Result<()> {
     // Generate the QR code for the data you want
     let code = QrCode::new(uri)?;
@@ -266,6 +267,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let test_personal_signing = false;
     let test_sign_tx = false;
     let test_send_tx = true;
+    let test_send_typedtx = false;
     let test_event_listening = false;
 
     let uri = client.get_connection_string().await;
@@ -319,6 +321,34 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("signature length {sig_hex_length} 0x{sig_hex}");
     }
 
+    if test_send_tx {
+        let from_address = std::env::var("MY_FROM_ADDRESS").expect("MY_FROM_ADDRESS not set");
+        let to_address = std::env::var("MY_TO_ADDRESS").expect("MY_TO_ADDRESS not set");
+
+        // convert fromaddress to 20 fixed byte array
+        let fromaddress = Address::from_str(&from_address)?;
+
+        let txinfo = WalletConnectTxEip155 {
+            common: WalletConnectTxCommon {
+                chainid: std::env::var("MY_CHAIN_ID")
+                    .expect("MY_CHAIN_ID not set")
+                    .parse::<u64>()?,
+                gas_limit: "2100000".into(),
+                gas_price: "17646852851231".into(),
+                nonce: "".into(),
+                web3api_url: "".into(),
+            },
+            to: to_address.into(),
+            data: vec![1],
+            value: "1000".into(),
+        };
+        let txhash =
+            send_eip155_transaction_blocking(&mut client, &txinfo, fromaddress.into()).await?;
+        let txhash_hex = hex::encode(txhash.as_slice());
+        let txhash_length = txhash.len();
+        println!("txhash {txhash_hex} 0x{txhash_length}");
+    }
+
     if test_event_listening {
         println!("press anykey to exit");
         loop {
@@ -331,7 +361,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    if test_send_tx {
+    if test_send_typedtx {
         let from_address = std::env::var("MY_FROM_ADDRESS").expect("MY_FROM_ADDRESS not set");
         let to_address = std::env::var("MY_TO_ADDRESS").expect("MY_TO_ADDRESS not set");
 
