@@ -1,6 +1,10 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.0.27-alpha] - 2004-5-22 
+- fix c++ walletconnect example to use wc 2.0
+- add verification for sign_personal
+
 ## [v0.0.26-alpha] - 2024-4-24
 - fix null `data` field in wc 2.0
 

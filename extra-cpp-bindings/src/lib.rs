@@ -347,6 +347,13 @@ mod ffi {
             message: String,
             address: [u8; 20],
         ) -> Result<Vec<u8>>;
+        /// verify message
+        pub fn verify_personal_blocking(
+            self: &mut Walletconnect2Client,
+            message: String,
+            signature_bytes: Vec<u8>,
+            user_address: [u8; 20],
+        ) -> Result<bool>;
         pub fn ping_blocking(self: &mut Walletconnect2Client, waitmillis: u64) -> Result<String>;
 
         /// build cronos(eth) eip155 transaction

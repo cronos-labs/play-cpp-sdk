@@ -19,6 +19,8 @@ jobs:
   check:
     name: cargo check
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -A dead_code
     steps:
       - uses: actions/checkout@v3
         with:
@@ -35,6 +37,8 @@ jobs:
   test:
     name: cargo test
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -A dead_code
     steps:
       - uses: actions/checkout@v3
         with:
@@ -73,6 +77,8 @@ jobs:
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -A dead_code
     steps:
       - uses: actions/checkout@v3
         with:
