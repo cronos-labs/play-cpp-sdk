@@ -141,6 +141,25 @@ impl Walletconnect2Client {
         }
     }
 
+    // signature: 65 bytes (r:32, s:32,v:1)
+    pub fn verify_personal_blocking(
+        &mut self,
+        message: String,
+        signature_bytes: Vec<u8>,
+        user_address: [u8; 20],
+    ) -> Result<bool> {
+        let address = ethers::types::Address::from_slice(&user_address);
+        let signature = Signature::try_from(signature_bytes.as_slice())
+            .map_err(|e| anyhow!("Invalid signature: {}", e))?;
+
+        Ok(signature.verify(message, address).is_ok())
+    }
+
+    // signature
+    // r: 32 bytes
+    // s: 32 bytees
+    // v: 1 byte
+    // total 65 bytes
     pub fn sign_personal_blocking(
         &mut self,
         message: String,

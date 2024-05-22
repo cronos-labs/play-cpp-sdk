@@ -34,35 +34,36 @@ rust::String address_to_hex_string(::std::array<::std::uint8_t, 20> bytes) {
 }
 
 // if session already exists, restore session
-rust::Box<WalletconnectClient> make_new_client(std::string filename) {
+rust::Box<Walletconnect2Client> make_new_client(std::string filename) {
 
     std::ifstream file(filename.c_str());
     if (file.is_open()) {
         std::string sessioninfostring((std::istreambuf_iterator<char>(file)),
                                       std::istreambuf_iterator<char>());
-        rust::Box<WalletconnectClient> client =
-            walletconnect_restore_client(sessioninfostring);
+        rust::Box<Walletconnect2Client> client =
+            walletconnect2_restore_client(sessioninfostring);
         return client;
     } else {
-        rust::Box<WalletconnectClient> client = walletconnect_new_client(
-            "Defi WalletConnect example.", "http://localhost:8080/",
-            rust::Vec<rust::String>(), "Defi WalletConnect Web3 Example",
-            338); // ChainId of Cronos Testnet
+        std::string projectid = std::getenv("NEXT_PUBLIC_PROJECT_ID")
+                                    ? std::getenv("NEXT_PUBLIC_PROJECT_ID")
+                                    : "";
+        // assert projectid not ""
+        assert(projectid != "");
+
+        rust::Box<Walletconnect2Client> client = walletconnect2_client_new(
+            "wss://relay.walletconnect.org", projectid,
+            "{\"eip155\":{\"methods\":[\"eth_sendTransaction\",\"eth_"
+            "signTransaction\",\"eth_sign\",\"personal_sign\",\"eth_"
+            "signTypedData\"],\"chains\":[\"eip155:338\"],\"events\":["
+            "\"chainChanged\",\"accountsChanged\"]}}",
+            "{\"description\":\"Defi WalletConnect v2 "
+            "example.\",\"url\":\"http://localhost:8080/"
+            "\",\"icons\":[],\"name\":\"Defi WalletConnect Web3 Example\"}");
         std::cout << "qrcode= " << client->get_connection_string() << std::endl;
 
         return client;
     }
 }
-
-class UserWalletConnectCallback : public WalletConnectCallback {
-  public:
-    UserWalletConnectCallback() {}
-    virtual ~UserWalletConnectCallback() {}
-    void onConnected(const WalletConnectSessionInfo &sessioninfo) const;
-    void onDisconnected(const WalletConnectSessionInfo &sessioninfo) const;
-    void onConnecting(const WalletConnectSessionInfo &sessioninfo) const;
-    void onUpdated(const WalletConnectSessionInfo &sessioninfo) const;
-};
 void print_session(const WalletConnectSessionInfo &sessioninfo) {
     std::cout << "connected: " << sessioninfo.connected << std::endl;
     std::cout << "chain_id: " << sessioninfo.chain_id << std::endl;
@@ -78,50 +79,21 @@ void print_session(const WalletConnectSessionInfo &sessioninfo) {
     std::cout << "handshake_topic: " << sessioninfo.handshake_topic
               << std::endl;
 }
-void UserWalletConnectCallback::onConnected(
-    const WalletConnectSessionInfo &sessioninfo) const {
-    std::cout << "user c++ onConnected" << std::endl;
-    print_session(sessioninfo);
-}
-void UserWalletConnectCallback::onDisconnected(
-    const WalletConnectSessionInfo &sessioninfo) const {
-    std::cout << "user c++ onDisconnected" << std::endl;
-    print_session(sessioninfo);
-    exit(0);
-}
-void UserWalletConnectCallback::onConnecting(
-    const WalletConnectSessionInfo &sessioninfo) const {
-    std::cout << "user c++ onConnecting" << std::endl;
-    print_session(sessioninfo);
-    // !!! Important !!!
-    // Comment out this line for actual test
-    exit(0);
-}
-void UserWalletConnectCallback::onUpdated(
-    const WalletConnectSessionInfo &sessioninfo) const {
-    std::cout << "user c++ onUpdated" << std::endl;
-    print_session(sessioninfo);
-}
 
 int main(int argc, char *argv[]) {
     std::string filename = "sessioninfo.json";
     try {
-        rust::Box<WalletconnectClient> client = make_new_client(filename);
-        WalletConnectCallback *usercallbackraw =
-            new UserWalletConnectCallback();
-        std::unique_ptr<WalletConnectCallback> usercallback(usercallbackraw);
-        client->setup_callback_blocking(std::move(usercallback));
+        rust::Box<Walletconnect2Client> client = make_new_client(filename);
 
         // Print the QR code on terminal
         rust::String uri = client->print_uri();
 
         // program is blocked here for waiting connecting
-        WalletConnectEnsureSessionResult result =
-            client->ensure_session_blocking();
+        WalletConnect2EnsureSessionResult result =
+            client->ensure_session_blocking(60000);
 
         // once connected, program continues
-        std::cout << "connected chain_id: " << result.chain_id << std::endl;
-        assert(result.addresses.size() > 0);
+        assert(result.eip155.accounts.size() > 0);
 
         // get the connected session info as string and save it into a file
         rust::String sessioninfo = client->save_client();
@@ -138,11 +110,21 @@ int main(int argc, char *argv[]) {
         // sign personal message
         if (test_personal) {
             /* message signing */
-            rust::Vec<uint8_t> sig1 = client->sign_personal_blocking(
-                "hello", result.addresses[0].address);
+            ::std::uint64_t testchainid = result.eip155.accounts[0].chain_id;
+            ::std::array<::std::uint8_t, 20> testaddress =
+                result.eip155.accounts[0].address.address;
+            std::cout << "chainid=" << testchainid << std::endl;
+            std::cout << "address="
+                      << address_to_hex_string(testaddress).c_str()
+                      << std::endl;
+            rust::Vec<uint8_t> sig1 =
+                client->sign_personal_blocking("hello", testaddress);
             std::cout << "signature=" << bytes_to_hex_string(sig1).c_str()
                       << std::endl;
             std::cout << "signature length=" << sig1.size() << std::endl;
+            bool verifyresult =
+                client->verify_personal_blocking("hello", sig1, testaddress);
+            std::cout << "verify result=" << verifyresult << std::endl;
         }
 
         // send transaction
@@ -166,12 +148,13 @@ int main(int argc, char *argv[]) {
             // info.to = "0x....";
             info.to = rust::String(
                 std::string("0x") +
-                address_to_hex_string(result.addresses[0].address).c_str());
+                address_to_hex_string(result.eip155.accounts[0].address.address)
+                    .c_str());
             info.value = "1000000000000000000"; // 1 TCRO
-            info.common.chainid = result.chain_id;
+            info.common.chainid = result.eip155.accounts[0].chain_id;
             rust::Vec<uint8_t> tx_hash =
                 client->send_eip155_transaction_blocking(
-                    info, result.addresses[0].address);
+                    info, result.eip155.accounts[0].address.address);
 
             std::cout << "transaction_hash="
                       << bytes_to_hex_string(tx_hash).c_str() << std::endl;
@@ -205,7 +188,8 @@ int main(int argc, char *argv[]) {
             assert(erc20.decimals() == 18);
             rust::String from_address = rust::String(
                 std::string("0x") +
-                address_to_hex_string(result.addresses[0].address).c_str());
+                address_to_hex_string(result.eip155.accounts[0].address.address)
+                    .c_str());
             U256 erc20_balance = erc20.balance_of(from_address);
             std::cout << "erc20 balance=" << erc20_balance.to_string()
                       << std::endl;
@@ -222,13 +206,14 @@ int main(int argc, char *argv[]) {
                         }
                    })";
 
-            common.chainid = result.chain_id;
+            common.chainid = result.eip155.accounts[0].chain_id;
             common.web3api_url =
                 "https://evm-dev-t3.cronos.org"; // TODO unnessary for
                                                  // walletconnect
 
             rust::Vec<uint8_t> tx_hash = client->send_contract_transaction(
-                contract_action, common, result.addresses[0].address);
+                contract_action, common,
+                result.eip155.accounts[0].address.address);
 
             std::cout << "transaction_hash="
                       << bytes_to_hex_string(tx_hash).c_str() << std::endl;

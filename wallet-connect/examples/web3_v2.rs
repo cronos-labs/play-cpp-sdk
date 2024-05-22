@@ -264,9 +264,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let test_ping = false;
-    let test_personal_signing = false;
+    let test_personal_signing = true;
     let test_sign_tx = false;
-    let test_send_tx = true;
+    let test_send_tx = false;
     let test_send_typedtx = false;
     let test_event_listening = false;
 
@@ -288,9 +288,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
     if test_personal_signing {
         // 0xaddress
+        let message = "Hello Crypto";
         let address1 = namespaces.get_ethereum_addresses()[0].address.clone();
-        let sig1 = client.personal_sign("Hello Crypto", &address1).await?;
+        let sig1 = client.personal_sign(message, &address1).await?;
         println!("sig1: {:?}", sig1);
+
+        // Verify the signature
+        let signer = sig1.verify(message, address1);
+        match signer {
+            Ok(_) => {
+                println!("Signature verified");
+            }
+            Err(err) => {
+                println!("Error verifying signature: {:?}", err);
+            }
+        }
     }
 
     if test_sign_tx {
